@@ -1,0 +1,14 @@
+ Estructura del Proyecto Base (Python/Flask)
+El proyecto se estructurará de manera minimalista para facilitar el despliegue en tu AWS EC2.
+1. Estructura de Archivos
+aura_pilates/
+├── app.py              # Aplicación Flask
+├── static/
+│   ├── css/
+│   │   └── style.css   # Estilos CSS (con tu paleta pastel y fuentes)
+│   ├── img/
+│   │   └── hero_image.jpg # Placeholder para la imagen principal
+│   └── js/
+│       └── main.js     # Script para transiciones (Parallax/Fade-in) y mapa
+└── templates/
+    └── index.html      # Plantilla principal (HTML)
