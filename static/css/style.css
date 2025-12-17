@@ -369,15 +369,29 @@ details[open] summary::after {
     font-size: 0.95rem;
 }
 
+/* Contenedor general de la sección */
 .gallery-section {
-    padding: 100px 0;
+    padding: 80px 20px;
     background-color: #fdfbf9;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centra todo el contenido horizontalmente */
 }
 
+/* Alineación del Título */
+.gallery-section h2 {
+    text-align: center; /* Asegura que el texto esté centrado */
+    margin-bottom: 2rem;
+    width: 100%;
+    max-width: 1200px; /* Misma anchura máxima que tus otras secciones */
+}
+
+/* Ajuste del Carrusel */
 .swiper-container {
     width: 100%;
-    max-width: 1000px;
-    padding: 50px 0;
+    max-width: 1200px; /* Igualamos al ancho del título */
+    padding: 20px 0 50px 0; /* Espacio para que las sombras no se corten */
+    overflow: hidden; /* Evita scrolls horizontales raros */
 }
 
 .swiper-slide {
@@ -387,12 +401,12 @@ details[open] summary::after {
     transition: transform 0.3s;
 }
 
+/* Para que las imágenes no se vean "gigantes" en pantallas muy grandes */
 .swiper-slide img {
     width: 100%;
-    height: 500px;
-    object-fit: cover; /* Recorta la imagen para que no se deforme */
+    max-height: 600px; 
+    object-fit: cover;
     border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
 /* Colores personalizados para las flechas */
