@@ -6,10 +6,20 @@
     <title>Aura Pilates | San Juan, Argentina</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    
-    <header class="hero-section" id="inicio">
+
+    <nav class="main-nav">
+        <a href="#inicio" class="logo-nav">Aura Pilates</a>
+        <div class="nav-links">
+            <a href="#servicios">Servicios</a>
+            <a href="#contact">Contacto</a>
+            <a href="{{ data.whatsapp_link }}" target="_blank" class="nav-btn">Reservar Clase</a>
+        </div>
+    </nav>
+
+    <header class="hero-section section" id="inicio">
         <h1>Aura Pilates</h1>
         <p class="slogan">{{ data.slogan }}</p>
         <div class="hero-image-container">
@@ -17,35 +27,55 @@
         </div>
     </header>
 
-    <section class="services-section" id="servicios">
+    <section class="services-section section" id="servicios">
         <h2>Clases y Servicios</h2>
-        <div class="service-card">
-            <h3>Aura Classic Reformer</h3>
-            <p>La base del método, para fundir forma y fluidez. Ideal para todos los niveles.</p>
-        </div>
-        </section>
-
-    <section class="contact-map-section" id="contacto">
-        <h2>Encuéntranos</h2>
-        
-        <div id="google-map-container" style="height: 400px; width: 100%;">
+        <div class="services-grid">
+            
+            <div class="service-card">
+                <h3>Aura Classic Reformer</h3>
+                <p>La base del método, para fundir forma y fluidez. Ideal para todos los niveles y para construir una base sólida de fuerza central.</p>
             </div>
-        
-        <p>Dirección: **{{ data.address }}**</p>
-        
-        <div class="contact-links">
-            <a href="{{ data.whatsapp_link }}" class="whatsapp-btn" target="_blank">
-                Chatea con nosotros por WhatsApp
+            
+            <div class="service-card">
+                <h3>Aura Sport Performance</h3>
+                <p>Sesiones dinámicas enfocadas en atletas, mejora del rendimiento deportivo y rehabilitación específica. Uso de Wunda Chair y Cadillac.</p>
+            </div>
+            
+            <div class="service-card">
+                <h3>Pilates & Bienestar</h3>
+                <p>Clases privadas o semi-privadas enfocadas en el alivio de dolor, posturas específicas y objetivos terapéuticos. Máxima atención personalizada.</p>
+            </div>
+            
+        </div>
+    </section>
+	
+    <section id="contact" class="contact-map-section section">
+        <h2>Encuéntranos</h2>
+        <div id="google-map-container">
+            <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2021.931590222818!2d-68.57068969857355!3d-31.538712156674002!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x968140ff5c13c2cf%3A0xb01908b94fc44781!2sEspacio%20San%20Juan%20Shopping!5e0!3m2!1ses!2sar!4v1765994409076!5m2!1ses!2sar" 
+                width="100%" 
+                height="450" 
+                style="border:0;" 
+                allowfullscreen="" 
+                loading="lazy" 
+                referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+        </div>
+
+        <div class="contact-links" style="text-align: center; margin-top: 2rem;">
+            <p>Dirección: <strong>San Roque Sur 1044, Rawson, San Juan</strong></p>
+            <a href="{{ data.whatsapp_link }}" target="_blank" class="whatsapp-btn">
+                <i class="fab fa-whatsapp"></i> Reservar por WhatsApp
             </a>
-            <p>O escríbenos a: <a href="mailto:{{ data.email }}">{{ data.email }}</a></p>
+            <p>Email: <a href="mailto:{{ data.email }}">{{ data.email }}</a></p>
         </div>
     </section>
 
     <footer>
-        <p>&copy; 2024 Aura Pilates. Todos los derechos reservados.</p>
+        <p>© 2024 Aura Pilates. Todos los derechos reservados.</p>
     </footer>
-    
+
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ data.google_maps_api_key }}&callback=initMap"></script>
-</body>
+    </body>
 </html>
