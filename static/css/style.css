@@ -418,82 +418,66 @@ details[open] summary::after {
     background: var(--color-acento-lavanda);
 }
 
-/* --- Footer con Paleta Aura Pilates --- */
 .main-footer {
-    background-color: #e8f5f1; /* El verde menta pastel de tu paleta */
-    color: #4a4a4a;           /* Texto gris oscuro para buen contraste */
-    padding: 80px 20px;
-    border-top: 1px solid rgba(0,0,0,0.03); /* Separación muy sutil */
+    background-color: #f1f8f6; /* Este es el verde exacto de tu navbar */
+    color: #444;
+    padding: 60px 20px 30px 20px;
+    text-align: center; /* Centramos todo para un look más moderno */
 }
 
 .footer-container {
-    max-width: 900px;
+    max-width: 1000px;
     margin: 0 auto;
 }
 
 .main-footer h3 {
-    font-family: 'Playfair Display', serif; /* Manteniendo la elegancia */
-    color: #5d5d5d;
+    font-family: 'Playfair Display', serif;
     font-size: 1.6rem;
-    margin-bottom: 2.5rem;
+    margin-bottom: 2rem;
+}
+
+.contact-info {
+    margin-bottom: 2rem;
 }
 
 .contact-info a {
-    display: flex;
-    align-items: center;
-    color: #5d5d5d;
+    color: #444;
     text-decoration: none;
-    margin-bottom: 1.2rem;
-    font-size: 1.1rem;
-    transition: color 0.3s ease;
-}
-
-.contact-info a:hover {
-    color: #bcaaa4; /* Un toque de color tierra/lavanda al pasar el mouse */
-}
-
-.contact-info i {
-    margin-right: 15px;
-    font-size: 1.2rem;
-    color: #bcaaa4; /* Los iconos en un tono complementario */
+    margin: 0 15px;
+    display: inline-block; /* Los ponemos uno al lado del otro */
 }
 
 .social-links {
-    margin: 2.5rem 0;
     display: flex;
+    justify-content: center;
     gap: 20px;
+    margin-bottom: 2.5rem;
 }
 
 .social-links a {
-    color: #5d5d5d;
+    color: #444;
     font-size: 1.5rem;
-    background: white; /* Círculos blancos para los iconos */
-    width: 45px;
-    height: 45px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 50%;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease;
 }
 
 .social-links a:hover {
     transform: translateY(-3px);
-    background-color: #bcaaa4;
-    color: white;
+    color: var(--color-acento-lavanda);
 }
 
-.working-hours h4 {
-    font-size: 1.1rem;
-    margin-bottom: 15px;
-    color: #5d5d5d;
+.working-hours {
+    margin-bottom: 3rem;
+}
+
+/* Estilo para la línea de Derechos Reservados */
+.footer-bottom {
+    border-top: 1px solid rgba(0,0,0,0.05); /* Línea muy tenue */
+    padding-top: 20px;
+}
+
+.footer-bottom p {
+    font-size: 0.8rem;
+    color: #888;
     text-transform: uppercase;
     letter-spacing: 1px;
-}
-
-.working-hours p {
-    margin: 5px 0;
-    font-size: 1rem;
-    color: #777;
 }
