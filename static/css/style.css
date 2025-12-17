@@ -460,14 +460,23 @@ details[open] summary::after {
 }
 
 .social-links a {
+    background-color: #ffffff; /* Círculo blanco */
     color: #444;
-    font-size: 1.5rem;
-    transition: transform 0.3s ease;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
 }
 
 .social-links a:hover {
     transform: translateY(-3px);
-    color: var(--color-acento-lavanda);
+    background-color: var(--color-acento-lavanda); /* Cambia al lila de tu marca al pasar el mouse */
+    color: white;
 }
 
 .working-hours {
