@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 </head>
 <body>
 
@@ -14,7 +15,7 @@
         <a href="#inicio" class="logo-nav">Aura Pilates</a>
         <div class="nav-links">
             <a href="#nosotros">Nosotros</a> <a href="#servicios">Servicios</a>
-            <a href="#contact">Contacto</a> <a href="#preguntas">Preguntas</a>
+            <a href="#contact">Contacto</a> <a href="#galeria">Galería</a> <a href="#preguntas">Preguntas</a>
             <a href="{{ data.whatsapp_link }}" target="_blank" class="nav-btn">Reservar Clase</a>
         </div>
     </nav>
@@ -78,6 +79,26 @@
             </div>
         </div>
     </section>
+
+    <section class="gallery-section section" id="galeria">
+        <h2>Nuestro Espacio</h2>
+        <div class="swiper-container mySwiper">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide">
+                    <img src="{{ url_for('static', filename='img/estudio1.jpg') }}" alt="Estudio Aura">
+                </div>
+                <div class="swiper-slide">
+                    <img src="{{ url_for('static', filename='img/estudio2.jpg') }}" alt="Reformer">
+                </div>
+                <div class="swiper-slide">
+                    <img src="{{ url_for('static', filename='img/estudio3.jpg') }}" alt="Clase de Pilates">
+                </div>
+            </div>
+            <div class="swiper-pagination"></div>
+            <div class="swiper-button-next"></div>
+            <div class="swiper-button-prev"></div>
+        </div>
+    </section>
 	
     <section id="contact" class="contact-map-section section">
         <h2>Encuéntranos</h2>
@@ -134,4 +155,29 @@
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     </body>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+        var swiper = new Swiper(".mySwiper", {
+            effect: "coverflow", /* Efecto moderno 3D sutil */
+            grabCursor: true,
+            centeredSlides: true,
+            slidesPerView: "auto",
+            coverflowEffect: {
+            rotate: 0,
+            stretch: 0,
+            depth: 100,
+            modifier: 2,
+            slideShadows: true,
+            },
+            loop: true,
+            pagination: {
+            el: ".swiper-pagination",
+            },
+            navigation: {
+            nextEl: ".swiper-button-next",
+            prevEl: ".swiper-button-prev",
+            },
+        });
+    </script>
 </html>
