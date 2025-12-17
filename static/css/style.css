@@ -419,11 +419,16 @@ details[open] summary::after {
 }
 
 .main-footer {
-    background-color: #f1f8f6; /* Este es el verde exacto de tu navbar */
+    /* Usamos la misma variable que el botón del navbar */
+    background-color: var(--color-acento-menta); 
+    background-color: rgba(232, 245, 241, 0.95);
     color: #444;
     padding: 60px 20px 30px 20px;
-    text-align: center; /* Centramos todo para un look más moderno */
+    text-align: center;
 }
+
+/* Si quieres que el footer sea un poco más transparente como el navbar (opcional) */
+/* background-color: rgba(232, 245, 241, 0.95); */
 
 .footer-container {
     max-width: 1000px;
