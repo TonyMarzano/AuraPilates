@@ -240,7 +240,68 @@ footer {
     color: var(--color-texto-oscuro);
 }
 
+.service-card {
+    background: rgba(255, 255, 255, 0.7); /* Fondo traslúcido */
+    backdrop-filter: blur(10px); /* Desenfoque de fondo */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 2.5rem;
+    border-radius: 20px;
+    transition: all 0.4s ease;
+}
+
+.service-card:hover {
+    transform: translateY(-10px);
+    background: var(--color-base-blanco);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+}
+
 /* --- Ajustes de Navegación --- */
 .main-nav {
     /* Ya lo tienes, pero asegúrate de que el nosotros esté en el nav si quieres */
+}
+
+/* --- FAQ Section --- */
+.faq-container {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+details {
+    background: var(--color-base-blanco);
+    border: 1px solid var(--color-acento-lavanda);
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+details[open] {
+    border-color: var(--color-acento-menta);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+summary {
+    font-weight: 500;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+summary::after {
+    content: '+';
+    font-size: 1.5rem;
+    color: var(--color-texto-claro);
+}
+
+details[open] summary::after {
+    content: '-';
+}
+
+.faq-content {
+    padding-top: 1rem;
+    color: var(--color-texto-oscuro);
+    font-size: 0.95rem;
 }
