@@ -255,6 +255,32 @@ footer {
     box-shadow: 0 20px 40px rgba(0,0,0,0.05);
 }
 
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    padding: 2rem 0;
+}
+
+.benefit-card {
+    background: #fff;
+    padding: 3rem 2rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03); /* Sombra muy sutil */
+    transition: transform 0.3s ease;
+    border: 1px solid #f0f0f0;
+}
+
+.benefit-card:hover {
+    transform: translateY(-5px);
+}
+
+.benefit-icon {
+    font-size: 2rem;
+    color: var(--color-acento-lavanda);
+    margin-bottom: 1.5rem;
+}
+
 /* --- Ajustes de Navegación --- */
 .main-nav {
     /* Ya lo tienes, pero asegúrate de que el nosotros esté en el nav si quieres */
