@@ -1,50 +1,56 @@
-// La función initMap es llamada automáticamente por el script de Google Maps API
-function initMap() {
-    // Coordenadas para la ubicación de ejemplo en San Juan (Rawson)
-    const sanJuanCoords = { lat: -31.5858212, lng: -68.5372213 };
-    
-    const map = new google.maps.Map(document.getElementById('google-map-container'), {
-        zoom: 14,
-        center: sanJuanCoords,
-        // Puedes agregar opciones de estilo para que el mapa sea más "aesthetic"
-        styles: [
-            // Estilos de mapa minimalistas
-        ]
-    });
+/**
+ * Aura Pilates - Lógica de Interactividad
+ */
 
-    // Marcador para la ubicación
-    new google.maps.Marker({
-        position: sanJuanCoords,
-        map: map,
-        title: 'Aura Pilates'
-    });
-}
+// 1. Desplazamiento suave (Smooth Scroll) para los enlaces de navegación
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
 
-// Lógica de Transición (Ejemplo: Parallax Simple en el encabezado)
-document.addEventListener('scroll', function() {
-    const header = document.querySelector('.hero-section');
-    const scrollPosition = window.pageYOffset;
-    // Mueve la imagen de fondo lentamente para crear el efecto Parallax
-    header.style.backgroundPositionY = -scrollPosition * 0.5 + 'px';
+        if (targetElement) {
+            targetElement.scrollIntoView({
+                behavior: 'smooth'
+            });
+        }
+    });
 });
 
-// Lógica para aplicar un "fade-in" sutil a las secciones al hacer scroll (aesthetic)
-const sections = document.querySelectorAll('section');
+// 2. Lógica de Transición (Parallax sutil en el Hero)
+document.addEventListener('scroll', function() {
+    const header = document.querySelector('.hero-section');
+    if (header) {
+        const scrollPosition = window.pageYOffset;
+        // Mueve el fondo un poco más lento que el scroll para el efecto parallax
+        header.style.backgroundPositionY = (scrollPosition * 0.5) + 'px';
+    }
+});
+
+// 3. Efecto de aparición (Fade-in) al hacer scroll
+// Declaramos las constantes una sola vez para evitar errores de VS Code
 const observerOptions = {
     root: null,
     rootMargin: '0px',
     threshold: 0.1 
 };
 
-const observer = new IntersectionObserver((entries, observer) => {
+const sectionObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
             entry.target.classList.add('visible');
-            observer.unobserve(entry.target);
+            // Una vez que es visible, dejamos de observarla para mejorar el rendimiento
+            sectionObserver.unobserve(entry.target);
         }
     });
 }, observerOptions);
 
-sections.forEach(section => {
-    observer.observe(section);
+// Aplicar el observador a todas las secciones
+document.querySelectorAll('section').forEach(section => {
+    sectionObserver.observe(section);
 });
+
+/**
+ * Nota: La función initMap se ha eliminado ya que el mapa 
+ * ahora se carga vía iframe directamente en el HTML.
+ */

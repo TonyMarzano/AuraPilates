@@ -222,3 +222,25 @@ footer {
 .nav-btn:hover {
     background-color: var(--color-acento-lavanda);
 }
+
+/* --- Sección Nosotros --- */
+.about-section {
+    text-align: center;
+    background-color: var(--color-base-blanco);
+}
+
+.about-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.about-content p {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    color: var(--color-texto-oscuro);
+}
+
+/* --- Ajustes de Navegación --- */
+.main-nav {
+    /* Ya lo tienes, pero asegúrate de que el nosotros esté en el nav si quieres */
+}
