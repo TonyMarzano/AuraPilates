@@ -418,62 +418,82 @@ details[open] summary::after {
     background: var(--color-acento-lavanda);
 }
 
+/* --- Footer con Paleta Aura Pilates --- */
 .main-footer {
-    background-color: #4a76a8; /* Azul similar al de tu referencia */
-    color: #ffffff;
-    padding: 60px 20px;
-    text-align: left; /* Alineado a la izquierda como en la foto */
+    background-color: #e8f5f1; /* El verde menta pastel de tu paleta */
+    color: #4a4a4a;           /* Texto gris oscuro para buen contraste */
+    padding: 80px 20px;
+    border-top: 1px solid rgba(0,0,0,0.03); /* Separación muy sutil */
 }
 
 .footer-container {
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
 }
 
 .main-footer h3 {
-    font-size: 1.5rem;
-    margin-bottom: 2rem;
-    font-weight: 400;
+    font-family: 'Playfair Display', serif; /* Manteniendo la elegancia */
+    color: #5d5d5d;
+    font-size: 1.6rem;
+    margin-bottom: 2.5rem;
 }
 
 .contact-info a {
-    display: block;
-    color: white;
+    display: flex;
+    align-items: center;
+    color: #5d5d5d;
     text-decoration: none;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.2rem;
     font-size: 1.1rem;
-    transition: opacity 0.3s;
+    transition: color 0.3s ease;
+}
+
+.contact-info a:hover {
+    color: #bcaaa4; /* Un toque de color tierra/lavanda al pasar el mouse */
 }
 
 .contact-info i {
     margin-right: 15px;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
+    color: #bcaaa4; /* Los iconos en un tono complementario */
 }
 
 .social-links {
-    margin: 2rem 0;
+    margin: 2.5rem 0;
     display: flex;
-    gap: 25px;
+    gap: 20px;
 }
 
 .social-links a {
-    color: white;
-    font-size: 1.8rem;
-    transition: transform 0.3s;
+    color: #5d5d5d;
+    font-size: 1.5rem;
+    background: white; /* Círculos blancos para los iconos */
+    width: 45px;
+    height: 45px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
 }
 
 .social-links a:hover {
-    transform: scale(1.2);
+    transform: translateY(-3px);
+    background-color: #bcaaa4;
+    color: white;
 }
 
 .working-hours h4 {
-    font-size: 1.2rem;
-    margin-bottom: 10px;
-    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    color: #5d5d5d;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .working-hours p {
     margin: 5px 0;
-    font-size: 1.1rem;
-    opacity: 0.9;
+    font-size: 1rem;
+    color: #777;
 }
