@@ -28,8 +28,8 @@ body {
     font-family: 'Poppins', sans-serif;
     line-height: 1.6;
     color: var(--color-texto-oscuro);
-    background-color: var(--color-bg-crema); /* Fondo Crema Suave */
-    padding-top: 5rem; /* AJUSTE PARA EL NAV FIJO */
+    background-color: var(--color-bg-crema);
+    padding-top: 0; /* Cambia 5rem por 0 */
 }
 
 h1, h2, h3 {
@@ -72,18 +72,30 @@ section.visible {
     transform: translateY(0);
 }
 
+#inicio.hero-section {
+    max-width: 100% !important;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    box-shadow: none; /* Opcional: quita la sombra solo en el hero para que pegue con la navbar */
+}
+
 /* 3. Header y Hero Section */
 .hero-section {
-    min-height: 80vh;
+    min-height: 90vh; /* Un poco más alto para impacto visual */
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
     position: relative;
-    padding: 8rem 10%;
+    padding: 120px 10% 80px 10%; /* El padding superior (120px) compensa la Navbar fija */
+    margin-top: 0; /* Aseguramos que no haya margen superior */
+    margin-bottom: 0; /* Eliminamos el margen inferior de 2rem que tienen todas tus secciones */
     overflow: hidden; 
     background-color: var(--color-acento-lavanda); 
+    width: 100%;
+    max-width: none; /* El Hero debe ocupar todo el ancho */
 }
 
 .slogan {
@@ -318,11 +330,6 @@ footer {
     margin-bottom: 1.5rem;
 }
 
-/* --- Ajustes de Navegación --- */
-.main-nav {
-    /* Ya lo tienes, pero asegúrate de que el nosotros esté en el nav si quieres */
-}
-
 /* --- FAQ Section --- */
 .faq-container {
     max-width: 800px;
@@ -419,9 +426,7 @@ details[open] summary::after {
 }
 
 .main-footer {
-    /* Usamos la misma variable que el botón del navbar */
-    background-color: var(--color-acento-menta); 
-    background-color: rgba(232, 245, 241, 0.95);
+    background-color: var(--color-acento-menta); /* Deja solo este */
     color: #444;
     padding: 60px 20px 30px 20px;
     text-align: center;
