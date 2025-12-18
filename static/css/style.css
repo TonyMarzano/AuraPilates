@@ -63,8 +63,8 @@ section {
     
     /* Estilos para el efecto de fade-in (ver main.js) */
     opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+    transform: translateY(20px);
+    transition: opacity 1s ease-out, transform 1s ease-out;
 }
 
 section.visible {
@@ -426,7 +426,8 @@ details[open] summary::after {
 }
 
 .main-footer {
-    background-color: var(--color-acento-menta); /* Deja solo este */
+    /* Usamos la misma variable que el botón del navbar */
+    background-color: var(--color-acento-menta); 
     color: #444;
     padding: 60px 20px 30px 20px;
     text-align: center;
