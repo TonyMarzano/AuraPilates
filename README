@@ -1,14 +1,70 @@
- Estructura del Proyecto Base (Python/Flask)
-El proyecto se estructurará de manera minimalista para facilitar el despliegue en tu AWS EC2.
-1. Estructura de Archivos
+# 🌿 Aura Pilates - Sitio Web Oficial
+
+Sitio web minimalista y "aesthetic" diseñado para un estudio de Pilates. Enfocado en la tranquilidad, el bienestar y la facilidad de reserva para los usuarios.
+
+## 🎨 Identidad Visual
+* **Paleta de Colores:** Tonos pastel (Crema `#F7F5EF`, Lavanda `#EEDDED`, Menta `#DDEEDD`).
+* **Tipografía:** *Playfair Display* para elegancia en títulos y *Poppins* para legibilidad en textos.
+* **Estilo:** Glassmorphism (efectos de vidrio esmerilado) y animaciones suaves de entrada.
+
+## 📂 Estructura del Proyecto Actualizada
+```text
 aura_pilates/
-├── app.py              # Aplicación Flask
+├── app.py              # Servidor Flask (Backend)
 ├── static/
 │   ├── css/
-│   │   └── style.css   # Estilos CSS (con tu paleta pastel y fuentes)
-│   ├── img/
-│   │   └── hero_image.jpg # Placeholder para la imagen principal
+│   │   └── style.css   # Estilos (Responsive, Animaciones, Glassmorphism)
+│   ├── img/            # Recursos visuales y Favicon
+    |     └── hero_image.jpg # Placeholder para la imagen
+    |     └── estudio1.webp # Imagen del carrucel de fotos
+    |     └── estudio2.webp # Imagen del carrucel de fotos
+    |     └── estudio2.webp # Imagen del carrucel de fotos
 │   └── js/
-│       └── main.js     # Script para transiciones (Parallax/Fade-in) y mapa
-└── templates/
-    └── index.html      # Plantilla principal (HTML)
+│       └── main.js     # Lógica: Menú hamburguesa, Scroll Reveal y Parallax
+├── templates/
+│   └── index.html      # Estructura principal (HTML5)
+└── README.md           # Documentación del proyecto
+
+
+🛠 Configuración Técnica y Despliegue
+1. Entorno del Servidor (AWS EC2)
+La aplicación corre sobre una instancia Ubuntu 22.04 LTS en AWS.
+Servidor Web: Nginx (actúa como Proxy Inverso).
+Servidor de Aplicaciones: Gunicorn (WSGI).
+Gestor de Procesos: Systemd.
+Lenguaje: Python 3.10+.
+
+
+2. Paquetes y Dependencias
+Comandos ejecutados para preparar el servidor:
+
+sudo apt update
+sudo apt install python3-pip python3-venv nginx git -y
+
+Dentro del entorno virtual (venv), instalamos:
+Flask: Framework web.
+gunicorn: Para manejar múltiples solicitudes en producción.
+
+3. Workflow de Actualización (Git)
+Pasos para subir cambios desde el entorno local al servidor:
+
+En PC Local:
+git add .
+git commit -m "Descripción clara del cambio"
+git push origin main
+
+
+En Servidor EC2:
+cd /ruta/de/tu/proyecto
+git pull origin main
+sudo systemctl restart aura_pilates  # Reiniciar para aplicar cambios
+sudo systemctl restart nginx
+
+4. Gestión del Servicio (Systemd)
+Comandos útiles para controlar el estado de la web en el servidor:
+Reiniciar: sudo systemctl restart aura_pilates
+Ver estado: sudo systemctl status aura_pilates
+Ver logs de error: sudo journalctl -u aura_pilates -f (útil si la web no carga).
+
+5. Configuración de Nginx
+El archivo de configuración se encuentra en /etc/nginx/sites-available/aura_pilates. Para verificar que la sintaxis de Nginx sea correcta tras un cambio: sudo nginx -t sudo systemctl restart nginx
