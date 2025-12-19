@@ -71,3 +71,12 @@ document.querySelectorAll('.nav-links a').forEach(link => {
         icon.classList.remove('fa-times');
     });
 });
+
+// Asegurar que el clic en el logo haga scroll suave al inicio
+document.querySelector('.logo-link').addEventListener('click', function(e) {
+    e.preventDefault();
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+});

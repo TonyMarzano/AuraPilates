@@ -292,6 +292,20 @@ footer {
     font-weight: 700;
 }
 
+/* Estilo para el logo que vuelve al inicio */
+.logo-link {
+    font-family: 'Playfair Display', serif;
+    color: var(--color-texto-oscuro) !important;
+    text-decoration: none;
+    transition: all 0.4s ease;
+    display: inline-block;
+}
+
+.logo-link:hover {
+    opacity: 0.7;
+    transform: scale(1.02); /* Pequeño pulso al tocarlo */
+}
+
 .nav-links a {
     margin-left: 1.5rem;
     font-weight: 500;
