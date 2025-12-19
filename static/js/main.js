@@ -55,7 +55,8 @@ const navLinks = document.querySelector('.nav-links');
 
 menuBtn.addEventListener('click', () => {
     navLinks.classList.toggle('active');
-    // Cambiar el icono de hamburguesa por una X al abrir
+    
+    // Opcional: Cambia el icono de hamburguesa por una X
     const icon = menuBtn.querySelector('i');
     icon.classList.toggle('fa-bars');
     icon.classList.toggle('fa-times');
