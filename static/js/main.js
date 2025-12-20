@@ -63,14 +63,26 @@ menuBtn.addEventListener('click', () => {
 });
 
 // Cerrar el menú automáticamente al hacer clic en un enlace
-document.querySelectorAll('.nav-links a').forEach(link => {
-    link.addEventListener('click', () => {
-        navLinks.classList.remove('active');
-        const icon = menuBtn.querySelector('i');
-        icon.classList.add('fa-bars');
-        icon.classList.remove('fa-times');
-    });
+// Opción A: Desaparecer cuando el DOM esté listo y el Hero haya cargado
+document.addEventListener('DOMContentLoaded', () => {
+    const preloader = document.getElementById('preloader');
+    const heroImg = new Image();
+    heroImg.src = "static/img/hero_image.webp"; // Cambia a .webp si lo conviertes
+
+    heroImg.onload = () => {
+        setTimeout(() => {
+            preloader.classList.add('hidden');
+        }, 500); // 500ms de gracia para la animación
+    };
 });
+
+// Opción B (Respaldo): Si tarda más de 4 segundos por mala conexión, quitarlo igual
+setTimeout(() => {
+    const preloader = document.getElementById('preloader');
+    if (!preloader.classList.contains('hidden')) {
+        preloader.classList.add('hidden');
+    }
+}, 4000);
 
 // Asegurar que el clic en el logo haga scroll suave al inicio
 document.querySelector('.logo-link').addEventListener('click', function(e) {
