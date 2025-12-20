@@ -7,6 +7,14 @@ Sitio web minimalista y "aesthetic" diseñado para un estudio de Pilates. Enfoca
 * **Tipografía:** *Playfair Display* para elegancia en títulos y *Poppins* para legibilidad en textos.
 * **Estilo:** Glassmorphism (efectos de vidrio esmerilado) y animaciones suaves de entrada.
 
+## 🔗 Enlace del Proyecto
+**URL:** [https://aurapilates.duckdns.org](https://aurapilates.duckdns.org)
+
+## 🛠 Notas de Servidor (Amazon Linux)
+- **Configuración Nginx:** `/etc/nginx/conf.d/aura_pilates.conf`
+- **Certificado SSL:** Gestionado por Certbot (Let's Encrypt).
+- **Comando de renovación:** `sudo certbot renew`
+
 ## 📂 Estructura del Proyecto Actualizada
 ```text
 aura_pilates/
