@@ -20,3 +20,9 @@ def index():
 if __name__ == '__main__':
     # Nota: En producción (EC2), usarías Gunicorn, no el servidor de desarrollo de Flask
     app.run(debug=True)
+
+app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+)
