@@ -635,3 +635,56 @@ details[open] summary::after {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* --- Preloader Styles --- */
+#preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-bg-crema);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* Por encima de todo */
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+}
+
+.loader-content {
+    text-align: center;
+}
+
+.loader-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    color: var(--color-texto-oscuro);
+    margin-bottom: 20px;
+    letter-spacing: 3px;
+    animation: fadeInOut 2s infinite ease-in-out;
+}
+
+.loader-line {
+    width: 0;
+    height: 2px;
+    background-color: var(--color-acento-menta);
+    margin: 0 auto;
+    animation: loadingBar 2s forwards ease-in-out;
+}
+
+/* Animaciones */
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0.5; transform: scale(0.98); }
+    50% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes loadingBar {
+    0% { width: 0; }
+    100% { width: 150px; }
+}
+
+/* Clase para ocultarlo */
+#preloader.hidden {
+    opacity: 0;
+    visibility: hidden;
+}

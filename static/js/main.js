@@ -80,3 +80,12 @@ document.querySelector('.logo-link').addEventListener('click', function(e) {
         behavior: 'smooth'
     });
 });
+
+window.addEventListener('load', () => {
+    const preloader = document.getElementById('preloader');
+    
+    // Agregamos un pequeño delay de 500ms para que la animación se aprecie
+    setTimeout(() => {
+        preloader.classList.add('hidden');
+    }, 1000);
+});
