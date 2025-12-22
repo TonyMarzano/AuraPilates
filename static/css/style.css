@@ -33,7 +33,7 @@ body {
 }
 
 h1, h2, h3 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Poppins', sans-serif;
     color: var(--color-texto-oscuro);
     margin-bottom: 0.5em;
 }
