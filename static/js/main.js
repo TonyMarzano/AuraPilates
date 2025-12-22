@@ -105,12 +105,13 @@ window.addEventListener('load', () => {
 window.addEventListener('scroll', function() {
     const parallax = document.querySelector('.parallax-servicios');
     if (parallax) {
-        let offset = window.pageYOffset;
+        // Obtenemos la posición de la sección respecto a la ventana
+        const distance = window.pageYOffset - parallax.offsetTop;
         
-        /* Calculamos el movimiento. 
-           El valor 0.7 hace que el fondo se mueva al 70% de la velocidad del scroll.
-           Ajusta el número para más o menos velocidad.
+        /* Multiplicamos por un factor pequeño (0.2 o 0.3). 
+           Si el número es positivo, la imagen baja; si es negativo, sube.
         */
-        parallax.style.backgroundPositionY = (offset * 0.7) + 'px';
+        const speed = 0.3;
+        parallax.style.backgroundPositionY = (distance * speed) + 'px';
     }
 });
