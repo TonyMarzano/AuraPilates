@@ -692,7 +692,7 @@ details[open] summary::after {
 .parallax-servicios {
     position: relative;
     /* Usa la imagen que prefieras de tu carpeta static */
-    background-image: url('../img/estudio1.webp'); 
+    background-image: url('../img/clases&servicio.webp'); 
     background-attachment: fixed; /* Este es el truco del parallax */
     background-position: center;
     background-repeat: no-repeat;
