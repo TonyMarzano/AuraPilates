@@ -76,3 +76,8 @@ Ver logs de error: sudo journalctl -u aura_pilates -f (útil si la web no carga)
 
 5. Configuración de Nginx
 El archivo de configuración se encuentra en /etc/nginx/sites-available/aura_pilates. Para verificar que la sintaxis de Nginx sea correcta tras un cambio: sudo nginx -t sudo systemctl restart nginx
+
+#### 🚨 Procedimiento de Rollback
+1. Local: `git reset --hard HEAD~1`
+2. GitHub: `git push origin main --force`
+3. EC2: `git fetch && git reset --hard origin/main`
