@@ -1,4 +1,4 @@
-/* Paleta de Colores:
+/* Paleta de Colores:'Poppins', sans-serif;
     --color-bg-crema: #F7F5EF;
     --color-base-blanco: #FFFFFF;
     --color-acento-lavanda: #EEDDED;
@@ -295,7 +295,7 @@ footer {
 
 /* Estilo para el logo que vuelve al inicio */
 .logo-link {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Poppins', sans-serif;
     color: var(--color-texto-oscuro) !important;
     text-decoration: none;
     transition: all 0.4s ease;
