@@ -101,3 +101,16 @@ window.addEventListener('load', () => {
         preloader.classList.add('hidden');
     }, 1000);
 });
+
+window.addEventListener('scroll', function() {
+    const parallax = document.querySelector('.parallax-servicios');
+    if (parallax) {
+        let offset = window.pageYOffset;
+        
+        /* Calculamos el movimiento. 
+           El valor 0.7 hace que el fondo se mueva al 70% de la velocidad del scroll.
+           Ajusta el número para más o menos velocidad.
+        */
+        parallax.style.backgroundPositionY = (offset * 0.7) + 'px';
+    }
+});
