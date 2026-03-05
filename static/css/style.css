@@ -742,64 +742,78 @@ details[open] summary::after {
    LOGO NAVBAR — Versión Horizontal
 ───────────────────────────────────────── */
 .logo-nav {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Cormorant Garamond', serif !important;
+    font-size: unset !important;
+    font-weight: unset !important;
 }
 
 .logo-link {
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    white-space: nowrap;
 }
 
 .cp-logo-horizontal {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px;
+    white-space: nowrap;
+    flex-wrap: nowrap;
 }
 
 .cp-initials {
-    font-family: 'Cormorant Garamond', serif;
-    font-weight: 300;
-    font-size: 2rem;
-    color: var(--cp-sage-deep);
+    font-family: 'Cormorant Garamond', serif !important;
+    font-weight: 300 !important;
+    font-size: 1.9rem !important;
+    color: var(--cp-sage-deep) !important;
     letter-spacing: -0.03em;
     line-height: 1;
+    flex-shrink: 0;
 }
 
 .cp-logo-vdivider {
-    display: inline-block;
-    width: 1px;
-    height: 32px;
+    display: block !important;
+    width: 1px !important;
+    height: 30px !important;
+    min-height: 30px;
+    flex-shrink: 0;
     background: linear-gradient(to bottom, transparent, var(--cp-sage), transparent);
 }
 
 .cp-logo-text {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px;
+    flex-shrink: 0;
 }
 
 .cp-logo-name {
-    font-family: 'Cormorant Garamond', serif;
-    font-weight: 300;
-    font-size: 1.1rem;
-    letter-spacing: 0.22em;
-    color: var(--cp-text);
+    font-family: 'Cormorant Garamond', serif !important;
+    font-weight: 300 !important;
+    font-size: 1rem !important;
+    letter-spacing: 0.18em;
+    color: var(--cp-text) !important;
     text-transform: uppercase;
     line-height: 1.1;
+    white-space: nowrap;
+    display: block !important;
 }
 
 .cp-logo-tagline {
-    font-family: 'Jost', sans-serif;
-    font-weight: 200;
-    font-size: 0.52rem;
-    letter-spacing: 0.45em;
-    color: var(--cp-sage-deep);
+    font-family: 'Jost', sans-serif !important;
+    font-weight: 200 !important;
+    font-size: 0.5rem !important;
+    letter-spacing: 0.4em;
+    color: var(--cp-sage-deep) !important;
     text-transform: uppercase;
+    white-space: nowrap;
+    display: block !important;
 }
 
 .logo-link:hover .cp-initials {
-    color: var(--cp-stone);
+    color: var(--cp-stone) !important;
 }
 
 .logo-link:hover .cp-logo-name {
@@ -815,17 +829,19 @@ details[open] summary::after {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 16px;
     margin-bottom: 1.5rem;
 }
 
 .hero-badge {
     position: relative;
-    width: 170px;
-    height: 170px;
+    width: 180px;
+    height: 180px;
     display: flex;
     align-items: center;
     justify-content: center;
+    /* Sombra difusa para que se vea sobre cualquier fondo */
+    filter: drop-shadow(0 4px 24px rgba(0,0,0,0.18));
 }
 
 /* Anillo exterior — gira suavemente */
@@ -833,16 +849,16 @@ details[open] summary::after {
     position: absolute;
     inset: 0;
     border-radius: 50%;
-    border: 1.5px solid rgba(181, 201, 177, 0.85);
+    border: 2px solid rgba(138, 171, 133, 0.95);
     animation: cpSpinRing 22s linear infinite;
 }
 
 /* Anillo interior punteado */
 .hero-badge-ring-dashed {
     position: absolute;
-    inset: 11px;
+    inset: 12px;
     border-radius: 50%;
-    border: 1px dashed rgba(212, 229, 208, 0.75);
+    border: 1.5px dashed rgba(138, 171, 133, 0.6);
 }
 
 @keyframes cpSpinRing {
@@ -853,56 +869,60 @@ details[open] summary::after {
 /* Puntos cardinales */
 .hero-dot {
     position: absolute;
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    background: rgba(181, 201, 177, 0.9);
+    background: #8aab85;
+    z-index: 3;
 }
-.hero-dot-top    { top: 1px;  left: 50%; transform: translateX(-50%); }
-.hero-dot-bottom { bottom: 1px; left: 50%; transform: translateX(-50%); }
-.hero-dot-left   { left: 1px; top: 50%;  transform: translateY(-50%); }
-.hero-dot-right  { right: 1px; top: 50%; transform: translateY(-50%); }
+.hero-dot-top    { top: -3px;  left: 50%; transform: translateX(-50%); }
+.hero-dot-bottom { bottom: -3px; left: 50%; transform: translateX(-50%); }
+.hero-dot-left   { left: -3px; top: 50%;  transform: translateY(-50%); }
+.hero-dot-right  { right: -3px; top: 50%; transform: translateY(-50%); }
 
 /* Ticks decorativos */
 .hero-tick {
     position: absolute;
-    background: rgba(212, 229, 208, 0.75);
+    background: rgba(138, 171, 133, 0.7);
+    z-index: 2;
 }
-.hero-tick-top    { width: 1px; height: 14px; top: 13px;  left: 50%; transform: translateX(-50%); }
-.hero-tick-bottom { width: 1px; height: 14px; bottom: 13px; left: 50%; transform: translateX(-50%); }
-.hero-tick-left   { height: 1px; width: 14px; left: 13px;  top: 50%;  transform: translateY(-50%); }
-.hero-tick-right  { height: 1px; width: 14px; right: 13px; top: 50%;  transform: translateY(-50%); }
+.hero-tick-top    { width: 1.5px; height: 16px; top: 14px;   left: 50%; transform: translateX(-50%); }
+.hero-tick-bottom { width: 1.5px; height: 16px; bottom: 14px; left: 50%; transform: translateX(-50%); }
+.hero-tick-left   { height: 1.5px; width: 16px; left: 14px;  top: 50%;  transform: translateY(-50%); }
+.hero-tick-right  { height: 1.5px; width: 16px; right: 14px; top: 50%;  transform: translateY(-50%); }
 
-/* Círculo interior */
+/* Círculo interior — blanco sólido para contrastar con la imagen */
 .hero-badge-inner {
-    width: 118px;
-    height: 118px;
-    background: rgba(234, 243, 232, 0.82);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    width: 124px;
+    height: 124px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    z-index: 2;
     box-shadow:
-        0 0 0 1px rgba(212, 229, 208, 0.6),
-        inset 0 2px 10px rgba(138, 171, 133, 0.15),
-        0 8px 32px rgba(0, 0, 0, 0.08);
+        0 0 0 1.5px rgba(138, 171, 133, 0.5),
+        inset 0 2px 12px rgba(138, 171, 133, 0.12),
+        0 8px 32px rgba(0, 0, 0, 0.12);
 }
 
 /* Monograma CP */
 .hero-monogram {
     font-family: 'Cormorant Garamond', serif;
     font-weight: 300;
-    font-size: 58px;
-    color: var(--cp-text);
+    font-size: 62px;
+    color: #3d4f3c;
     letter-spacing: -0.02em;
     line-height: 1;
     user-select: none;
 }
 
 .hero-monogram span {
-    color: var(--cp-sage-deep);
+    color: #8aab85;
 }
 
 /* Wordmark debajo del badge */
@@ -916,27 +936,27 @@ details[open] summary::after {
 .hero-brand-name {
     font-family: 'Cormorant Garamond', serif;
     font-weight: 300;
-    font-size: 1.6rem;
+    font-size: 1.5rem;
     letter-spacing: 0.3em;
-    color: var(--cp-text);
+    color: #ffffff;
     text-transform: uppercase;
-    text-shadow: 0 2px 8px rgba(255,255,255,0.6);
+    text-shadow: 0 1px 12px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .hero-divider-line {
     width: 70px;
     height: 1px;
-    background: linear-gradient(to right, transparent, var(--cp-sage), transparent);
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.8), transparent);
 }
 
 .hero-brand-sub {
     font-family: 'Jost', sans-serif;
     font-weight: 200;
-    font-size: 0.62rem;
+    font-size: 0.6rem;
     letter-spacing: 0.5em;
-    color: var(--cp-sage-deep);
+    color: rgba(255,255,255,0.9);
     text-transform: uppercase;
-    text-shadow: 0 1px 4px rgba(255,255,255,0.5);
+    text-shadow: 0 1px 8px rgba(0,0,0,0.3);
 }
 
 /* ─────────────────────────────────────────
