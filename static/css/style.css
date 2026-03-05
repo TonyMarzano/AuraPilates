@@ -994,12 +994,19 @@ details[open] summary::after {
         0 8px 32px rgba(0, 0, 0, 0.12);
 }
 
-/* SVG logo inside the badge */
-.hero-cp-svg {
-    width: 78px;
-    height: auto;
-    display: block;
-    margin-top: 4px;
+/* Monograma CP */
+.hero-monogram {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: 62px;
+    color: #3d4f3c;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    user-select: none;
+}
+
+.hero-monogram span {
+    color: #8aab85;
 }
 
 /* Wordmark debajo del badge */
