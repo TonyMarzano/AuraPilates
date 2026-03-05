@@ -3,27 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aura Pilates | San Juan, Argentina</title>
+    <title>Club Pilates | San Juan, Argentina</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
     <link rel="preload" as="image" href="static/img/hero_image.webp">
 </head>
 <body>
 
+    <!-- PRELOADER -->
     <div id="preloader">
         <div class="loader-content">
-            <h1 class="loader-logo">Aura Pilates</h1>
+            <div class="loader-cp-badge">
+                <div class="loader-ring"></div>
+                <div class="loader-inner">
+                    <span class="loader-cp"><span>C</span>P</span>
+                </div>
+            </div>
             <div class="loader-line"></div>
         </div>
     </div>
 
+    <!-- NAVBAR -->
     <nav class="main-nav">
         <div class="logo-nav">
-            <a href="#inicio" class="logo-link">Aura Pilates</a>
+            <a href="#inicio" class="logo-link">
+                <!-- Logo Versión Horizontal -->
+                <div class="cp-logo-horizontal">
+                    <span class="cp-initials">CP</span>
+                    <span class="cp-logo-vdivider"></span>
+                    <div class="cp-logo-text">
+                        <span class="cp-logo-name">Club Pilates</span>
+                        <span class="cp-logo-tagline">Studio &amp; Wellness</span>
+                    </div>
+                </div>
+            </a>
         </div>
         
         <button class="mobile-menu-btn">
@@ -40,24 +57,54 @@
         </div>
     </nav>
 
+    <!-- HERO -->
     <header class="hero-section section" id="inicio">
-        <h1>Aura Pilates</h1>
+
+        <!-- Logo Versión Principal (circular) centrado en el hero -->
+        <div class="hero-badge-wrapper">
+            <div class="hero-badge">
+                <div class="hero-badge-ring-outer"></div>
+                <div class="hero-badge-ring-dashed"></div>
+                <!-- Dots -->
+                <div class="hero-dot hero-dot-top"></div>
+                <div class="hero-dot hero-dot-bottom"></div>
+                <div class="hero-dot hero-dot-left"></div>
+                <div class="hero-dot hero-dot-right"></div>
+                <!-- Ticks -->
+                <div class="hero-tick hero-tick-top"></div>
+                <div class="hero-tick hero-tick-bottom"></div>
+                <div class="hero-tick hero-tick-left"></div>
+                <div class="hero-tick hero-tick-right"></div>
+                <div class="hero-badge-inner">
+                    <div class="hero-monogram"><span>C</span>P</div>
+                </div>
+            </div>
+            <div class="hero-wordmark">
+                <span class="hero-brand-name">Club Pilates</span>
+                <div class="hero-divider-line"></div>
+                <span class="hero-brand-sub">Studio &amp; Wellness</span>
+            </div>
+        </div>
+
         <p class="slogan">{{ data.slogan }}</p>
+
         <div class="hero-image-container">
             <img src="{{ url_for('static', filename='img/hero_image.webp') }}" alt="Estudio de Pilates Minimalista" loading="lazy">
         </div>
     </header>
 
+    <!-- NOSOTROS -->
     <section class="about-section section" id="nosotros">
         <div class="about-content">
             <h2>Nuestra Filosofía</h2>
-            <p>En <strong>Aura Pilates</strong>, creemos en el movimiento como una forma de cuidado personal. Nuestro espacio en San Juan está diseñado para ofrecerte una experiencia de bienestar integral, donde la precisión del método se encuentra con un ambiente de calma y equilibrio.</p>
+            <p>En <strong>Club Pilates</strong>, creemos en el movimiento como una forma de cuidado personal. Nuestro espacio en San Juan está diseñado para ofrecerte una experiencia de bienestar integral, donde la precisión del método se encuentra con un ambiente de calma y equilibrio.</p>
             <p>Ya sea que busques mejorar tu rendimiento deportivo o encontrar un momento de conexión consciente, estamos aquí para acompañar tu proceso.</p>
         </div>
     </section>
 
+    <!-- MÉTODO -->
     <section class="benefits-section section" id="metodo">
-        <h2>El Método Aura</h2>
+        <h2>Nuestro Método</h2>
         <div class="benefits-grid">
             <div class="benefit-card">
                 <div class="benefit-icon"><i class="fas fa-leaf"></i></div>
@@ -77,39 +124,37 @@
         </div>
     </section>
 
+    <!-- SERVICIOS -->
     <section class="services-section section parallax-servicios" id="servicios">
         <div class="parallax-content">
             <h2>Clases y Servicios</h2>
             <div class="services-grid">
-                
                 <div class="service-card">
                     <span style="text-transform: uppercase; font-size: 0.7rem; letter-spacing: 2px; color: #bcaaa4;">Equilibrio</span>
-                    <h3>Aura Classic Reformer</h3>
+                    <h3>Club Classic Reformer</h3>
                     <p>La base del método, para fundir forma y fluidez. Ideal para construir una base sólida de fuerza central.</p>
                 </div>
-
                 <div class="service-card">
                     <span style="text-transform: uppercase; font-size: 0.7rem; letter-spacing: 2px; color: #bcaaa4;">Rendimiento</span>
-                    <h3>Aura Sport Performance</h3>
+                    <h3>Club Sport Performance</h3>
                     <p>Sesiones dinámicas enfocadas en atletas y mejora del rendimiento deportivo. Uso de Wunda Chair y Cadillac.</p>
                 </div>
-
                 <div class="service-card">
                     <span style="text-transform: uppercase; font-size: 0.7rem; letter-spacing: 2px; color: #bcaaa4;">Cuidado</span>
-                    <h3>Pilates & Bienestar</h3>
+                    <h3>Pilates &amp; Bienestar</h3>
                     <p>Clases enfocadas en el alivio de dolor y objetivos terapéuticos. Máxima atención personalizada.</p>
                 </div>
-                
             </div>
         </div>
     </section>
 
+    <!-- GALERÍA -->
     <section class="gallery-section section" id="galeria">
         <h2>Nuestro Espacio</h2>
         <div class="swiper-container mySwiper">
             <div class="swiper-wrapper">
                 <div class="swiper-slide">
-                    <img src="{{ url_for('static', filename='img/estudio1.webp') }}" alt="Estudio Aura" loading="lazy">
+                    <img src="{{ url_for('static', filename='img/estudio1.webp') }}" alt="Estudio Club Pilates" loading="lazy">
                 </div>
                 <div class="swiper-slide">
                     <img src="{{ url_for('static', filename='img/estudio2.webp') }}" alt="Reformer" loading="lazy">
@@ -124,6 +169,7 @@
         </div>
     </section>
 	
+    <!-- CONTACTO -->
     <section id="contacto" class="contact-map-section section">
         <h2>Encuéntranos</h2>
         <div id="google-map-container">
@@ -137,7 +183,6 @@
                 referrerpolicy="no-referrer-when-downgrade">
             </iframe>
         </div>
-
         <div class="contact-links" style="text-align: center; margin-top: 2rem;">
             <p>Dirección: <strong>San Roque Sur 1044, Rawson, San Juan</strong></p>
             <a href="{{ data.whatsapp_link }}" target="_blank" class="whatsapp-btn">
@@ -147,6 +192,7 @@
         </div>
     </section>
 
+    <!-- FAQ -->
     <section class="faq-section section" id="preguntas">
         <h2>Preguntas Frecuentes</h2>
         <div class="faq-container">
@@ -156,14 +202,12 @@
                     <p>No es necesario. Nuestras clases son personalizadas y se adaptan a tu nivel actual, guiándote paso a paso en el uso de los equipos.</p>
                 </div>
             </details>
-
             <details>
                 <summary>¿Qué debo llevar a mi primera clase?</summary>
                 <div class="faq-content">
                     <p>Te recomendamos traer ropa cómoda (deportiva), una botella de agua y, por higiene, el uso de medias es obligatorio.</p>
                 </div>
             </details>
-
             <details>
                 <summary>¿Cuántas veces por semana se recomienda practicar?</summary>
                 <div class="faq-content">
@@ -173,61 +217,56 @@
         </div>
     </section>
 
+    <!-- FOOTER -->
     <footer class="main-footer" id="contact">
         <div class="footer-container">
             <h3>Reservá tu turno ahora o contactanos para más información</h3>
-
             <div class="contact-info">
                 <a href="https://wa.me/5492645551234" target="_blank">
                     <i class="fab fa-whatsapp"></i> +54 9 264 555-1234
                 </a>
-                <a href="mailto:info@aurapilates.com.ar">
-                    <i class="far fa-envelope"></i> info@aurapilates.com.ar
+                <a href="mailto:info@clubpilates.com.ar">
+                    <i class="far fa-envelope"></i> info@clubpilates.com.ar
                 </a>
             </div>
-
             <div class="social-links">
                 <a href="#" target="_blank"><i class="fab fa-facebook-f"></i></a>
                 <a href="#" target="_blank"><i class="fab fa-instagram"></i></a>
             </div>
-
             <div class="working-hours">
                 <h4>Horarios y días de atención:</h4>
                 <p>Lunes a viernes de 8 a 21 hs.</p>
                 <p>Sábados de 9 a 14 hs.</p>
             </div>
-
             <div class="footer-bottom">
-                <p>© 2025 Aura Pilates. Todos los derechos reservados.</p>
+                <p>© 2025 Club Pilates. Todos los derechos reservados.</p>
             </div>
         </div>
     </footer>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    </body>
 
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script>
         var swiper = new Swiper(".mySwiper", {
-            effect: "coverflow", /* Efecto moderno 3D sutil */
+            effect: "coverflow",
             grabCursor: true,
             centeredSlides: true,
             slidesPerView: "auto",
             coverflowEffect: {
-            rotate: 0,
-            stretch: 0,
-            depth: 100,
-            modifier: 2,
-            slideShadows: true,
+                rotate: 0,
+                stretch: 0,
+                depth: 100,
+                modifier: 2,
+                slideShadows: true,
             },
             loop: true,
-            pagination: {
-            el: ".swiper-pagination",
-            },
+            pagination: { el: ".swiper-pagination" },
             navigation: {
-            nextEl: ".swiper-button-next",
-            prevEl: ".swiper-button-prev",
+                nextEl: ".swiper-button-next",
+                prevEl: ".swiper-button-prev",
             },
         });
     </script>
+</body>
 </html>
