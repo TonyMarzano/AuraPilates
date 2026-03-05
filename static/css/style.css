@@ -850,7 +850,7 @@ details[open] summary::after {
 .cp-initials {
     font-family: 'Cormorant Garamond', serif;
     font-weight: 300;
-    font-size: 1.9rem;
+    font-size: 2.6rem;
     color: var(--cp-sage-deep);
     letter-spacing: -0.03em;
     line-height: 1;
@@ -860,8 +860,8 @@ details[open] summary::after {
 .cp-logo-vdivider {
     display: block;
     width: 1px;
-    height: 30px;
-    min-height: 30px;
+    height: 40px;
+    min-height: 40px;
     flex-shrink: 0;
     background: linear-gradient(to bottom, transparent, var(--cp-sage), transparent);
 }
@@ -869,14 +869,14 @@ details[open] summary::after {
 .cp-logo-text {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 3px;
     flex-shrink: 0;
 }
 
 .cp-logo-name {
     font-family: 'Cormorant Garamond', serif;
     font-weight: 300;
-    font-size: 1rem;
+    font-size: 1.25rem;
     letter-spacing: 0.18em;
     color: var(--cp-text);
     text-transform: uppercase;
@@ -888,7 +888,7 @@ details[open] summary::after {
 .cp-logo-tagline {
     font-family: 'Jost', sans-serif;
     font-weight: 200;
-    font-size: 0.5rem;
+    font-size: 0.62rem;
     letter-spacing: 0.4em;
     color: var(--cp-sage-deep);
     text-transform: uppercase;
