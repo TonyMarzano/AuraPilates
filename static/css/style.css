@@ -277,13 +277,12 @@ footer {
     top: 0; left: 0; width: 100%;
     display: flex; justify-content: space-between; align-items: center;
     padding: 1rem 10%;
-    /* Fondo más translúcido y desenfoque mayor */
-    background-color: rgba(255, 255, 255, 0.75); 
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border-bottom: 3px solid var(--color-acento-menta);
-    box-shadow: 0 4px 10px rgba(221, 238, 221, 0.3); /* Sombra suave del mismo color verde */
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.02);
+    /* Fondo verde pastel translúcido */
+    background-color: rgba(221, 238, 221, 0.82);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-bottom: 2px solid rgba(181, 201, 177, 0.5);
+    box-shadow: 0 4px 24px rgba(138, 171, 133, 0.15);
     z-index: 1000;
 }
 
