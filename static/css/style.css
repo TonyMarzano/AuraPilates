@@ -346,18 +346,108 @@ footer {
 /* --- Sección Nosotros --- */
 .about-section {
     text-align: center;
-    background-color: var(--color-base-blanco);
+    background-color: var(--color-bg-crema);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Anillos decorativos de fondo */
+.about-section::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    border: 1px solid rgba(181, 201, 177, 0.22);
+    pointer-events: none;
+}
+
+.about-section::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 680px;
+    height: 680px;
+    border-radius: 50%;
+    border: 1px dashed rgba(181, 201, 177, 0.12);
+    pointer-events: none;
 }
 
 .about-content {
-    max-width: 800px;
+    max-width: 720px;
     margin: 0 auto;
+    position: relative;
+    z-index: 1;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(181, 201, 177, 0.45);
+    border-radius: 4px;
+    padding: 3.5rem 4rem;
+    box-shadow:
+        0 4px 40px rgba(138, 171, 133, 0.09),
+        inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+/* Esquinas decorativas */
+.about-content::before,
+.about-content::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-color: rgba(138, 171, 133, 0.55);
+    border-style: solid;
+}
+
+.about-content::before {
+    top: 14px;
+    left: 14px;
+    border-width: 1px 0 0 1px;
+}
+
+.about-content::after {
+    bottom: 14px;
+    right: 14px;
+    border-width: 0 1px 1px 0;
+}
+
+.about-content h2 {
+    position: relative;
+    padding-bottom: 1.2rem;
+    margin-bottom: 1.8rem;
+    font-family: 'Playfair Display', serif;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+}
+
+/* Línea ornamental bajo el título */
+.about-content h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #8aab85, transparent);
 }
 
 .about-content p {
-    font-size: 1.1rem;
-    margin-bottom: 1.5rem;
+    font-size: 1.05rem;
+    margin-bottom: 1.4rem;
     color: var(--color-texto-oscuro);
+    line-height: 1.85;
+    font-weight: 300;
+}
+
+.about-content p:last-child {
+    margin-bottom: 0;
 }
 
 .service-card {
@@ -904,19 +994,12 @@ details[open] summary::after {
         0 8px 32px rgba(0, 0, 0, 0.12);
 }
 
-/* Monograma CP */
-.hero-monogram {
-    font-family: 'Cormorant Garamond', serif;
-    font-weight: 300;
-    font-size: 62px;
-    color: #3d4f3c;
-    letter-spacing: -0.02em;
-    line-height: 1;
-    user-select: none;
-}
-
-.hero-monogram span {
-    color: #8aab85;
+/* SVG logo inside the badge */
+.hero-cp-svg {
+    width: 78px;
+    height: auto;
+    display: block;
+    margin-top: 4px;
 }
 
 /* Wordmark debajo del badge */
