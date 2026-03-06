@@ -7,7 +7,7 @@ import os
 app = Flask(__name__)
 
 # !! CAMBIÁ ESTO por una clave secreta larga y aleatoria !!
-app.secret_key = 'ClubPilates12!'
+app.secret_key = 'cambia-esto-por-una-clave-secreta-larga'
 
 app.config.update(
     SESSION_COOKIE_SECURE=True,
@@ -19,6 +19,9 @@ app.config.update(
 # Cambiá estos valores por los que quieras usar
 AGENDA_USER     = 'admin'
 AGENDA_PASSWORD = 'clubpilates2025'
+
+# Código secreto para recuperar la contraseña (solo vos lo sabés)
+RECOVERY_CODE   = 'sanjuan2025'
 
 # ── Decorador: requiere login ─────────────────────────
 def login_required(f):
@@ -59,6 +62,16 @@ init_db()
 def favicon():
     return redirect(url_for('static', filename='img/favicon.svg'))
 
+@app.route('/')
+def index():
+    contact_data = {
+        "whatsapp_link": "https://wa.me/5492645551234",
+        "email": "clubpilatesanjuan@gmail.com",
+        "address": "San Roque Sur 1044, Rawson, San Juan",
+        "google_maps_api_key": "TU_API_KEY_AQUI"
+    }
+    return render_template('index.html', data=contact_data)
+
 # ── Login / Logout ────────────────────────────────────
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -77,6 +90,39 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
+@app.route('/recuperar', methods=['GET', 'POST'])
+def recuperar():
+    error   = None
+    success = None
+    if request.method == 'POST':
+        action = request.form.get('action')
+
+        if action == 'verificar':
+            code = request.form.get('codigo', '').strip()
+            if code == RECOVERY_CODE:
+                session['recovery_verified'] = True
+                return render_template('recuperar.html', step='nueva', error=None)
+            else:
+                error = 'Código incorrecto'
+                return render_template('recuperar.html', step='codigo', error=error)
+
+        elif action == 'cambiar':
+            if not session.get('recovery_verified'):
+                return redirect(url_for('recuperar'))
+            nueva    = request.form.get('nueva', '').strip()
+            confirma = request.form.get('confirma', '').strip()
+            if not nueva or len(nueva) < 6:
+                return render_template('recuperar.html', step='nueva', error='La contraseña debe tener al menos 6 caracteres')
+            if nueva != confirma:
+                return render_template('recuperar.html', step='nueva', error='Las contraseñas no coinciden')
+            # Actualizar en memoria (hasta el próximo restart)
+            global AGENDA_PASSWORD
+            AGENDA_PASSWORD = nueva
+            session.pop('recovery_verified', None)
+            return render_template('recuperar.html', step='ok')
+
+    return render_template('recuperar.html', step='codigo', error=None)
 
 
     contact_data = {
