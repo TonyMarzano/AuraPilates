@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from functools import wraps
-from whatsapp_bot import process_message, VERIFY_TOKEN
 import sqlite3
 import os
 
