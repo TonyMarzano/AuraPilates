@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso — Club Pilates</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+    <style>
+        :root {
+            --sage:       #8aab85;
+            --sage-light: #b5c9b1;
+            --sage-pale:  #eaf3e8;
+            --sage-bg:    #f2f7f1;
+            --cream:      #f7f4ef;
+            --text:       #3d4f3c;
+            --text-light: #7a8f79;
+            --border:     rgba(138,171,133,0.28);
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            font-family: 'Jost', sans-serif;
+            background: var(--sage-bg);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Anillos decorativos de fondo */
+        body::before, body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        body::before {
+            width: 600px; height: 600px;
+            border: 1px solid rgba(138,171,133,0.15);
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        body::after {
+            width: 800px; height: 800px;
+            border: 1px dashed rgba(138,171,133,0.08);
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .login-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            width: 380px;
+            max-width: 95vw;
+            box-shadow: 0 8px 40px rgba(61,79,60,0.1);
+            position: relative;
+            overflow: hidden;
+            animation: fadeUp 0.4s ease;
+        }
+
+        @keyframes fadeUp {
+            from { opacity:0; transform: translateY(16px); }
+            to   { opacity:1; transform: translateY(0); }
+        }
+
+        /* Esquinas decorativas */
+        .login-card::before, .login-card::after {
+            content: '';
+            position: absolute;
+            width: 16px; height: 16px;
+            border-color: rgba(138,171,133,0.4);
+            border-style: solid;
+        }
+        .login-card::before { top:12px; left:12px; border-width: 1px 0 0 1px; }
+        .login-card::after  { bottom:12px; right:12px; border-width: 0 1px 1px 0; }
+
+        .card-header {
+            background: var(--sage-pale);
+            border-bottom: 1px solid var(--border);
+            padding: 2rem 2.5rem 1.75rem;
+            text-align: center;
+        }
+
+        .logo-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo-cp {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 300;
+            color: var(--sage);
+            letter-spacing: -0.02em;
+            line-height: 1;
+        }
+
+        .logo-div {
+            width: 1px;
+            height: 26px;
+            background: linear-gradient(to bottom, transparent, var(--sage-light), transparent);
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            text-align: left;
+        }
+
+        .logo-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1rem;
+            font-weight: 300;
+            letter-spacing: 0.18em;
+            color: var(--text);
+            text-transform: uppercase;
+        }
+
+        .logo-sub {
+            font-size: 0.5rem;
+            font-weight: 200;
+            letter-spacing: 0.35em;
+            color: var(--sage);
+            text-transform: uppercase;
+        }
+
+        .card-subtitle {
+            font-size: 0.62rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--text-light);
+            margin-top: 0.75rem;
+        }
+
+        .card-body {
+            padding: 2rem 2.5rem 2.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.62rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--text-light);
+            margin-bottom: 7px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-family: 'Jost', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 300;
+            color: var(--text);
+            background: var(--cream);
+            outline: none;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--sage);
+            background: white;
+        }
+
+        .error-msg {
+            background: #fdf0f0;
+            border: 1px solid #f0d0d0;
+            border-radius: 4px;
+            padding: 10px 14px;
+            font-size: 0.75rem;
+            color: #c0756d;
+            margin-bottom: 1.2rem;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: var(--sage);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-family: 'Jost', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 400;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 0.5rem;
+        }
+
+        .btn-login:hover { background: var(--text); }
+
+        .divider-line {
+            width: 40px;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--sage-light), transparent);
+            margin: 0 auto 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="card-header">
+            <div class="logo-wrap">
+                <span class="logo-cp">CP</span>
+                <span class="logo-div"></span>
+                <div class="logo-text">
+                    <span class="logo-name">Club Pilates</span>
+                    <span class="logo-sub">Studio &amp; Wellness</span>
+                </div>
+            </div>
+            <div class="card-subtitle">Acceso a la Agenda</div>
+        </div>
+
+        <div class="card-body">
+            <div class="divider-line"></div>
+
+            {% if error %}
+            <div class="error-msg">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="/login">
+                <div class="form-group">
+                    <label class="form-label">Usuario</label>
+                    <input class="form-input" type="text" name="usuario" autocomplete="username" autofocus placeholder="Ingresá tu usuario">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contraseña</label>
+                    <input class="form-input" type="password" name="password" autocomplete="current-password" placeholder="••••••••••">
+                </div>
+                <button class="btn-login" type="submit">Ingresar</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

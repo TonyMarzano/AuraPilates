@@ -1,15 +1,33 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+from functools import wraps
 import sqlite3
 import os
 
 # ── App ──────────────────────────────────────────────
 app = Flask(__name__)
 
+# !! CAMBIÁ ESTO por una clave secreta larga y aleatoria !!
+app.secret_key = 'cambia-esto-por-una-clave-secreta-larga'
+
 app.config.update(
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
 )
+
+# ── Credenciales de la agenda ─────────────────────────
+# Cambiá estos valores por los que quieras usar
+AGENDA_USER     = 'admin'
+AGENDA_PASSWORD = 'clubpilates2025'
+
+# ── Decorador: requiere login ─────────────────────────
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('logged_in'):
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated
 
 # ── Base de datos ─────────────────────────────────────
 DB_PATH = os.path.join(os.path.dirname(__file__), 'agenda.db')
@@ -41,6 +59,25 @@ init_db()
 def favicon():
     return redirect(url_for('static', filename='img/favicon.svg'))
 
+# ── Login / Logout ────────────────────────────────────
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    if request.method == 'POST':
+        user = request.form.get('usuario', '').strip()
+        pwd  = request.form.get('password', '').strip()
+        if user == AGENDA_USER and pwd == AGENDA_PASSWORD:
+            session['logged_in'] = True
+            return redirect(url_for('agenda'))
+        else:
+            error = 'Usuario o contraseña incorrectos'
+    return render_template('login.html', error=error)
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
 
     contact_data = {
         "whatsapp_link": "https://wa.me/5492645551234",
@@ -51,14 +88,14 @@ def favicon():
     return render_template('index.html', data=contact_data)
 
 @app.route('/agenda')
+@login_required
 def agenda():
     return render_template('agenda.html')
 
 # ── API de Reservas ───────────────────────────────────
 
-# GET /api/reservas?desde=2025-01-01&hasta=2025-01-31
-# Devuelve todas las reservas en un rango de fechas
 @app.route('/api/reservas', methods=['GET'])
+@login_required
 def get_reservas():
     desde = request.args.get('desde', '')
     hasta = request.args.get('hasta', '')
@@ -85,10 +122,10 @@ def get_reservas():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# POST /api/reservas  — crea una reserva
 @app.route('/api/reservas', methods=['POST'])
+@login_required
 def create_reserva():
-    data = request.get_json()
+    data     = request.get_json()
     slot_key = data.get('slot_key', '').strip()
     nombre   = data.get('nombre',   '').strip()
     apellido = data.get('apellido', '').strip()
@@ -110,8 +147,8 @@ def create_reserva():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# DELETE /api/reservas/<slot_key>  — cancela una reserva
 @app.route('/api/reservas/<path:slot_key>', methods=['DELETE'])
+@login_required
 def delete_reserva(slot_key):
     try:
         with get_db() as conn:
