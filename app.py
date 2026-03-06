@@ -49,7 +49,7 @@ def init_db():
                 nombre    TEXT    NOT NULL,
                 apellido  TEXT    NOT NULL,
                 tel       TEXT    NOT NULL,
-                created_at DATETIME DEFAULT (datetime('now','localtime'))
+                created_at DATETIME DEFAULT (datetime('now','-3 hours'))
             )
         ''')
         conn.commit()
