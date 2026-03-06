@@ -7,7 +7,7 @@ import os
 app = Flask(__name__)
 
 # !! CAMBIÁ ESTO por una clave secreta larga y aleatoria !!
-app.secret_key = 'cambia-esto-por-una-clave-secreta-larga'
+app.secret_key = 'ClubPilates12!'
 
 app.config.update(
     SESSION_COOKIE_SECURE=True,
