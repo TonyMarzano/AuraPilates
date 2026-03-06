@@ -63,6 +63,25 @@ menuBtn.addEventListener('click', () => {
 });
 
 // Cerrar el menú automáticamente al hacer clic en un enlace
+document.querySelectorAll('.nav-links a').forEach(link => {
+    link.addEventListener('click', () => {
+        navLinks.classList.remove('active');
+        const icon = menuBtn.querySelector('i');
+        icon.classList.add('fa-bars');
+        icon.classList.remove('fa-times');
+    });
+});
+
+// Cerrar el menú al hacer clic fuera de él
+document.addEventListener('click', (e) => {
+    const isInsideNav = menuBtn.contains(e.target) || navLinks.contains(e.target);
+    if (!isInsideNav && navLinks.classList.contains('active')) {
+        navLinks.classList.remove('active');
+        const icon = menuBtn.querySelector('i');
+        icon.classList.add('fa-bars');
+        icon.classList.remove('fa-times');
+    }
+});
 // Opción A: Desaparecer cuando el DOM esté listo y el Hero haya cargado
 document.addEventListener('DOMContentLoaded', () => {
     const preloader = document.getElementById('preloader');
