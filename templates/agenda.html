@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda — Club Pilates</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sage:       #8aab85;
+            --sage-light: #b5c9b1;
+            --sage-pale:  #eaf3e8;
+            --sage-bg:    #f2f7f1;
+            --cream:      #f7f4ef;
+            --text:       #3d4f3c;
+            --text-light: #7a8f79;
+            --white:      #ffffff;
+            --border:     rgba(138,171,133,0.25);
+            --booked:     #8aab85;
+            --booked-bg:  #ddeedd;
+            --shadow:     0 2px 20px rgba(61,79,60,0.08);
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            font-family: 'Jost', sans-serif;
+            background: var(--sage-bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ── Header ── */
+        .app-header {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .header-cp {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.7rem;
+            font-weight: 300;
+            color: var(--sage);
+            letter-spacing: -0.02em;
+            line-height: 1;
+        }
+
+        .header-divider {
+            width: 1px;
+            height: 24px;
+            background: var(--sage-light);
+        }
+
+        .header-title {
+            font-family: 'Jost', sans-serif;
+            font-weight: 300;
+            font-size: 0.75rem;
+            letter-spacing: 0.3em;
+            color: var(--text);
+            text-transform: uppercase;
+        }
+
+        .header-sub {
+            font-size: 0.55rem;
+            color: var(--text-light);
+            letter-spacing: 0.25em;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .week-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .week-nav button {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            color: var(--text);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .week-nav button:hover {
+            background: var(--sage-pale);
+            border-color: var(--sage);
+        }
+
+        .week-label {
+            font-size: 0.75rem;
+            font-weight: 300;
+            letter-spacing: 0.1em;
+            color: var(--text);
+            min-width: 160px;
+            text-align: center;
+        }
+
+        .btn-today {
+            font-family: 'Jost', sans-serif;
+            font-size: 0.65rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            background: var(--sage-pale);
+            border: 1px solid var(--sage-light);
+            color: var(--sage);
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-today:hover { background: var(--sage); color: white; }
+
+        /* ── Layout ── */
+        .app-body {
+            padding: 1.5rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* ── Stats row ── */
+        .stats-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .stat-label {
+            font-size: 0.6rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--text-light);
+        }
+
+        .stat-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 300;
+            color: var(--sage);
+            line-height: 1;
+        }
+
+        /* ── Calendar grid ── */
+        .calendar-wrap {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: 64px repeat(7, 1fr);
+            overflow-x: auto;
+        }
+
+        /* Day headers */
+        .col-header {
+            padding: 1rem 0.5rem 0.75rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            background: var(--cream);
+            position: sticky;
+            top: 0;
+        }
+
+        .col-header:first-child { background: var(--cream); }
+
+        .col-header.today-col {
+            background: var(--sage-pale);
+        }
+
+        .day-name {
+            font-size: 0.6rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--text-light);
+            font-weight: 300;
+        }
+
+        .day-num {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: var(--text);
+            line-height: 1.2;
+        }
+
+        .day-num.today {
+            color: var(--sage);
+        }
+
+        /* Time labels column */
+        .time-label {
+            padding: 0 0.5rem;
+            text-align: right;
+            font-size: 0.6rem;
+            color: var(--text-light);
+            letter-spacing: 0.05em;
+            border-right: 1px solid var(--border);
+            display: flex;
+            align-items: flex-start;
+            padding-top: 6px;
+            height: 56px;
+        }
+
+        /* Slot cells */
+        .slot {
+            height: 56px;
+            border-bottom: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            position: relative;
+            transition: background 0.15s;
+        }
+
+        .slot.available {
+            cursor: pointer;
+        }
+
+        .slot.available:hover {
+            background: var(--sage-pale);
+        }
+
+        .slot.available:hover::after {
+            content: '+ Reservar';
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--sage);
+            font-weight: 400;
+        }
+
+        .slot.booked {
+            background: var(--booked-bg);
+            cursor: pointer;
+        }
+
+        .slot.closed {
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 4px,
+                rgba(0,0,0,0.03) 4px,
+                rgba(0,0,0,0.03) 8px
+            );
+            cursor: not-allowed;
+        }
+
+        .slot-content {
+            padding: 5px 8px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .slot-name {
+            font-size: 0.68rem;
+            font-weight: 500;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+        }
+
+        .slot-phone {
+            font-size: 0.58rem;
+            color: var(--text-light);
+            font-weight: 300;
+        }
+
+        .slot-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--sage);
+            position: absolute;
+            top: 8px;
+            right: 8px;
+        }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(61,79,60,0.25);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        .modal-overlay.open { display: flex; }
+
+        .modal {
+            background: white;
+            border-radius: 8px;
+            width: 420px;
+            max-width: 95vw;
+            box-shadow: 0 20px 60px rgba(61,79,60,0.2);
+            overflow: hidden;
+            animation: modalIn 0.25s ease;
+        }
+
+        @keyframes modalIn {
+            from { opacity:0; transform: translateY(12px) scale(0.98); }
+            to   { opacity:1; transform: translateY(0) scale(1); }
+        }
+
+        .modal-header {
+            background: var(--sage-pale);
+            padding: 1.5rem 2rem 1.2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.4rem;
+            font-weight: 300;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .modal-slot-info {
+            font-size: 0.65rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--sage);
+        }
+
+        .modal-body {
+            padding: 1.75rem 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.62rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--text-light);
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-family: 'Jost', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 300;
+            color: var(--text);
+            background: var(--cream);
+            transition: border-color 0.2s;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: var(--sage);
+            background: white;
+        }
+
+        .modal-footer {
+            padding: 1rem 2rem 1.5rem;
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            font-family: 'Jost', sans-serif;
+            font-size: 0.7rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            padding: 10px 22px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-light);
+        }
+
+        .btn-cancel:hover { border-color: var(--sage-light); color: var(--text); }
+
+        .btn-confirm {
+            background: var(--sage);
+            color: white;
+        }
+
+        .btn-confirm:hover { background: var(--text); }
+
+        .btn-delete {
+            background: none;
+            border: 1px solid #e8c5c5;
+            color: #c0756d;
+        }
+
+        .btn-delete:hover { background: #fdf0f0; }
+
+        /* View booked modal */
+        .booked-detail {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .detail-row {
+            display: flex;
+            gap: 1rem;
+            align-items: baseline;
+        }
+
+        .detail-key {
+            font-size: 0.6rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--text-light);
+            width: 80px;
+            flex-shrink: 0;
+        }
+
+        .detail-val {
+            font-size: 0.95rem;
+            font-weight: 300;
+            color: var(--text);
+        }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--text);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            z-index: 300;
+        }
+
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+            .stats-row { flex-wrap: wrap; }
+            .stat-card { min-width: 140px; }
+            .app-body { padding: 1rem; }
+            .header-sub { display: none; }
+        }
+
+        @media (max-width: 600px) {
+            .app-header { padding: 0 1rem; }
+            .btn-today { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="app-header">
+    <a href="/" class="header-logo">
+        <span class="header-cp">CP</span>
+        <span class="header-divider"></span>
+        <div>
+            <div class="header-title">Club Pilates</div>
+            <div class="header-sub">Agenda de Turnos</div>
+        </div>
+    </a>
+
+    <div class="header-right">
+        <button class="btn-today" onclick="goToday()">Hoy</button>
+        <div class="week-nav">
+            <button onclick="changeWeek(-1)">&#8592;</button>
+            <span class="week-label" id="weekLabel"></span>
+            <button onclick="changeWeek(1)">&#8594;</button>
+        </div>
+    </div>
+</header>
+
+<!-- BODY -->
+<div class="app-body">
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <span class="stat-label">Turnos esta semana</span>
+            <span class="stat-value" id="statWeek">0</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Disponibles hoy</span>
+            <span class="stat-value" id="statToday">0</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Total reservados</span>
+            <span class="stat-value" id="statTotal">0</span>
+        </div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="calendar-wrap">
+        <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+</div>
+
+<!-- MODAL: Reservar -->
+<div class="modal-overlay" id="modalReservar">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Nueva Reserva</div>
+            <div class="modal-slot-info" id="modalSlotInfo"></div>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Nombre</label>
+                <input class="form-input" id="inputNombre" type="text" placeholder="Ej: María">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Apellido</label>
+                <input class="form-input" id="inputApellido" type="text" placeholder="Ej: González">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Teléfono / Cel</label>
+                <input class="form-input" id="inputTel" type="tel" placeholder="Ej: 264 555-1234">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
+            <button class="btn btn-confirm" onclick="confirmReserva()">Confirmar Turno</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Ver turno -->
+<div class="modal-overlay" id="modalVer">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Detalle del Turno</div>
+            <div class="modal-slot-info" id="modalVerInfo"></div>
+        </div>
+        <div class="modal-body">
+            <div class="booked-detail" id="bookedDetail"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-delete" onclick="cancelarTurno()">Cancelar Turno</button>
+            <button class="btn btn-cancel" onclick="closeModal()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Config ──
+const SCHEDULE = {
+    1: { start: 8,  end: 21 },
+    2: { start: 8,  end: 21 },
+    3: { start: 8,  end: 21 },
+    4: { start: 8,  end: 21 },
+    5: { start: 8,  end: 21 },
+    6: { start: 9,  end: 14 },
+};
+
+const DAYS_ES   = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+// ── State ──
+let currentMonday = getMonday(new Date());
+let reservas      = {};
+let pendingSlot   = null;
+let pendingKey    = null;
+
+// ── Utils ──
+function getMonday(d) {
+    const date = new Date(d);
+    const day  = date.getDay();
+    const diff = (day === 0) ? -6 : 1 - day;
+    date.setDate(date.getDate() + diff);
+    date.setHours(0,0,0,0);
+    return date;
+}
+
+function addDays(date, n) {
+    const d = new Date(date);
+    d.setDate(d.getDate() + n);
+    return d;
+}
+
+function slotKey(date, hour) {
+    return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}_${String(hour).padStart(2,'0')}`;
+}
+
+function formatDate(d) {
+    return `${d.getDate()} ${MONTHS_ES[d.getMonth()]}`;
+}
+
+function isToday(d) {
+    const t = new Date();
+    return d.getDate()===t.getDate() && d.getMonth()===t.getMonth() && d.getFullYear()===t.getFullYear();
+}
+
+// ── API ──
+function getWeekDays() {
+    const days = [];
+    for (let i = 0; i < 6; i++) days.push(addDays(currentMonday, i));
+    return days;
+}
+
+async function fetchReservas() {
+    const days  = getWeekDays();
+    const desde = slotKey(days[0], 0).split('_')[0];
+    const hasta = slotKey(days[5], 0).split('_')[0];
+    try {
+        const res = await fetch(`/api/reservas?desde=${desde}&hasta=${hasta}`);
+        reservas  = await res.json();
+    } catch(e) {
+        reservas = {};
+        showToast('Error al cargar reservas');
+    }
+}
+
+async function apiCrear(key, nombre, apellido, tel) {
+    return await fetch('/api/reservas', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ slot_key: key, nombre, apellido, tel })
+    });
+}
+
+async function apiEliminar(key) {
+    return await fetch(`/api/reservas/${key}`, { method: 'DELETE' });
+}
+
+// ── Navigation ──
+function goToday() {
+    currentMonday = getMonday(new Date());
+    loadAndRender();
+}
+
+function changeWeek(dir) {
+    currentMonday = addDays(currentMonday, dir * 7);
+    loadAndRender();
+}
+
+async function loadAndRender() {
+    await fetchReservas();
+    render();
+}
+
+// ── Render ──
+function render() {
+    const grid = document.getElementById('calendarGrid');
+    grid.innerHTML = '';
+    const days = getWeekDays();
+    const sat  = days[5];
+
+    document.getElementById('weekLabel').textContent =
+        `${formatDate(currentMonday)} — ${formatDate(sat)} ${sat.getFullYear()}`;
+
+    const allHours = new Set();
+    days.forEach(d => {
+        const dow = d.getDay();
+        if (SCHEDULE[dow]) {
+            for (let h = SCHEDULE[dow].start; h < SCHEDULE[dow].end; h++) allHours.add(h);
+        }
+    });
+    const hours = [...allHours].sort((a,b)=>a-b);
+
+    // Header
+    const corner = document.createElement('div');
+    corner.className = 'col-header';
+    grid.appendChild(corner);
+
+    days.forEach(d => {
+        const el = document.createElement('div');
+        el.className = 'col-header' + (isToday(d) ? ' today-col' : '');
+        el.innerHTML = `
+            <div class="day-name">${DAYS_ES[d.getDay()]}</div>
+            <div class="day-num ${isToday(d)?'today':''}">${d.getDate()}</div>
+        `;
+        if (!SCHEDULE[d.getDay()]) el.style.opacity = '0.4';
+        grid.appendChild(el);
+    });
+
+    // Rows
+    hours.forEach(hour => {
+        const timeEl = document.createElement('div');
+        timeEl.className = 'time-label';
+        timeEl.textContent = `${String(hour).padStart(2,'0')}:00`;
+        grid.appendChild(timeEl);
+
+        days.forEach(d => {
+            const dow   = d.getDay();
+            const sched = SCHEDULE[dow];
+            const slot  = document.createElement('div');
+            const key   = slotKey(d, hour);
+
+            if (!sched || hour < sched.start || hour >= sched.end) {
+                slot.className = 'slot closed';
+            } else if (reservas[key]) {
+                slot.className = 'slot booked';
+                const r = reservas[key];
+                slot.innerHTML = `
+                    <div class="slot-content">
+                        <div class="slot-name">${r.nombre} ${r.apellido}</div>
+                        <div class="slot-phone">${r.tel}</div>
+                    </div>
+                    <div class="slot-dot"></div>
+                `;
+                slot.addEventListener('click', () => openVerModal(key, d, hour));
+            } else {
+                slot.className = 'slot available';
+                slot.addEventListener('click', () => openReservarModal(key, d, hour));
+            }
+            grid.appendChild(slot);
+        });
+    });
+
+    updateStats(days);
+}
+
+// ── Stats ──
+function updateStats(days) {
+    const today   = new Date();
+    const todaySc = SCHEDULE[today.getDay()];
+    let weekCount = 0;
+
+    days.forEach(d => {
+        const sc = SCHEDULE[d.getDay()];
+        if (!sc) return;
+        for (let h = sc.start; h < sc.end; h++)
+            if (reservas[slotKey(d,h)]) weekCount++;
+    });
+
+    let todayAvail = 0;
+    if (todaySc) {
+        for (let h = todaySc.start; h < todaySc.end; h++)
+            if (!reservas[slotKey(today,h)]) todayAvail++;
+    }
+
+    document.getElementById('statWeek').textContent  = weekCount;
+    document.getElementById('statToday').textContent = todayAvail;
+    document.getElementById('statTotal').textContent = Object.keys(reservas).length;
+}
+
+// ── Modals ──
+function openReservarModal(key, date, hour) {
+    pendingKey  = key;
+    pendingSlot = { date, hour };
+    document.getElementById('modalSlotInfo').textContent =
+        `${DAYS_ES[date.getDay()]} ${formatDate(date)} · ${String(hour).padStart(2,'0')}:00 — ${String(hour+1).padStart(2,'0')}:00`;
+    document.getElementById('inputNombre').value   = '';
+    document.getElementById('inputApellido').value = '';
+    document.getElementById('inputTel').value      = '';
+    document.getElementById('modalReservar').classList.add('open');
+    setTimeout(() => document.getElementById('inputNombre').focus(), 100);
+}
+
+function openVerModal(key, date, hour) {
+    pendingKey = key;
+    const r    = reservas[key];
+    document.getElementById('modalVerInfo').textContent =
+        `${DAYS_ES[date.getDay()]} ${formatDate(date)} · ${String(hour).padStart(2,'0')}:00 — ${String(hour+1).padStart(2,'0')}:00`;
+    document.getElementById('bookedDetail').innerHTML = `
+        <div class="detail-row">
+            <span class="detail-key">Nombre</span>
+            <span class="detail-val">${r.nombre} ${r.apellido}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-key">Teléfono</span>
+            <span class="detail-val">${r.tel}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-key">Reservado</span>
+            <span class="detail-val">${r.createdAt || '—'}</span>
+        </div>
+    `;
+    document.getElementById('modalVer').classList.add('open');
+}
+
+function closeModal() {
+    document.getElementById('modalReservar').classList.remove('open');
+    document.getElementById('modalVer').classList.remove('open');
+    pendingKey = null;
+}
+
+async function confirmReserva() {
+    const nombre   = document.getElementById('inputNombre').value.trim();
+    const apellido = document.getElementById('inputApellido').value.trim();
+    const tel      = document.getElementById('inputTel').value.trim();
+
+    if (!nombre || !apellido || !tel) { showToast('Completá todos los campos'); return; }
+
+    const btn = document.querySelector('#modalReservar .btn-confirm');
+    btn.textContent = 'Guardando…';
+    btn.disabled    = true;
+
+    try {
+        const res = await apiCrear(pendingKey, nombre, apellido, tel);
+        if (res.ok) {
+            closeModal();
+            await loadAndRender();
+            showToast(`✓ Turno reservado para ${nombre} ${apellido}`);
+        } else {
+            const data = await res.json();
+            showToast(data.error || 'Error al reservar');
+        }
+    } catch(e) {
+        showToast('Error de conexión');
+    } finally {
+        btn.textContent = 'Confirmar Turno';
+        btn.disabled    = false;
+    }
+}
+
+async function cancelarTurno() {
+    if (!pendingKey) return;
+    const r    = reservas[pendingKey];
+    const name = `${r.nombre} ${r.apellido}`;
+    try {
+        await apiEliminar(pendingKey);
+        closeModal();
+        await loadAndRender();
+        showToast(`Turno de ${name} cancelado`);
+    } catch(e) {
+        showToast('Error al cancelar');
+    }
+}
+
+// ── Toast ──
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── Cerrar modales ──
+document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', e => { if (e.target === o) closeModal(); });
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ── Init ──
+loadAndRender();
+</script>
+</body>
+</html>
