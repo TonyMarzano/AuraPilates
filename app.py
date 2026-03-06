@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from functools import wraps
+from whatsapp_bot import process_message, VERIFY_TOKEN
 import sqlite3
 import os
 
@@ -203,6 +204,51 @@ def delete_reserva(slot_key):
         return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# ── WhatsApp Webhook ──────────────────────────────────
+# GET: Meta verifica que el webhook existe
+@app.route('/whatsapp', methods=['GET'])
+def whatsapp_verify():
+    mode      = request.args.get('hub.mode')
+    token     = request.args.get('hub.verify_token')
+    challenge = request.args.get('hub.challenge')
+    if mode == 'subscribe' and token == VERIFY_TOKEN:
+        return challenge, 200
+    return 'Forbidden', 403
+
+# POST: Meta envía los mensajes entrantes
+@app.route('/whatsapp', methods=['POST'])
+def whatsapp_webhook():
+    data = request.get_json()
+    try:
+        entry    = data['entry'][0]
+        changes  = entry['changes'][0]
+        value    = changes['value']
+
+        # Ignorar notificaciones que no son mensajes
+        if 'messages' not in value:
+            return 'ok', 200
+
+        msg      = value['messages'][0]
+        phone    = msg['from']
+        msg_type = msg.get('type')
+
+        # Solo procesamos mensajes de texto
+        if msg_type != 'text':
+            from whatsapp_bot import send_message
+            send_message(phone, 'Por ahora solo proceso mensajes de texto 🌿')
+            return 'ok', 200
+
+        text     = msg['text']['body']
+        response = process_message(phone, text, DB_PATH)
+
+        from whatsapp_bot import send_message
+        send_message(phone, response)
+
+    except (KeyError, IndexError) as e:
+        print(f'[Webhook] Error procesando mensaje: {e}')
+
+    return 'ok', 200
 
 # ── Arranque ──────────────────────────────────────────
 if __name__ == '__main__':
