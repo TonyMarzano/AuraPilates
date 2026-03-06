@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 import sqlite3
 import os
 
@@ -37,8 +37,11 @@ def init_db():
 init_db()
 
 # ── Rutas principales ─────────────────────────────────
-@app.route('/')
-def index():
+@app.route('/favicon.ico')
+def favicon():
+    return redirect(url_for('static', filename='img/favicon.svg'))
+
+
     contact_data = {
         "whatsapp_link": "https://wa.me/5492645551234",
         "email": "clubpilatesanjuan@gmail.com",
