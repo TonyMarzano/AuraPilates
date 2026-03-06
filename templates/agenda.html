@@ -190,7 +190,7 @@
 
         .calendar-grid {
             display: grid;
-            grid-template-columns: 64px repeat(7, 1fr);
+            grid-template-columns: 60px repeat(7, 1fr);
             overflow-x: auto;
         }
 
@@ -663,14 +663,14 @@ function isToday(d) {
 // ── API ──
 function getWeekDays() {
     const days = [];
-    for (let i = 0; i < 6; i++) days.push(addDays(currentMonday, i));
+    for (let i = 0; i < 7; i++) days.push(addDays(currentMonday, i));
     return days;
 }
 
 async function fetchReservas() {
     const days  = getWeekDays();
     const desde = slotKey(days[0], 0).split('_')[0];
-    const hasta = slotKey(days[5], 0).split('_')[0];
+    const hasta = slotKey(days[6], 0).split('_')[0];
     try {
         const res = await fetch(`/api/reservas?desde=${desde}&hasta=${hasta}`);
         reservas  = await res.json();
@@ -713,7 +713,7 @@ function render() {
     const grid = document.getElementById('calendarGrid');
     grid.innerHTML = '';
     const days = getWeekDays();
-    const sat  = days[5];
+    const sat  = days[6];
 
     document.getElementById('weekLabel').textContent =
         `${formatDate(currentMonday)} — ${formatDate(sat)} ${sat.getFullYear()}`;
