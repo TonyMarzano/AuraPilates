@@ -316,31 +316,67 @@ footer {
 
 /* Estilo base actualizado del botón */
 .nav-btn {
-    background-color: var(--color-acento-menta);
-    padding: 10px 22px; /* Un poco más de aire */
-    border-radius: 50px; /* Bordes más redondeados tipo píldora */
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #b5c9b1 0%, #8aab85 50%, #b5c9b1 100%);
+    background-size: 200% 200%;
+    padding: 10px 22px;
+    border-radius: 50px;
     font-weight: 600;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Efecto elástico */
+    color: #3d4f3c !important;
     display: inline-block;
+    transition: all 0.4s ease;
+    animation: gradient-shift 3s ease infinite, glow-pulse 3s ease-in-out infinite;
+    box-shadow: 0 2px 12px rgba(138, 171, 133, 0.35);
+    letter-spacing: 0.02em;
 }
 
-/* Efecto al pasar el cursor (Hover) */
+/* Brillo que recorre el botón */
+.nav-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -75%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+        120deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.55) 50%,
+        transparent 100%
+    );
+    transform: skewX(-20deg);
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0%   { left: -75%; }
+    60%  { left: 130%; }
+    100% { left: 130%; }
+}
+
+@keyframes gradient-shift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 2px 12px rgba(138, 171, 133, 0.35); }
+    50%       { box-shadow: 0 4px 20px rgba(138, 171, 133, 0.65); }
+}
+
 .nav-btn:hover {
-    background-color: var(--color-acento-lavanda); /* Cambia al lila de tu marca */
-    transform: scale(1.1); /* Se amplía un 10% */
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* Sombra para dar profundidad */
-    color: var(--color-texto-oscuro) !important;
+    transform: translateY(-2px) scale(1.04);
+    background: linear-gradient(135deg, #8aab85 0%, #3d4f3c 50%, #8aab85 100%);
+    background-size: 200% 200%;
+    color: #ffffff !important;
+    box-shadow: 0 6px 24px rgba(61, 79, 60, 0.35);
+    animation: gradient-shift 1.5s ease infinite;
 }
 
-/* Animación sutil de "latido" opcional (se activa sola cada 3 segundos) */
-@keyframes pulse-green {
-    0% { box-shadow: 0 0 0 0 rgba(221, 238, 221, 0.7); }
-    70% { box-shadow: 0 0 0 10px rgba(221, 238, 221, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(221, 238, 221, 0); }
-}
-
-.nav-btn {
-    animation: pulse-green 2s infinite;
+.nav-btn:hover::before {
+    animation: shimmer 1s ease-in-out infinite;
 }
 
 /* --- Sección Nosotros --- */
