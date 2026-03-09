@@ -324,7 +324,9 @@ footer {
     border-radius: 50px;
     font-weight: 600;
     color: #3d4f3c !important;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
     transition: all 0.4s ease;
     animation: gradient-shift 3s ease infinite, glow-pulse 3s ease-in-out infinite;
     box-shadow: 0 2px 12px rgba(138, 171, 133, 0.35);
