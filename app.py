@@ -52,6 +52,17 @@ def init_db():
                 created_at DATETIME DEFAULT (datetime('now','-3 hours'))
             )
         ''')
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS movimientos (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                tipo        TEXT    NOT NULL CHECK(tipo IN ('ingreso','gasto')),
+                categoria   TEXT    NOT NULL,
+                descripcion TEXT    NOT NULL,
+                monto       REAL    NOT NULL,
+                fecha       TEXT    NOT NULL,
+                created_at  DATETIME DEFAULT (datetime('now','-3 hours'))
+            )
+        ''')
         conn.commit()
 
 # Inicializar DB al arrancar
@@ -125,14 +136,6 @@ def recuperar():
     return render_template('recuperar.html', step='codigo', error=None)
 
 
-    contact_data = {
-        "whatsapp_link": "https://wa.me/5492645551234",
-        "email": "clubpilatesanjuan@gmail.com",
-        "address": "San Roque Sur 1044, Rawson, San Juan",
-        "google_maps_api_key": "TU_API_KEY_AQUI"
-    }
-    return render_template('index.html', data=contact_data)
-
 @app.route('/agenda')
 @login_required
 def agenda():
@@ -204,50 +207,85 @@ def delete_reserva(slot_key):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ── WhatsApp Webhook ──────────────────────────────────
-# GET: Meta verifica que el webhook existe
-@app.route('/whatsapp', methods=['GET'])
-def whatsapp_verify():
-    mode      = request.args.get('hub.mode')
-    token     = request.args.get('hub.verify_token')
-    challenge = request.args.get('hub.challenge')
-    if mode == 'subscribe' and token == VERIFY_TOKEN:
-        return challenge, 200
-    return 'Forbidden', 403
+# ── API de Finanzas ───────────────────────────────────
 
-# POST: Meta envía los mensajes entrantes
-@app.route('/whatsapp', methods=['POST'])
-def whatsapp_webhook():
-    data = request.get_json()
+@app.route('/api/movimientos', methods=['GET'])
+@login_required
+def get_movimientos():
+    mes  = request.args.get('mes', '')   # YYYY-MM
+    tipo = request.args.get('tipo', '')  # ingreso | gasto | (vacío = todos)
     try:
-        entry    = data['entry'][0]
-        changes  = entry['changes'][0]
-        value    = changes['value']
+        with get_db() as conn:
+            query  = 'SELECT * FROM movimientos WHERE 1=1'
+            params = []
+            if mes:
+                query  += ' AND fecha LIKE ?'
+                params.append(f'{mes}%')
+            if tipo:
+                query  += ' AND tipo = ?'
+                params.append(tipo)
+            query += ' ORDER BY fecha DESC, id DESC'
+            rows = conn.execute(query, params).fetchall()
+        return jsonify([dict(r) for r in rows])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-        # Ignorar notificaciones que no son mensajes
-        if 'messages' not in value:
-            return 'ok', 200
+@app.route('/api/movimientos', methods=['POST'])
+@login_required
+def create_movimiento():
+    data        = request.get_json()
+    tipo        = data.get('tipo', '').strip()
+    categoria   = data.get('categoria', '').strip()
+    descripcion = data.get('descripcion', '').strip()
+    monto       = data.get('monto', 0)
+    fecha       = data.get('fecha', '').strip()
 
-        msg      = value['messages'][0]
-        phone    = msg['from']
-        msg_type = msg.get('type')
+    if not all([tipo, categoria, descripcion, monto, fecha]):
+        return jsonify({'error': 'Faltan campos obligatorios'}), 400
+    if tipo not in ('ingreso', 'gasto'):
+        return jsonify({'error': 'Tipo inválido'}), 400
 
-        # Solo procesamos mensajes de texto
-        if msg_type != 'text':
-            from whatsapp_bot import send_message
-            send_message(phone, 'Por ahora solo proceso mensajes de texto 🌿')
-            return 'ok', 200
+    try:
+        with get_db() as conn:
+            cur = conn.execute(
+                'INSERT INTO movimientos (tipo, categoria, descripcion, monto, fecha) VALUES (?, ?, ?, ?, ?)',
+                (tipo, categoria, descripcion, float(monto), fecha)
+            )
+            conn.commit()
+            row = conn.execute('SELECT * FROM movimientos WHERE id = ?', (cur.lastrowid,)).fetchone()
+        return jsonify(dict(row)), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-        text     = msg['text']['body']
-        response = process_message(phone, text, DB_PATH)
+@app.route('/api/movimientos/<int:mov_id>', methods=['DELETE'])
+@login_required
+def delete_movimiento(mov_id):
+    try:
+        with get_db() as conn:
+            conn.execute('DELETE FROM movimientos WHERE id = ?', (mov_id,))
+            conn.commit()
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-        from whatsapp_bot import send_message
-        send_message(phone, response)
-
-    except (KeyError, IndexError) as e:
-        print(f'[Webhook] Error procesando mensaje: {e}')
-
-    return 'ok', 200
+@app.route('/api/movimientos/resumen', methods=['GET'])
+@login_required
+def resumen_movimientos():
+    mes = request.args.get('mes', '')
+    try:
+        with get_db() as conn:
+            params = [f'{mes}%'] if mes else ['%']
+            ingresos = conn.execute(
+                'SELECT COALESCE(SUM(monto),0) as total FROM movimientos WHERE tipo="ingreso" AND fecha LIKE ?',
+                params
+            ).fetchone()['total']
+            gastos = conn.execute(
+                'SELECT COALESCE(SUM(monto),0) as total FROM movimientos WHERE tipo="gasto" AND fecha LIKE ?',
+                params
+            ).fetchone()['total']
+        return jsonify({'ingresos': ingresos, 'gastos': gastos, 'balance': ingresos - gastos})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # ── Arranque ──────────────────────────────────────────
 if __name__ == '__main__':
