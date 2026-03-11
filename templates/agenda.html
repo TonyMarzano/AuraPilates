@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-AR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1271,7 +1271,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Fecha de nacimiento</label>
-                    <input class="form-input" id="alumFechaNac" type="date">
+                    <input class="form-input" id="alumFechaNac" type="date" lang="es-AR">
                 </div>
                 <div class="form-group" style="display:flex;flex-direction:column">
                     <label class="form-label">Estado</label>
@@ -1286,12 +1286,10 @@
                 <textarea class="alum-notas-area" id="alumNotas" placeholder="Lesiones, preferencias, observaciones…"></textarea>
             </div>
         </div>
-        <div class="modal-footer" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+        <div class="modal-footer" style="justify-content:space-between;align-items:center;gap:0.75rem">
             <button class="btn btn-delete" id="alumBtnDelete" onclick="deleteAlumna()" style="display:none">Eliminar</button>
-            <div style="display:flex;gap:0.75rem;margin-left:auto">
-                <button class="btn btn-cancel" onclick="closeAlumnaModal()">Cancelar</button>
-                <button class="btn btn-confirm" onclick="confirmAlumna()">Guardar</button>
-            </div>
+            <button class="btn btn-cancel" onclick="closeAlumnaModal()" style="margin-left:auto">Cancelar</button>
+            <button class="btn btn-confirm" onclick="confirmAlumna()">Guardar</button>
         </div>
     </div>
 </div>
