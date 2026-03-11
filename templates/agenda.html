@@ -836,6 +836,196 @@
             .proy-card { border-right: none; border-bottom: 1px solid var(--border); }
         }
 
+        /* ── Alumnas ── */
+        .alum-body {
+            padding: 1.5rem 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .alum-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .alum-search {
+            font-family: 'Jost', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 300;
+            color: var(--text);
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 8px 14px;
+            outline: none;
+            width: 240px;
+            transition: border-color 0.2s;
+        }
+
+        .alum-search:focus { border-color: var(--sage); }
+
+        .alum-filter {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .filter-btn {
+            font-family: 'Jost', sans-serif;
+            font-size: 0.65rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: none;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active, .filter-btn:hover {
+            background: var(--sage-pale);
+            border-color: var(--sage-light);
+            color: var(--sage);
+        }
+
+        /* Stats alumnas */
+        .alum-stats {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Grid alumnas */
+        .alum-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .alum-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            position: relative;
+            transition: box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .alum-card:hover { box-shadow: 0 4px 20px rgba(61,79,60,0.1); }
+
+        .alum-card.inactiva { opacity: 0.55; }
+
+        .alum-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--sage-pale);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem;
+            font-weight: 300;
+            color: var(--sage);
+            margin-bottom: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .alum-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .alum-nombre {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--text);
+            line-height: 1.2;
+        }
+
+        .alum-apellido {
+            font-size: 0.78rem;
+            font-weight: 300;
+            color: var(--text-light);
+        }
+
+        .alum-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 0.6rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 20px;
+        }
+
+        .alum-badge.activa   { background: #e8f3e8; color: #5a8a6a; }
+        .alum-badge.inactiva { background: #f5f5f5; color: #aaa; }
+
+        .alum-info {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .alum-info-row {
+            font-size: 0.78rem;
+            font-weight: 300;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .alum-empty {
+            grid-column: 1/-1;
+            padding: 3rem;
+            text-align: center;
+            color: var(--text-light);
+            font-size: 0.88rem;
+            letter-spacing: 0.1em;
+        }
+
+        /* Modal alumna */
+        #modalAlumna .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .alum-notas-area {
+            width: 100%;
+            font-family: 'Jost', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 300;
+            color: var(--text);
+            background: var(--cream);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 10px 14px;
+            resize: vertical;
+            min-height: 70px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .alum-notas-area:focus { border-color: var(--sage); background: white; }
+
+        @media (max-width: 768px) {
+            .alum-grid { grid-template-columns: 1fr; }
+            #modalAlumna .form-row { grid-template-columns: 1fr; }
+        }
+
     </style>
 </head>
 <body>
@@ -865,6 +1055,7 @@
 <div class="tabs-bar">
     <button class="tab-btn active" onclick="switchTab('agenda')">📅 Agenda</button>
     <button class="tab-btn" onclick="switchTab('finanzas')">💰 Finanzas</button>
+    <button class="tab-btn" onclick="switchTab('alumnas')">👩 Alumnas</button>
 </div>
 
 <!-- TAB: AGENDA -->
@@ -966,6 +1157,40 @@
 </div>
 </div><!-- /tab-finanzas -->
 
+<!-- TAB: ALUMNAS -->
+<div class="tab-panel" id="tab-alumnas">
+<div class="alum-body">
+
+    <div class="alum-header-row">
+        <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+            <input class="alum-search" id="alumSearch" type="text" placeholder="Buscar alumna…" oninput="renderAlumnas()">
+            <div class="alum-filter">
+                <button class="filter-btn active" id="filterActiva" onclick="setFiltro('activa')">Activas</button>
+                <button class="filter-btn" id="filterTodas" onclick="setFiltro('todas')">Todas</button>
+                <button class="filter-btn" id="filterInactiva" onclick="setFiltro('inactiva')">Inactivas</button>
+            </div>
+        </div>
+        <button class="btn-nuevo-mov" onclick="openAlumnaModal()">+ Nueva alumna</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="alum-stats">
+        <div class="stat-card">
+            <span class="stat-label">Alumnas activas</span>
+            <span class="stat-value" id="statAlumActivas">0</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Total registradas</span>
+            <span class="stat-value" id="statAlumTotal">0</span>
+        </div>
+    </div>
+
+    <!-- Grid -->
+    <div class="alum-grid" id="alumGrid"></div>
+
+</div>
+</div><!-- /tab-alumnas -->
+
 <!-- MODAL: Reservar -->
 <div class="modal-overlay" id="modalReservar">
     <div class="modal">
@@ -1014,7 +1239,60 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- MODAL: Nuevo movimiento -->
+<!-- MODAL: Nueva/Editar alumna -->
+<div class="modal-overlay" id="modalAlumna">
+    <div class="modal" style="max-width:520px">
+        <div class="modal-header">
+            <div class="modal-title" id="alumnaModalTitle">Nueva Alumna</div>
+        </div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Nombre *</label>
+                    <input class="form-input" id="alumNombre" type="text" placeholder="Ej: María">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Apellido *</label>
+                    <input class="form-input" id="alumApellido" type="text" placeholder="Ej: González">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Teléfono</label>
+                    <input class="form-input" id="alumTel" type="tel" placeholder="264 555-1234">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input class="form-input" id="alumEmail" type="email" placeholder="mail@ejemplo.com">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Fecha de nacimiento</label>
+                    <input class="form-input" id="alumFechaNac" type="date">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Estado</label>
+                    <select class="form-input" id="alumActiva">
+                        <option value="1">Activa</option>
+                        <option value="0">Inactiva</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Notas</label>
+                <textarea class="alum-notas-area" id="alumNotas" placeholder="Lesiones, preferencias, observaciones…"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer" style="justify-content:space-between">
+            <button class="btn btn-delete" id="alumBtnDelete" onclick="deleteAlumna()" style="display:none">Eliminar</button>
+            <div style="display:flex;gap:0.75rem">
+                <button class="btn btn-cancel" onclick="closeAlumnaModal()">Cancelar</button>
+                <button class="btn btn-confirm" onclick="confirmAlumna()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="modal-overlay" id="modalMovimiento">
     <div class="modal">
         <div class="modal-header">
@@ -1032,9 +1310,15 @@
                 <label class="form-label">Categoría</label>
                 <select class="form-input" id="movCategoria"></select>
             </div>
+            <div class="form-group" id="movAlumnaGroup">
+                <label class="form-label">Alumna (opcional)</label>
+                <select class="form-input" id="movAlumna">
+                    <option value="">— Sin asignar —</option>
+                </select>
+            </div>
             <div class="form-group">
                 <label class="form-label">Descripción</label>
-                <input class="form-input" id="movDesc" type="text" placeholder="Ej: Pack mensual María García">
+                <input class="form-input" id="movDesc" type="text" placeholder="Ej: Pack mensual">
             </div>
             <div class="form-row">
                 <div class="form-group">
@@ -1351,16 +1635,299 @@ loadAndRender();
 // ── Tabs ──
 function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach((b,i) => {
-        b.classList.toggle('active', (i === 0 && tab==='agenda') || (i===1 && tab==='finanzas'));
+        b.classList.toggle('active',
+            (i===0 && tab==='agenda') ||
+            (i===1 && tab==='finanzas') ||
+            (i===2 && tab==='alumnas')
+        );
     });
-    document.getElementById('tab-agenda').classList.toggle('active', tab==='agenda');
+    document.getElementById('tab-agenda').classList.toggle('active',   tab==='agenda');
     document.getElementById('tab-finanzas').classList.toggle('active', tab==='finanzas');
+    document.getElementById('tab-alumnas').classList.toggle('active',  tab==='alumnas');
     if (tab === 'finanzas') loadFinanzas();
+    if (tab === 'alumnas')  loadAlumnas();
 }
 
 // ── Finanzas config ──
 const CATS_INGRESO = ['Pack mensual','Clase individual','Clase grupal','Inscripción','Otro ingreso'];
 const CATS_GASTO   = ['Alquiler','Luz','Gas','Agua','Internet','Sueldos','Mantenimiento','Equipamiento','Marketing','Limpieza','Otro gasto'];
+
+function fmt(n) {
+    return '$' + Math.abs(n).toLocaleString('es-AR', { maximumFractionDigits: 0 });
+}
+
+// ── Load finanzas ──
+async function loadFinanzas() {
+    const mes = document.getElementById('finMes').value;
+    const [movs, resumen] = await Promise.all([
+        fetch(`/api/movimientos?mes=${mes}`).then(r=>r.json()),
+        fetch(`/api/movimientos/resumen?mes=${mes}`).then(r=>r.json())
+    ]);
+
+    document.getElementById('balIngresos').textContent = fmt(resumen.ingresos);
+    document.getElementById('balGastos').textContent   = fmt(resumen.gastos);
+    const balEl = document.getElementById('balBalance');
+    balEl.textContent = fmt(resumen.balance);
+    balEl.className   = 'balance-amount' + (resumen.balance < 0 ? ' negativo' : '');
+
+    const list = document.getElementById('movList');
+    if (!movs.length) {
+        list.innerHTML = '<div class="mov-empty">Sin movimientos este mes. Agregá el primero 🌿</div>';
+        return;
+    }
+    list.innerHTML = movs.map(m => `
+        <div class="mov-row">
+            <span><span class="mov-tipo ${m.tipo}">${m.tipo}</span></span>
+            <span class="mov-cat">${m.categoria}${m.alumna_nombre ? `<br><span style="color:var(--sage);font-size:0.72rem">👩 ${m.alumna_nombre}</span>` : ''}</span>
+            <span class="mov-desc">${m.descripcion}</span>
+            <span class="mov-fecha">${m.fecha}</span>
+            <span class="mov-monto ${m.tipo}">${m.tipo==='ingreso'?'+':'-'}${fmt(m.monto)}</span>
+            <button class="mov-del" onclick="deleteMov(${m.id})" title="Eliminar">✕</button>
+        </div>
+    `).join('');
+}
+
+// ── Modal movimiento ──
+async function openMovModal() {
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = String(today.getMonth()+1).padStart(2,'0');
+    const d = String(today.getDate()).padStart(2,'0');
+    document.getElementById('movFecha').value = `${y}-${m}-${d}`;
+    document.getElementById('movDesc').value  = '';
+    document.getElementById('movMonto').value = '';
+    document.getElementById('movTipo').value  = 'ingreso';
+    updateCategorias();
+    // Cargar alumnas activas en el selector
+    await loadAlumnaSelector();
+    document.getElementById('modalMovimiento').classList.add('open');
+}
+
+async function loadAlumnaSelector() {
+    const alumnas = await fetch('/api/alumnas?activa=1').then(r=>r.json());
+    const sel = document.getElementById('movAlumna');
+    sel.innerHTML = '<option value="">— Sin asignar —</option>' +
+        alumnas.map(a => `<option value="${a.id}">${a.apellido}, ${a.nombre}</option>`).join('');
+}
+
+function closeMovModal() {
+    document.getElementById('modalMovimiento').classList.remove('open');
+}
+
+function updateCategorias() {
+    const tipo = document.getElementById('movTipo').value;
+    const cats = tipo === 'ingreso' ? CATS_INGRESO : CATS_GASTO;
+    const sel  = document.getElementById('movCategoria');
+    sel.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+    // Mostrar/ocultar selector de alumna solo en ingresos
+    document.getElementById('movAlumnaGroup').style.display = tipo === 'ingreso' ? '' : 'none';
+}
+
+async function confirmMovimiento() {
+    const tipo      = document.getElementById('movTipo').value;
+    const cat       = document.getElementById('movCategoria').value;
+    const desc      = document.getElementById('movDesc').value.trim();
+    const monto     = document.getElementById('movMonto').value;
+    const fecha     = document.getElementById('movFecha').value;
+    const alumnaId  = document.getElementById('movAlumna').value || null;
+
+    if (!desc || !monto || !fecha) { showToast('Completá todos los campos'); return; }
+
+    const btn = document.querySelector('#modalMovimiento .btn-confirm');
+    btn.textContent = 'Guardando…';
+    btn.disabled    = true;
+
+    try {
+        const res = await fetch('/api/movimientos', {
+            method:  'POST',
+            headers: {'Content-Type':'application/json'},
+            body:    JSON.stringify({ tipo, categoria: cat, descripcion: desc, monto: parseFloat(monto), fecha, alumna_id: alumnaId })
+        });
+        if (res.ok) {
+            closeMovModal();
+            document.getElementById('finMes').value = fecha.slice(0,7);
+            await loadFinanzas();
+            showToast('✓ Movimiento guardado');
+        } else {
+            const d = await res.json();
+            showToast(d.error || 'Error al guardar');
+        }
+    } catch(e) {
+        showToast('Error de conexión');
+    } finally {
+        btn.textContent = 'Guardar';
+        btn.disabled    = false;
+    }
+}
+
+async function deleteMov(id) {
+    if (!confirm('¿Eliminar este movimiento?')) return;
+    await fetch(`/api/movimientos/${id}`, { method: 'DELETE' });
+    await loadFinanzas();
+    showToast('Movimiento eliminado');
+}
+
+(function() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth()+1).padStart(2,'0');
+    document.getElementById('finMes').value = `${y}-${m}`;
+})();
+
+document.getElementById('modalMovimiento').addEventListener('click', e => {
+    if (e.target === document.getElementById('modalMovimiento')) closeMovModal();
+});
+
+// ── ALUMNAS ──────────────────────────────────────────
+let alumnas      = [];
+let alumnaFiltro = 'activa';
+let editingAlumnaId = null;
+
+async function loadAlumnas() {
+    alumnas = await fetch('/api/alumnas').then(r=>r.json());
+    renderAlumnas();
+    updateAlumStats();
+}
+
+function setFiltro(f) {
+    alumnaFiltro = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('filter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active');
+    renderAlumnas();
+}
+
+function renderAlumnas() {
+    const q    = (document.getElementById('alumSearch').value || '').toLowerCase();
+    const grid = document.getElementById('alumGrid');
+
+    let lista = alumnas.filter(a => {
+        if (alumnaFiltro === 'activa'   && !a.activa)  return false;
+        if (alumnaFiltro === 'inactiva' && a.activa)   return false;
+        if (q) {
+            const full = `${a.nombre} ${a.apellido} ${a.tel||''} ${a.email||''}`.toLowerCase();
+            if (!full.includes(q)) return false;
+        }
+        return true;
+    });
+
+    if (!lista.length) {
+        grid.innerHTML = '<div class="alum-empty">No hay alumnas registradas. ¡Agregá la primera! 🌿</div>';
+        return;
+    }
+
+    grid.innerHTML = lista.map(a => {
+        const initials = (a.nombre[0]||'') + (a.apellido[0]||'');
+        return `
+        <div class="alum-card ${a.activa?'':'inactiva'}" onclick="openAlumnaModal(${a.id})">
+            <span class="alum-badge ${a.activa?'activa':'inactiva'}">${a.activa?'activa':'inactiva'}</span>
+            <div class="alum-card-header">
+                <div class="alum-avatar">${initials.toUpperCase()}</div>
+                <div>
+                    <div class="alum-nombre">${a.nombre}</div>
+                    <div class="alum-apellido">${a.apellido}</div>
+                </div>
+            </div>
+            <div class="alum-info">
+                ${a.tel   ? `<div class="alum-info-row">📱 ${a.tel}</div>` : ''}
+                ${a.email ? `<div class="alum-info-row">✉️ ${a.email}</div>` : ''}
+                ${a.notas ? `<div class="alum-info-row" style="margin-top:4px;color:var(--text-light);font-style:italic">${a.notas.slice(0,60)}${a.notas.length>60?'…':''}</div>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function updateAlumStats() {
+    document.getElementById('statAlumActivas').textContent = alumnas.filter(a=>a.activa).length;
+    document.getElementById('statAlumTotal').textContent   = alumnas.length;
+}
+
+function openAlumnaModal(id) {
+    editingAlumnaId = id || null;
+    const delBtn = document.getElementById('alumBtnDelete');
+
+    if (id) {
+        const a = alumnas.find(x => x.id === id);
+        if (!a) return;
+        document.getElementById('alumnaModalTitle').textContent = 'Editar Alumna';
+        document.getElementById('alumNombre').value   = a.nombre;
+        document.getElementById('alumApellido').value = a.apellido;
+        document.getElementById('alumTel').value      = a.tel    || '';
+        document.getElementById('alumEmail').value    = a.email  || '';
+        document.getElementById('alumFechaNac').value = a.fecha_nac || '';
+        document.getElementById('alumNotas').value    = a.notas  || '';
+        document.getElementById('alumActiva').value   = a.activa ? '1' : '0';
+        delBtn.style.display = '';
+    } else {
+        document.getElementById('alumnaModalTitle').textContent = 'Nueva Alumna';
+        ['alumNombre','alumApellido','alumTel','alumEmail','alumFechaNac','alumNotas'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        document.getElementById('alumActiva').value = '1';
+        delBtn.style.display = 'none';
+    }
+    document.getElementById('modalAlumna').classList.add('open');
+    setTimeout(() => document.getElementById('alumNombre').focus(), 100);
+}
+
+function closeAlumnaModal() {
+    document.getElementById('modalAlumna').classList.remove('open');
+    editingAlumnaId = null;
+}
+
+async function confirmAlumna() {
+    const payload = {
+        nombre:    document.getElementById('alumNombre').value.trim(),
+        apellido:  document.getElementById('alumApellido').value.trim(),
+        tel:       document.getElementById('alumTel').value.trim(),
+        email:     document.getElementById('alumEmail').value.trim(),
+        fecha_nac: document.getElementById('alumFechaNac').value,
+        notas:     document.getElementById('alumNotas').value.trim(),
+        activa:    parseInt(document.getElementById('alumActiva').value)
+    };
+
+    if (!payload.nombre || !payload.apellido) { showToast('Nombre y apellido son obligatorios'); return; }
+
+    const btn = document.querySelector('#modalAlumna .btn-confirm');
+    btn.textContent = 'Guardando…';
+    btn.disabled    = true;
+
+    try {
+        const url    = editingAlumnaId ? `/api/alumnas/${editingAlumnaId}` : '/api/alumnas';
+        const method = editingAlumnaId ? 'PUT' : 'POST';
+        const res    = await fetch(url, {
+            method,
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+            closeAlumnaModal();
+            await loadAlumnas();
+            showToast(editingAlumnaId ? '✓ Alumna actualizada' : '✓ Alumna registrada');
+        } else {
+            const d = await res.json();
+            showToast(d.error || 'Error al guardar');
+        }
+    } catch(e) {
+        showToast('Error de conexión');
+    } finally {
+        btn.textContent = 'Guardar';
+        btn.disabled    = false;
+    }
+}
+
+async function deleteAlumna() {
+    if (!editingAlumnaId) return;
+    if (!confirm('¿Eliminar esta alumna? Esta acción no se puede deshacer.')) return;
+    await fetch(`/api/alumnas/${editingAlumnaId}`, { method: 'DELETE' });
+    closeAlumnaModal();
+    await loadAlumnas();
+    showToast('Alumna eliminada');
+}
+
+document.getElementById('modalAlumna').addEventListener('click', e => {
+    if (e.target === document.getElementById('modalAlumna')) closeAlumnaModal();
+});
+
 
 function fmt(n) {
     return '$' + Math.abs(n).toLocaleString('es-AR', { maximumFractionDigits: 0 });

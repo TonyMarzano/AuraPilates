@@ -53,6 +53,19 @@ def init_db():
             )
         ''')
         conn.execute('''
+            CREATE TABLE IF NOT EXISTS alumnas (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                nombre      TEXT    NOT NULL,
+                apellido    TEXT    NOT NULL,
+                tel         TEXT,
+                email       TEXT,
+                fecha_nac   TEXT,
+                notas       TEXT,
+                activa      INTEGER DEFAULT 1,
+                created_at  DATETIME DEFAULT (datetime('now','-3 hours'))
+            )
+        ''')
+        conn.execute('''
             CREATE TABLE IF NOT EXISTS movimientos (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 tipo        TEXT    NOT NULL CHECK(tipo IN ('ingreso','gasto')),
@@ -60,6 +73,7 @@ def init_db():
                 descripcion TEXT    NOT NULL,
                 monto       REAL    NOT NULL,
                 fecha       TEXT    NOT NULL,
+                alumna_id   INTEGER REFERENCES alumnas(id) ON DELETE SET NULL,
                 created_at  DATETIME DEFAULT (datetime('now','-3 hours'))
             )
         ''')
@@ -207,24 +221,105 @@ def delete_reserva(slot_key):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# ── API de Alumnas ────────────────────────────────────
+
+@app.route('/api/alumnas', methods=['GET'])
+@login_required
+def get_alumnas():
+    activa = request.args.get('activa', '')
+    try:
+        with get_db() as conn:
+            query = 'SELECT * FROM alumnas'
+            params = []
+            if activa != '':
+                query += ' WHERE activa = ?'
+                params.append(int(activa))
+            query += ' ORDER BY apellido, nombre'
+            rows = conn.execute(query, params).fetchall()
+        return jsonify([dict(r) for r in rows])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/alumnas', methods=['POST'])
+@login_required
+def create_alumna():
+    data     = request.get_json()
+    nombre   = data.get('nombre',    '').strip()
+    apellido = data.get('apellido',  '').strip()
+    tel      = data.get('tel',       '').strip()
+    email    = data.get('email',     '').strip()
+    fecha_nac= data.get('fecha_nac', '').strip()
+    notas    = data.get('notas',     '').strip()
+    if not nombre or not apellido:
+        return jsonify({'error': 'Nombre y apellido son obligatorios'}), 400
+    try:
+        with get_db() as conn:
+            cur = conn.execute(
+                'INSERT INTO alumnas (nombre, apellido, tel, email, fecha_nac, notas) VALUES (?,?,?,?,?,?)',
+                (nombre, apellido, tel, email, fecha_nac, notas)
+            )
+            conn.commit()
+            row = conn.execute('SELECT * FROM alumnas WHERE id = ?', (cur.lastrowid,)).fetchone()
+        return jsonify(dict(row)), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/alumnas/<int:alumna_id>', methods=['PUT'])
+@login_required
+def update_alumna(alumna_id):
+    data = request.get_json()
+    try:
+        with get_db() as conn:
+            conn.execute('''
+                UPDATE alumnas SET nombre=?, apellido=?, tel=?, email=?, fecha_nac=?, notas=?, activa=?
+                WHERE id=?
+            ''', (
+                data.get('nombre','').strip(),
+                data.get('apellido','').strip(),
+                data.get('tel','').strip(),
+                data.get('email','').strip(),
+                data.get('fecha_nac','').strip(),
+                data.get('notas','').strip(),
+                int(data.get('activa', 1)),
+                alumna_id
+            ))
+            conn.commit()
+            row = conn.execute('SELECT * FROM alumnas WHERE id = ?', (alumna_id,)).fetchone()
+        return jsonify(dict(row))
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/alumnas/<int:alumna_id>', methods=['DELETE'])
+@login_required
+def delete_alumna(alumna_id):
+    try:
+        with get_db() as conn:
+            conn.execute('DELETE FROM alumnas WHERE id = ?', (alumna_id,))
+            conn.commit()
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 # ── API de Finanzas ───────────────────────────────────
 
 @app.route('/api/movimientos', methods=['GET'])
 @login_required
 def get_movimientos():
-    mes  = request.args.get('mes', '')   # YYYY-MM
-    tipo = request.args.get('tipo', '')  # ingreso | gasto | (vacío = todos)
+    mes  = request.args.get('mes', '')
+    tipo = request.args.get('tipo', '')
     try:
         with get_db() as conn:
-            query  = 'SELECT * FROM movimientos WHERE 1=1'
+            query  = '''SELECT m.*, a.nombre || ' ' || a.apellido as alumna_nombre
+                        FROM movimientos m LEFT JOIN alumnas a ON m.alumna_id = a.id
+                        WHERE 1=1'''
             params = []
             if mes:
-                query  += ' AND fecha LIKE ?'
+                query  += ' AND m.fecha LIKE ?'
                 params.append(f'{mes}%')
             if tipo:
-                query  += ' AND tipo = ?'
+                query  += ' AND m.tipo = ?'
                 params.append(tipo)
-            query += ' ORDER BY fecha DESC, id DESC'
+            query += ' ORDER BY m.fecha DESC, m.id DESC'
             rows = conn.execute(query, params).fetchall()
         return jsonify([dict(r) for r in rows])
     except Exception as e:
@@ -239,6 +334,7 @@ def create_movimiento():
     descripcion = data.get('descripcion', '').strip()
     monto       = data.get('monto', 0)
     fecha       = data.get('fecha', '').strip()
+    alumna_id   = data.get('alumna_id', None)
 
     if not all([tipo, categoria, descripcion, monto, fecha]):
         return jsonify({'error': 'Faltan campos obligatorios'}), 400
@@ -248,11 +344,15 @@ def create_movimiento():
     try:
         with get_db() as conn:
             cur = conn.execute(
-                'INSERT INTO movimientos (tipo, categoria, descripcion, monto, fecha) VALUES (?, ?, ?, ?, ?)',
-                (tipo, categoria, descripcion, float(monto), fecha)
+                'INSERT INTO movimientos (tipo, categoria, descripcion, monto, fecha, alumna_id) VALUES (?, ?, ?, ?, ?, ?)',
+                (tipo, categoria, descripcion, float(monto), fecha, alumna_id if alumna_id else None)
             )
             conn.commit()
-            row = conn.execute('SELECT * FROM movimientos WHERE id = ?', (cur.lastrowid,)).fetchone()
+            row = conn.execute(
+                '''SELECT m.*, a.nombre || ' ' || a.apellido as alumna_nombre
+                   FROM movimientos m LEFT JOIN alumnas a ON m.alumna_id = a.id
+                   WHERE m.id = ?''', (cur.lastrowid,)
+            ).fetchone()
         return jsonify(dict(row)), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
