@@ -1269,11 +1269,11 @@
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Fecha de nacimiento</label>
-                    <input class="form-input" id="alumFechaNac" type="date">
+                    <input class="form-input" id="alumFechaNac" type="text" placeholder="dd/mm/aaaa" maxlength="10">
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="display:flex;flex-direction:column">
                     <label class="form-label">Estado</label>
-                    <select class="form-input" id="alumActiva">
+                    <select class="form-input" id="alumActiva" style="flex:1">
                         <option value="1">Activa</option>
                         <option value="0">Inactiva</option>
                     </select>
@@ -1284,9 +1284,9 @@
                 <textarea class="alum-notas-area" id="alumNotas" placeholder="Lesiones, preferencias, observaciones…"></textarea>
             </div>
         </div>
-        <div class="modal-footer" style="justify-content:space-between">
+        <div class="modal-footer" style="justify-content:space-between;align-items:center">
             <button class="btn btn-delete" id="alumBtnDelete" onclick="deleteAlumna()" style="display:none">Eliminar</button>
-            <div style="display:flex;gap:0.75rem">
+            <div style="display:flex;gap:0.75rem;margin-left:auto">
                 <button class="btn btn-cancel" onclick="closeAlumnaModal()">Cancelar</button>
                 <button class="btn btn-confirm" onclick="confirmAlumna()">Guardar</button>
             </div>
@@ -1310,7 +1310,7 @@
                 <label class="form-label">Categoría</label>
                 <select class="form-input" id="movCategoria"></select>
             </div>
-            <div class="form-group" id="movAlumnaGroup">
+            <div class="form-group" id="movAlumnaGroup" style="display:none">
                 <label class="form-label">Alumna (opcional)</label>
                 <select class="form-input" id="movAlumna">
                     <option value="">— Sin asignar —</option>
@@ -1704,10 +1704,14 @@ async function openMovModal() {
 }
 
 async function loadAlumnaSelector() {
-    const alumnas = await fetch('/api/alumnas?activa=1').then(r=>r.json());
-    const sel = document.getElementById('movAlumna');
-    sel.innerHTML = '<option value="">— Sin asignar —</option>' +
-        alumnas.map(a => `<option value="${a.id}">${a.apellido}, ${a.nombre}</option>`).join('');
+    try {
+        const lista = await fetch('/api/alumnas?activa=1').then(r => r.json());
+        const sel = document.getElementById('movAlumna');
+        sel.innerHTML = '<option value="">— Sin asignar —</option>' +
+            lista.map(a => `<option value="${a.id}">${a.apellido}, ${a.nombre}</option>`).join('');
+    } catch(e) {
+        console.error('Error cargando alumnas:', e);
+    }
 }
 
 function closeMovModal() {
@@ -1928,126 +1932,6 @@ document.getElementById('modalAlumna').addEventListener('click', e => {
     if (e.target === document.getElementById('modalAlumna')) closeAlumnaModal();
 });
 
-
-function fmt(n) {
-    return '$' + Math.abs(n).toLocaleString('es-AR', { maximumFractionDigits: 0 });
-}
-
-// ── Load finanzas ──
-async function loadFinanzas() {
-    const mes = document.getElementById('finMes').value;
-    const [movs, resumen] = await Promise.all([
-        fetch(`/api/movimientos?mes=${mes}`).then(r=>r.json()),
-        fetch(`/api/movimientos/resumen?mes=${mes}`).then(r=>r.json())
-    ]);
-
-    // Balance cards
-    document.getElementById('balIngresos').textContent = fmt(resumen.ingresos);
-    document.getElementById('balGastos').textContent   = fmt(resumen.gastos);
-    const balEl = document.getElementById('balBalance');
-    balEl.textContent = fmt(resumen.balance);
-    balEl.className   = 'balance-amount' + (resumen.balance < 0 ? ' negativo' : '');
-
-    // Tabla
-    const list = document.getElementById('movList');
-    if (!movs.length) {
-        list.innerHTML = '<div class="mov-empty">Sin movimientos este mes. Agregá el primero 🌿</div>';
-        return;
-    }
-    list.innerHTML = movs.map(m => `
-        <div class="mov-row">
-            <span><span class="mov-tipo ${m.tipo}">${m.tipo}</span></span>
-            <span class="mov-cat">${m.categoria}</span>
-            <span class="mov-desc">${m.descripcion}</span>
-            <span class="mov-fecha">${m.fecha}</span>
-            <span class="mov-monto ${m.tipo}">${m.tipo==='ingreso'?'+':'-'}${fmt(m.monto)}</span>
-            <button class="mov-del" onclick="deleteMov(${m.id})" title="Eliminar">✕</button>
-        </div>
-    `).join('');
-}
-
-// ── Modal movimiento ──
-function openMovModal() {
-    // Set today as default date
-    const today = new Date();
-    const y = today.getFullYear();
-    const m = String(today.getMonth()+1).padStart(2,'0');
-    const d = String(today.getDate()).padStart(2,'0');
-    document.getElementById('movFecha').value = `${y}-${m}-${d}`;
-    document.getElementById('movDesc').value  = '';
-    document.getElementById('movMonto').value = '';
-    document.getElementById('movTipo').value  = 'ingreso';
-    updateCategorias();
-    document.getElementById('modalMovimiento').classList.add('open');
-}
-
-function closeMovModal() {
-    document.getElementById('modalMovimiento').classList.remove('open');
-}
-
-function updateCategorias() {
-    const tipo = document.getElementById('movTipo').value;
-    const cats = tipo === 'ingreso' ? CATS_INGRESO : CATS_GASTO;
-    const sel  = document.getElementById('movCategoria');
-    sel.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
-}
-
-async function confirmMovimiento() {
-    const tipo     = document.getElementById('movTipo').value;
-    const cat      = document.getElementById('movCategoria').value;
-    const desc     = document.getElementById('movDesc').value.trim();
-    const monto    = document.getElementById('movMonto').value;
-    const fecha    = document.getElementById('movFecha').value;
-
-    if (!desc || !monto || !fecha) { showToast('Completá todos los campos'); return; }
-
-    const btn = document.querySelector('#modalMovimiento .btn-confirm');
-    btn.textContent = 'Guardando…';
-    btn.disabled    = true;
-
-    try {
-        const res = await fetch('/api/movimientos', {
-            method:  'POST',
-            headers: {'Content-Type':'application/json'},
-            body:    JSON.stringify({ tipo, categoria: cat, descripcion: desc, monto: parseFloat(monto), fecha })
-        });
-        if (res.ok) {
-            closeMovModal();
-            // Sync finMes to the saved date
-            document.getElementById('finMes').value = fecha.slice(0,7);
-            await loadFinanzas();
-            showToast(`✓ Movimiento guardado`);
-        } else {
-            const d = await res.json();
-            showToast(d.error || 'Error al guardar');
-        }
-    } catch(e) {
-        showToast('Error de conexión');
-    } finally {
-        btn.textContent = 'Guardar';
-        btn.disabled    = false;
-    }
-}
-
-async function deleteMov(id) {
-    if (!confirm('¿Eliminar este movimiento?')) return;
-    await fetch(`/api/movimientos/${id}`, { method: 'DELETE' });
-    await loadFinanzas();
-    showToast('Movimiento eliminado');
-}
-
-// Init finMes con el mes actual
-(function() {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth()+1).padStart(2,'0');
-    document.getElementById('finMes').value = `${y}-${m}`;
-})();
-
-// Cerrar modal movimiento con overlay
-document.getElementById('modalMovimiento').addEventListener('click', e => {
-    if (e.target === document.getElementById('modalMovimiento')) closeMovModal();
-});
 </script>
 </body>
 </html>

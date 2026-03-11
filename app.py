@@ -77,6 +77,10 @@ def init_db():
                 created_at  DATETIME DEFAULT (datetime('now','-3 hours'))
             )
         ''')
+        # Migración: agregar alumna_id si la tabla ya existía sin esa columna
+        cols = [r[1] for r in conn.execute("PRAGMA table_info(movimientos)").fetchall()]
+        if 'alumna_id' not in cols:
+            conn.execute("ALTER TABLE movimientos ADD COLUMN alumna_id INTEGER REFERENCES alumnas(id) ON DELETE SET NULL")
         conn.commit()
 
 # Inicializar DB al arrancar
