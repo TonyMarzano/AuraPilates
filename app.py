@@ -391,6 +391,25 @@ def resumen_movimientos():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/alumnas/pagos', methods=['GET'])
+@login_required
+def get_pagos():
+    """Devuelve qué alumnas tienen un ingreso registrado en el mes dado."""
+    mes = request.args.get('mes', '')
+    try:
+        with get_db() as conn:
+            rows = conn.execute('''
+                SELECT alumna_id, MIN(fecha) as fecha_pago
+                FROM movimientos
+                WHERE tipo = 'ingreso'
+                  AND alumna_id IS NOT NULL
+                  AND fecha LIKE ?
+                GROUP BY alumna_id
+            ''', (f'{mes}%',)).fetchall()
+        return jsonify({str(r['alumna_id']): r['fecha_pago'] for r in rows})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 # ── Arranque ──────────────────────────────────────────
 if __name__ == '__main__':
     app.run(debug=True)

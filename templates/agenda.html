@@ -1028,6 +1028,31 @@
             #modalAlumna .form-row { grid-template-columns: 1fr; }
         }
 
+        .pago-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.68rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        .pago-badge.pago-si {
+            background: #e8f3e8;
+            color: #5a8a6a;
+            border: 1px solid #c8e6c8;
+        }
+
+        .pago-badge.pago-no {
+            background: #fdf0f0;
+            color: #c08080;
+            border: 1px solid #f0d0d0;
+        }
+
     </style>
 </head>
 <body>
@@ -1171,8 +1196,19 @@
                 <button class="filter-btn" id="filterTodas" onclick="setFiltro('todas')">Todas</button>
                 <button class="filter-btn" id="filterInactiva" onclick="setFiltro('inactiva')">Inactivas</button>
             </div>
+            <div class="alum-filter">
+                <button class="filter-btn active" id="filterPagoTodas" onclick="setFiltroPago('todas')">Todas</button>
+                <button class="filter-btn" id="filterPagoPago" onclick="setFiltroPago('pagaron')">✓ Pagaron</button>
+                <button class="filter-btn" id="filterPagoDebe" onclick="setFiltroPago('deben')">✗ Deben</button>
+            </div>
         </div>
-        <button class="btn-nuevo-mov" onclick="openAlumnaModal()">+ Nueva alumna</button>
+        <div style="display:flex;gap:0.75rem;align-items:center">
+            <div class="fin-mes-selector">
+                <label>Mes</label>
+                <input type="month" id="alumMes" onchange="loadAlumnas()">
+            </div>
+            <button class="btn-nuevo-mov" onclick="openAlumnaModal()">+ Nueva alumna</button>
+        </div>
     </div>
 
     <!-- Stats -->
@@ -1184,6 +1220,14 @@
         <div class="stat-card">
             <span class="stat-label">Total registradas</span>
             <span class="stat-value" id="statAlumTotal">0</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Pagaron este mes</span>
+            <span class="stat-value" id="statAlumPagaron" style="color:#5a8a6a">0</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Deben este mes</span>
+            <span class="stat-value" id="statAlumDeben" style="color:#c08080">0</span>
         </div>
     </div>
 
@@ -1775,7 +1819,8 @@ async function deleteMov(id) {
     const now = new Date();
     const y = now.getFullYear();
     const m = String(now.getMonth()+1).padStart(2,'0');
-    document.getElementById('finMes').value = `${y}-${m}`;
+    document.getElementById('finMes').value  = `${y}-${m}`;
+    document.getElementById('alumMes').value = `${y}-${m}`;
 })();
 
 document.getElementById('modalMovimiento').addEventListener('click', e => {
@@ -1783,20 +1828,34 @@ document.getElementById('modalMovimiento').addEventListener('click', e => {
 });
 
 // ── ALUMNAS ──────────────────────────────────────────
-let alumnas      = [];
-let alumnaFiltro = 'activa';
+let alumnas         = [];
+let pagos           = {};   // { alumna_id: 'YYYY-MM-DD' }
+let alumnaFiltro    = 'activa';
+let alumnaFiltroPago = 'todas';
 let editingAlumnaId = null;
 
 async function loadAlumnas() {
-    alumnas = await fetch('/api/alumnas').then(r=>r.json());
+    const mes = document.getElementById('alumMes').value;
+    [alumnas, pagos] = await Promise.all([
+        fetch('/api/alumnas').then(r => r.json()),
+        fetch(`/api/alumnas/pagos?mes=${mes}`).then(r => r.json())
+    ]);
     renderAlumnas();
     updateAlumStats();
 }
 
 function setFiltro(f) {
     alumnaFiltro = f;
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#filterActiva,#filterTodas,#filterInactiva').forEach(b => b.classList.remove('active'));
     document.getElementById('filter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active');
+    renderAlumnas();
+}
+
+function setFiltroPago(f) {
+    alumnaFiltroPago = f;
+    document.querySelectorAll('#filterPagoTodas,#filterPagoPago,#filterPagoDebe').forEach(b => b.classList.remove('active'));
+    const map = { todas: 'filterPagoTodas', pagaron: 'filterPagoPago', deben: 'filterPagoDebe' };
+    document.getElementById(map[f]).classList.add('active');
     renderAlumnas();
 }
 
@@ -1805,8 +1864,11 @@ function renderAlumnas() {
     const grid = document.getElementById('alumGrid');
 
     let lista = alumnas.filter(a => {
-        if (alumnaFiltro === 'activa'   && !a.activa)  return false;
-        if (alumnaFiltro === 'inactiva' && a.activa)   return false;
+        if (alumnaFiltro === 'activa'   && !a.activa) return false;
+        if (alumnaFiltro === 'inactiva' && a.activa)  return false;
+        const pagada = !!pagos[String(a.id)];
+        if (alumnaFiltroPago === 'pagaron' && !pagada) return false;
+        if (alumnaFiltroPago === 'deben'   && pagada)  return false;
         if (q) {
             const full = `${a.nombre} ${a.apellido} ${a.tel||''} ${a.email||''}`.toLowerCase();
             if (!full.includes(q)) return false;
@@ -1815,12 +1877,16 @@ function renderAlumnas() {
     });
 
     if (!lista.length) {
-        grid.innerHTML = '<div class="alum-empty">No hay alumnas registradas. ¡Agregá la primera! 🌿</div>';
+        grid.innerHTML = '<div class="alum-empty">No hay alumnas que coincidan 🌿</div>';
         return;
     }
 
     grid.innerHTML = lista.map(a => {
-        const initials = (a.nombre[0]||'') + (a.apellido[0]||'');
+        const initials  = (a.nombre[0]||'') + (a.apellido[0]||'');
+        const fechaPago = pagos[String(a.id)];
+        const pagoBadge = fechaPago
+            ? `<div class="pago-badge pago-si">✓ Pagó · ${fechaPago}</div>`
+            : `<div class="pago-badge pago-no">✗ Debe</div>`;
         return `
         <div class="alum-card ${a.activa?'':'inactiva'}" onclick="openAlumnaModal(${a.id})">
             <span class="alum-badge ${a.activa?'activa':'inactiva'}">${a.activa?'activa':'inactiva'}</span>
@@ -1834,15 +1900,20 @@ function renderAlumnas() {
             <div class="alum-info">
                 ${a.tel   ? `<div class="alum-info-row">📱 ${a.tel}</div>` : ''}
                 ${a.email ? `<div class="alum-info-row">✉️ ${a.email}</div>` : ''}
-                ${a.notas ? `<div class="alum-info-row" style="margin-top:4px;color:var(--text-light);font-style:italic">${a.notas.slice(0,60)}${a.notas.length>60?'…':''}</div>` : ''}
+                ${a.notas ? `<div class="alum-info-row" style="font-style:italic">${a.notas.slice(0,60)}${a.notas.length>60?'…':''}</div>` : ''}
             </div>
+            ${pagoBadge}
         </div>`;
     }).join('');
 }
 
 function updateAlumStats() {
-    document.getElementById('statAlumActivas').textContent = alumnas.filter(a=>a.activa).length;
+    const activas  = alumnas.filter(a => a.activa);
+    const pagaron  = activas.filter(a => pagos[String(a.id)]).length;
+    document.getElementById('statAlumActivas').textContent = activas.length;
     document.getElementById('statAlumTotal').textContent   = alumnas.length;
+    document.getElementById('statAlumPagaron').textContent = pagaron;
+    document.getElementById('statAlumDeben').textContent   = activas.length - pagaron;
 }
 
 function openAlumnaModal(id) {
