@@ -430,6 +430,8 @@
             border: none;
             cursor: pointer;
             transition: all 0.2s;
+            white-space: nowrap;
+            min-width: 90px;
         }
 
         .btn-cancel {
@@ -1241,7 +1243,7 @@
 
 <!-- MODAL: Nueva/Editar alumna -->
 <div class="modal-overlay" id="modalAlumna">
-    <div class="modal" style="max-width:520px">
+    <div class="modal" style="max-width:560px;width:100%">
         <div class="modal-header">
             <div class="modal-title" id="alumnaModalTitle">Nueva Alumna</div>
         </div>
@@ -1269,7 +1271,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Fecha de nacimiento</label>
-                    <input class="form-input" id="alumFechaNac" type="text" placeholder="dd/mm/aaaa" maxlength="10">
+                    <input class="form-input" id="alumFechaNac" type="date">
                 </div>
                 <div class="form-group" style="display:flex;flex-direction:column">
                     <label class="form-label">Estado</label>
@@ -1284,7 +1286,7 @@
                 <textarea class="alum-notas-area" id="alumNotas" placeholder="Lesiones, preferencias, observaciones…"></textarea>
             </div>
         </div>
-        <div class="modal-footer" style="justify-content:space-between;align-items:center">
+        <div class="modal-footer" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
             <button class="btn btn-delete" id="alumBtnDelete" onclick="deleteAlumna()" style="display:none">Eliminar</button>
             <div style="display:flex;gap:0.75rem;margin-left:auto">
                 <button class="btn btn-cancel" onclick="closeAlumnaModal()">Cancelar</button>
