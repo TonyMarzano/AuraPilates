@@ -1,0 +1,4 @@
+12/03/26
+- Cuando genero un nuevo movimiento de Ingreso, en las categorias Debe aparecer Pack Mensual, Clase Individual, Otro Ingreso y nada mas.
+- Cuando voy a hacer una nueva reserva de una alumna sin registrar, cuando ingrese sus datos y reserve el turno, automáticamente debería crear una nueva alumna en la tab alumnas con los datos que ingresé.
+- Corregir en la agenda que por Turno pueden haber hasta 5 alumnas, es decir, por ejemplo: cuando agendo un turno de 10-11hs se me descontaría 1 de los 5 cupos que hay de 10 a 11hs.
