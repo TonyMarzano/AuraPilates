@@ -1503,17 +1503,33 @@
                     </div>
                     <!-- Modo libre -->
                     <div id="sectionLibre" style="display:none">
-                        <div class="form-group">
-                            <label class="form-label">Nombre</label>
-                            <input class="form-input" id="inputNombre" type="text" placeholder="Ej: María">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Nombre</label>
+                                <input class="form-input" id="inputNombre" type="text" placeholder="Ej: María">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Apellido</label>
+                                <input class="form-input" id="inputApellido" type="text" placeholder="Ej: González">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Apellido</label>
-                            <input class="form-input" id="inputApellido" type="text" placeholder="Ej: González">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Teléfono</label>
+                                <input class="form-input" id="inputTel" type="tel" placeholder="Ej: 264 555-1234">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Plan</label>
+                                <select class="form-input" id="inputPlan">
+                                    <option value="">— Sin plan —</option>
+                                    <option value="plan8">Plan 8 clases</option>
+                                    <option value="plan4">Plan 4 clases</option>
+                                    <option value="individual">Clase individual</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Teléfono</label>
-                            <input class="form-input" id="inputTel" type="tel" placeholder="Ej: 264 555-1234">
+                        <div style="font-size:0.74rem;color:var(--text-light);background:var(--sage-pale);border-radius:5px;padding:0.45rem 0.6rem;margin-top:0.1rem;">
+                            ✦ Se creará automáticamente como nueva alumna registrada
                         </div>
                     </div>
                     <div style="display:flex;gap:0.5rem;margin-top:0.25rem">
@@ -1870,6 +1886,7 @@ async function openSlotModal(key, date, hour) {
     document.getElementById('inputNombre').value   = '';
     document.getElementById('inputApellido').value = '';
     document.getElementById('inputTel').value      = '';
+    document.getElementById('inputPlan').value     = '';
     document.getElementById('alumnaPreview').style.display = 'none';
 
     renderSlotModal(key);
@@ -1962,7 +1979,7 @@ async function confirmReserva() {
         nombre   = document.getElementById('inputNombre').value.trim();
         apellido = document.getElementById('inputApellido').value.trim();
         tel      = document.getElementById('inputTel').value.trim();
-        if (!nombre || !apellido || !tel) { showToast('Completá todos los campos'); return; }
+        if (!nombre || !apellido || !tel) { showToast('Completá nombre, apellido y teléfono'); return; }
     }
 
     const btn = document.getElementById('btnConfirmReserva');
@@ -1970,6 +1987,21 @@ async function confirmReserva() {
     btn.disabled    = true;
 
     try {
+        // Si es "sin registrar", crear la alumna primero
+        if (reservaMode === 'libre') {
+            const plan = document.getElementById('inputPlan').value || null;
+            const resAlumna = await fetch('/api/alumnas', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ nombre, apellido, tel, plan })
+            });
+            if (resAlumna.ok) {
+                const nueva = await resAlumna.json();
+                alumnaId = nueva.id;
+            }
+            // Si falla la creación de alumna, igual reservamos (sin vínculo)
+        }
+
         const res = await fetch('/api/reservas', {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1977,12 +2009,14 @@ async function confirmReserva() {
         });
         if (res.ok) {
             await fetchReservas();
-            // Actualizar modal sin cerrarlo
             document.getElementById('slotAddForm').classList.remove('open');
             addFormOpen = false;
             renderSlotModal(pendingKey);
             render();
-            showToast(`✓ Reservado para ${nombre} ${apellido}`);
+            const planLabel = { plan8: 'Plan 8', plan4: 'Plan 4', individual: 'Individual' };
+            const plan = document.getElementById('inputPlan')?.value;
+            const extra = (reservaMode === 'libre' && alumnaId) ? ' · registrada como alumna' + (plan ? ` (${planLabel[plan]||plan})` : '') : '';
+            showToast(`✓ Reservado para ${nombre} ${apellido}${extra}`);
         } else {
             const data = await res.json();
             showToast(data.error || 'Error al reservar');
