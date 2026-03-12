@@ -1201,7 +1201,7 @@
             <label>Mes</label>
             <input type="month" id="finMes" onchange="loadFinanzas()">
         </div>
-        <button class="btn-nuevo-mov" onclick="openMovModal()">+ Nuevo movimiento</button>
+        <button class="btn-nuevo-mov" onclick="event.stopPropagation();openMovModal()">+ Nuevo movimiento</button>
     </div>
 
     <!-- Balance cards -->
@@ -1284,7 +1284,7 @@
                 <label>Mes</label>
                 <input type="month" id="alumMes" onchange="loadAlumnas()">
             </div>
-            <button class="btn-nuevo-mov" onclick="openAlumnaModal()">+ Nueva alumna</button>
+            <button class="btn-nuevo-mov" onclick="event.stopPropagation();openAlumnaModal()">+ Nueva alumna</button>
         </div>
     </div>
 
@@ -1414,7 +1414,6 @@
                     <label class="form-label">Fecha de nacimiento</label>
                     <input class="form-input" id="alumFechaNac" type="date" lang="es-AR">
                 </div>
-            <div class="form-row">
                 <div class="form-group" style="display:flex;flex-direction:column">
                     <label class="form-label">Plan</label>
                     <select class="form-input" id="alumPlan" style="flex:1">
@@ -1424,6 +1423,8 @@
                         <option value="individual">Clase individual</option>
                     </select>
                 </div>
+            </div>
+            <div class="form-row">
                 <div class="form-group" style="display:flex;flex-direction:column">
                     <label class="form-label">Estado</label>
                     <select class="form-input" id="alumActiva" style="flex:1">
@@ -1837,6 +1838,9 @@ loadAndRender();
 
 // ── Tabs ──
 function switchTab(tab) {
+    // Cerrar cualquier modal abierto antes de cambiar de tab
+    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
+
     document.querySelectorAll('.tab-btn').forEach((b,i) => {
         b.classList.toggle('active',
             (i===0 && tab==='agenda') ||
@@ -1891,7 +1895,7 @@ async function loadFinanzas() {
 }
 
 // ── Modal movimiento ──
-async function openMovModal() {
+function openMovModal() {
     const today = new Date();
     const y = today.getFullYear();
     const m = String(today.getMonth()+1).padStart(2,'0');
@@ -1901,9 +1905,9 @@ async function openMovModal() {
     document.getElementById('movMonto').value = '';
     document.getElementById('movTipo').value  = 'ingreso';
     updateCategorias();
-    // Cargar alumnas activas en el selector
-    await loadAlumnaSelector();
     document.getElementById('modalMovimiento').classList.add('open');
+    // Cargar alumnas en segundo plano, sin bloquear apertura
+    loadAlumnaSelector();
 }
 
 async function loadAlumnaSelector() {
@@ -1982,9 +1986,6 @@ async function deleteMov(id) {
     document.getElementById('alumMes').value = `${y}-${m}`;
 })();
 
-document.getElementById('modalMovimiento').addEventListener('click', e => {
-    if (e.target === document.getElementById('modalMovimiento')) closeMovModal();
-});
 
 // ── ALUMNAS ──────────────────────────────────────────
 let alumnas         = [];
