@@ -77,10 +77,19 @@ def init_db():
                 created_at  DATETIME DEFAULT (datetime('now','-3 hours'))
             )
         ''')
-        # Migración: agregar alumna_id si la tabla ya existía sin esa columna
-        cols = [r[1] for r in conn.execute("PRAGMA table_info(movimientos)").fetchall()]
-        if 'alumna_id' not in cols:
+        # Migraciones automáticas
+        cols_mov = [r[1] for r in conn.execute("PRAGMA table_info(movimientos)").fetchall()]
+        if 'alumna_id' not in cols_mov:
             conn.execute("ALTER TABLE movimientos ADD COLUMN alumna_id INTEGER REFERENCES alumnas(id) ON DELETE SET NULL")
+
+        cols_alum = [r[1] for r in conn.execute("PRAGMA table_info(alumnas)").fetchall()]
+        if 'plan' not in cols_alum:
+            conn.execute("ALTER TABLE alumnas ADD COLUMN plan TEXT DEFAULT NULL")
+
+        cols_res = [r[1] for r in conn.execute("PRAGMA table_info(reservas)").fetchall()]
+        if 'alumna_id' not in cols_res:
+            conn.execute("ALTER TABLE reservas ADD COLUMN alumna_id INTEGER REFERENCES alumnas(id) ON DELETE SET NULL")
+
         conn.commit()
 
 # Inicializar DB al arrancar
@@ -192,11 +201,12 @@ def get_reservas():
 @app.route('/api/reservas', methods=['POST'])
 @login_required
 def create_reserva():
-    data     = request.get_json()
-    slot_key = data.get('slot_key', '').strip()
-    nombre   = data.get('nombre',   '').strip()
-    apellido = data.get('apellido', '').strip()
-    tel      = data.get('tel',      '').strip()
+    data      = request.get_json()
+    slot_key  = data.get('slot_key',  '').strip()
+    nombre    = data.get('nombre',    '').strip()
+    apellido  = data.get('apellido',  '').strip()
+    tel       = data.get('tel',       '').strip()
+    alumna_id = data.get('alumna_id', None)
 
     if not all([slot_key, nombre, apellido, tel]):
         return jsonify({'error': 'Faltan campos obligatorios'}), 400
@@ -204,8 +214,8 @@ def create_reserva():
     try:
         with get_db() as conn:
             conn.execute(
-                'INSERT INTO reservas (slot_key, nombre, apellido, tel) VALUES (?, ?, ?, ?)',
-                (slot_key, nombre, apellido, tel)
+                'INSERT INTO reservas (slot_key, nombre, apellido, tel, alumna_id) VALUES (?, ?, ?, ?, ?)',
+                (slot_key, nombre, apellido, tel, alumna_id if alumna_id else None)
             )
             conn.commit()
         return jsonify({'ok': True}), 201
@@ -254,13 +264,14 @@ def create_alumna():
     email    = data.get('email',     '').strip()
     fecha_nac= data.get('fecha_nac', '').strip()
     notas    = data.get('notas',     '').strip()
+    plan     = data.get('plan',      None)
     if not nombre or not apellido:
         return jsonify({'error': 'Nombre y apellido son obligatorios'}), 400
     try:
         with get_db() as conn:
             cur = conn.execute(
-                'INSERT INTO alumnas (nombre, apellido, tel, email, fecha_nac, notas) VALUES (?,?,?,?,?,?)',
-                (nombre, apellido, tel, email, fecha_nac, notas)
+                'INSERT INTO alumnas (nombre, apellido, tel, email, fecha_nac, notas, plan) VALUES (?,?,?,?,?,?,?)',
+                (nombre, apellido, tel, email, fecha_nac, notas, plan)
             )
             conn.commit()
             row = conn.execute('SELECT * FROM alumnas WHERE id = ?', (cur.lastrowid,)).fetchone()
@@ -275,7 +286,7 @@ def update_alumna(alumna_id):
     try:
         with get_db() as conn:
             conn.execute('''
-                UPDATE alumnas SET nombre=?, apellido=?, tel=?, email=?, fecha_nac=?, notas=?, activa=?
+                UPDATE alumnas SET nombre=?, apellido=?, tel=?, email=?, fecha_nac=?, notas=?, activa=?, plan=?
                 WHERE id=?
             ''', (
                 data.get('nombre','').strip(),
@@ -285,6 +296,7 @@ def update_alumna(alumna_id):
                 data.get('fecha_nac','').strip(),
                 data.get('notas','').strip(),
                 int(data.get('activa', 1)),
+                data.get('plan', None),
                 alumna_id
             ))
             conn.commit()
@@ -391,7 +403,25 @@ def resumen_movimientos():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/alumnas/pagos', methods=['GET'])
+@app.route('/api/alumnas/clases', methods=['GET'])
+@login_required
+def get_clases():
+    """Clases usadas por alumna en el mes dado (reservas vinculadas)."""
+    mes = request.args.get('mes', '')
+    try:
+        with get_db() as conn:
+            rows = conn.execute('''
+                SELECT alumna_id, COUNT(*) as usadas
+                FROM reservas
+                WHERE alumna_id IS NOT NULL
+                  AND substr(slot_key, 1, 7) = ?
+                GROUP BY alumna_id
+            ''', (mes,)).fetchall()
+        return jsonify({str(r['alumna_id']): r['usadas'] for r in rows})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ── Arranque ──────────────────────────────────────────
 @login_required
 def get_pagos():
     """Devuelve qué alumnas tienen un ingreso registrado en el mes dado."""
