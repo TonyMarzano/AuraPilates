@@ -2,6 +2,10 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for, s
 from functools import wraps
 import sqlite3
 import os
+import smtplib
+import threading
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 # ── App ──────────────────────────────────────────────
 app = Flask(__name__)
@@ -16,12 +20,15 @@ app.config.update(
 )
 
 # ── Credenciales de la agenda ─────────────────────────
-# Cambiá estos valores por los que quieras usar
 AGENDA_USER     = 'admin'
 AGENDA_PASSWORD = 'clubpilates2025'
-
-# Código secreto para recuperar la contraseña (solo vos lo sabés)
 RECOVERY_CODE   = 'sanjuan2025'
+
+# ── Configuración de email ────────────────────────────
+# Obtené tu App Password en: myaccount.google.com → Seguridad → Contraseñas de aplicaciones
+EMAIL_FROM     = 'clubpilatesanjuan@gmail.com'
+EMAIL_PASSWORD = 'kldnaidcrdxcdftw'   # ← pegá acá tu App Password de 16 caracteres
+EMAIL_ENABLED  = True                     # ← poné False para desactivar sin borrar la config
 
 # ── Decorador: requiere login ─────────────────────────
 def login_required(f):
@@ -31,6 +38,120 @@ def login_required(f):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated
+
+# ── Email de bienvenida ───────────────────────────────
+
+PLAN_INFO = {
+    'plan8':      ('Plan 8 clases',      '2 clases por semana', '$45.000'),
+    'plan4':      ('Plan 4 clases',      '1 clase por semana',  '$25.000'),
+    'individual': ('Clase individual',   '1 clase',             '$6.000'),
+}
+
+def _build_welcome_html(nombre, apellido, plan):
+    plan_nombre, plan_detalle, plan_precio = PLAN_INFO.get(plan, ('—', '—', '—')) if plan else ('Sin plan asignado', '', '')
+
+    plan_block = ''
+    if plan:
+        plan_block = f'''
+        <div style="background:#eaf3e8;border-left:3px solid #8aab85;border-radius:6px;padding:16px 20px;margin:24px 0;">
+            <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#7a8f79;margin-bottom:6px;">Tu plan</div>
+            <div style="font-size:20px;font-weight:500;color:#3d4f3c;">{plan_nombre}</div>
+            <div style="font-size:14px;color:#7a8f79;margin-top:4px;">{plan_detalle} &nbsp;·&nbsp; {plan_precio} / mes</div>
+        </div>'''
+
+    return f'''<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f2f7f1;font-family:'Helvetica Neue',Arial,sans-serif;">
+<div style="max-width:560px;margin:40px auto;background:white;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(61,79,60,0.10);">
+
+    <!-- Header -->
+    <div style="background:#8aab85;padding:36px 40px 28px;text-align:center;">
+        <div style="font-size:11px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:8px;">Club Pilates San Juan</div>
+        <div style="font-size:28px;color:white;font-weight:300;letter-spacing:0.05em;">Bienvenida,<br><strong style="font-weight:500">{nombre}</strong></div>
+    </div>
+
+    <!-- Cuerpo -->
+    <div style="padding:32px 40px;">
+        <p style="font-size:15px;color:#3d4f3c;line-height:1.7;margin:0 0 16px;">
+            Nos alegra mucho que te hayas sumado a nuestra comunidad 🌿<br>
+            En Club Pilates San Juan trabajamos para que cada clase sea un espacio de bienestar, movimiento y conexión con tu cuerpo.
+        </p>
+
+        {plan_block}
+
+        <!-- Cómo agendar -->
+        <div style="margin:28px 0 0;">
+            <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#7a8f79;margin-bottom:12px;">¿Cómo agendar tu turno?</div>
+
+            <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;">
+                <div style="background:#eaf3e8;border-radius:50%;width:32px;height:32px;min-width:32px;display:flex;align-items:center;justify-content:center;font-size:14px;">💬</div>
+                <div>
+                    <div style="font-size:14px;font-weight:500;color:#3d4f3c;">Por WhatsApp</div>
+                    <div style="font-size:13px;color:#7a8f79;margin-top:2px;">Envianos un mensaje al <strong>+54 9 264 555-1234</strong> indicando el día y horario que preferís.</div>
+                </div>
+            </div>
+
+            <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;">
+                <div style="background:#eaf3e8;border-radius:50%;width:32px;height:32px;min-width:32px;display:flex;align-items:center;justify-content:center;font-size:14px;">📅</div>
+                <div>
+                    <div style="font-size:14px;font-weight:500;color:#3d4f3c;">Horarios disponibles</div>
+                    <div style="font-size:13px;color:#7a8f79;margin-top:2px;">Lunes a viernes de 8:00 a 21:00 hs · Sábados de 9:00 a 12:00 hs</div>
+                </div>
+            </div>
+
+            <div style="display:flex;align-items:flex-start;gap:14px;">
+                <div style="background:#eaf3e8;border-radius:50%;width:32px;height:32px;min-width:32px;display:flex;align-items:center;justify-content:center;font-size:14px;">📍</div>
+                <div>
+                    <div style="font-size:14px;font-weight:500;color:#3d4f3c;">Dónde estamos</div>
+                    <div style="font-size:13px;color:#7a8f79;margin-top:2px;">San Roque Sur 1044, Rawson, San Juan</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Importante -->
+        <div style="background:#f7f4ef;border-radius:6px;padding:14px 18px;margin-top:28px;font-size:12px;color:#7a8f79;line-height:1.6;">
+            <strong style="color:#3d4f3c;">Recordá:</strong> Los planes son mensuales e intransferibles.
+            Si necesitás cancelar un turno, avisanos con al menos 2 horas de anticipación por WhatsApp.
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="border-top:1px solid #eaf3e8;padding:20px 40px;text-align:center;">
+        <div style="font-size:12px;color:#b5c9b1;letter-spacing:0.1em;">Club Pilates San Juan &nbsp;·&nbsp; clubpilatesanjuan@gmail.com</div>
+    </div>
+
+</div>
+</body>
+</html>'''
+
+
+def send_welcome_email(nombre, apellido, email_dest, plan):
+    """Envía el email de bienvenida en un hilo separado para no bloquear la respuesta."""
+    if not EMAIL_ENABLED or not email_dest:
+        return
+
+    def _send():
+        try:
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = f'¡Bienvenida a Club Pilates San Juan, {nombre}! 🌿'
+            msg['From']    = f'Club Pilates San Juan <{EMAIL_FROM}>'
+            msg['To']      = email_dest
+
+            html = _build_welcome_html(nombre, apellido, plan)
+            msg.attach(MIMEText(html, 'html', 'utf-8'))
+
+            with smtplib.SMTP('smtp.gmail.com', 587) as server:
+                server.starttls()
+                server.login(EMAIL_FROM, EMAIL_PASSWORD)
+                server.sendmail(EMAIL_FROM, email_dest, msg.as_string())
+
+            print(f'[email] Bienvenida enviada a {email_dest}')
+        except Exception as e:
+            print(f'[email] Error al enviar a {email_dest}: {e}')
+
+    threading.Thread(target=_send, daemon=True).start()
+
 
 # ── Base de datos ─────────────────────────────────────
 DB_PATH = os.path.join(os.path.dirname(__file__), 'agenda.db')
@@ -303,6 +424,11 @@ def create_alumna():
             )
             conn.commit()
             row = conn.execute('SELECT * FROM alumnas WHERE id = ?', (cur.lastrowid,)).fetchone()
+
+        # Enviar email de bienvenida si tiene email (no bloquea la respuesta)
+        if email:
+            send_welcome_email(nombre, apellido, email, plan)
+
         return jsonify(dict(row)), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
