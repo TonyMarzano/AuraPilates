@@ -88,7 +88,7 @@ def _build_welcome_html(nombre, apellido, plan):
                 <div style="background:#eaf3e8;border-radius:50%;width:32px;height:32px;min-width:32px;display:flex;align-items:center;justify-content:center;font-size:14px;">💬</div>
                 <div>
                     <div style="font-size:14px;font-weight:500;color:#3d4f3c;">Por WhatsApp</div>
-                    <div style="font-size:13px;color:#7a8f79;margin-top:2px;">Envianos un mensaje al <strong>+54 9 264 555-1234</strong> indicando el día y horario que preferís.</div>
+                    <div style="font-size:13px;color:#7a8f79;margin-top:2px;">Envianos un mensaje al <a href="https://wa.me/542645797486" style="color:#8aab85;font-weight:500;text-decoration:none;">+54 9 264 579-7486</a> indicando el día y horario que preferís.</div>
                 </div>
             </div>
 
