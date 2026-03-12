@@ -279,6 +279,42 @@ def create_alumna():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# IMPORTANTE: estas rutas deben estar ANTES de /<int:alumna_id>
+@app.route('/api/alumnas/pagos', methods=['GET'])
+@login_required
+def get_pagos():
+    mes = request.args.get('mes', '')
+    try:
+        with get_db() as conn:
+            rows = conn.execute('''
+                SELECT alumna_id, MIN(fecha) as fecha_pago
+                FROM movimientos
+                WHERE tipo = 'ingreso'
+                  AND alumna_id IS NOT NULL
+                  AND fecha LIKE ?
+                GROUP BY alumna_id
+            ''', (f'{mes}%',)).fetchall()
+        return jsonify({str(r['alumna_id']): r['fecha_pago'] for r in rows})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/alumnas/clases', methods=['GET'])
+@login_required
+def get_clases():
+    mes = request.args.get('mes', '')
+    try:
+        with get_db() as conn:
+            rows = conn.execute('''
+                SELECT alumna_id, COUNT(*) as usadas
+                FROM reservas
+                WHERE alumna_id IS NOT NULL
+                  AND substr(slot_key, 1, 7) = ?
+                GROUP BY alumna_id
+            ''', (mes,)).fetchall()
+        return jsonify({str(r['alumna_id']): r['usadas'] for r in rows})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/alumnas/<int:alumna_id>', methods=['PUT'])
 @login_required
 def update_alumna(alumna_id):
@@ -403,42 +439,6 @@ def resumen_movimientos():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/alumnas/clases', methods=['GET'])
-@login_required
-def get_clases():
-    """Clases usadas por alumna en el mes dado (reservas vinculadas)."""
-    mes = request.args.get('mes', '')
-    try:
-        with get_db() as conn:
-            rows = conn.execute('''
-                SELECT alumna_id, COUNT(*) as usadas
-                FROM reservas
-                WHERE alumna_id IS NOT NULL
-                  AND substr(slot_key, 1, 7) = ?
-                GROUP BY alumna_id
-            ''', (mes,)).fetchall()
-        return jsonify({str(r['alumna_id']): r['usadas'] for r in rows})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# ── Arranque ──────────────────────────────────────────
-@login_required
-def get_pagos():
-    """Devuelve qué alumnas tienen un ingreso registrado en el mes dado."""
-    mes = request.args.get('mes', '')
-    try:
-        with get_db() as conn:
-            rows = conn.execute('''
-                SELECT alumna_id, MIN(fecha) as fecha_pago
-                FROM movimientos
-                WHERE tipo = 'ingreso'
-                  AND alumna_id IS NOT NULL
-                  AND fecha LIKE ?
-                GROUP BY alumna_id
-            ''', (f'{mes}%',)).fetchall()
-        return jsonify({str(r['alumna_id']): r['fecha_pago'] for r in rows})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 # ── Arranque ──────────────────────────────────────────
 if __name__ == '__main__':
