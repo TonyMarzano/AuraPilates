@@ -282,6 +282,44 @@
             cursor: pointer;
         }
 
+        /* Turno parcialmente ocupado (1-4 alumnas) */
+        .slot.partial {
+            background: #e8f5e4;
+            cursor: pointer;
+            border-left: 3px solid var(--sage-light);
+        }
+
+        /* Turno completo (5 alumnas) */
+        .slot.full {
+            background: #f5e4e4;
+            cursor: pointer;
+            border-left: 3px solid #c97a7a;
+        }
+
+        .slot-capacity {
+            font-size: 0.68rem;
+            font-weight: 500;
+            letter-spacing: 0.03em;
+            margin-top: 2px;
+        }
+        .slot.partial .slot-capacity { color: var(--sage); }
+        .slot.full    .slot-capacity { color: #b05050; }
+
+        .slot-avatars {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            margin-top: 3px;
+        }
+
+        .slot-avatar-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--sage);
+        }
+        .slot.full .slot-avatar-dot { background: #c97a7a; }
+
         .slot.closed {
             background: repeating-linear-gradient(
                 45deg,
@@ -484,6 +522,119 @@
             font-weight: 300;
             color: var(--text);
         }
+
+        /* ── Slot detail modal: lista de alumnas ── */
+        .slot-capacity-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 0 0.9rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 0.75rem;
+        }
+
+        .cap-dots {
+            display: flex;
+            gap: 5px;
+        }
+
+        .cap-dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            border: 1.5px solid var(--sage-light);
+            background: transparent;
+            transition: background 0.2s;
+        }
+
+        .cap-dot.used { background: var(--sage); border-color: var(--sage); }
+        .cap-dot.used.full-color { background: #c97a7a; border-color: #c97a7a; }
+
+        .cap-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            letter-spacing: 0.1em;
+        }
+
+        .slot-alumna-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .slot-alumna-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0.75rem;
+            background: var(--sage-bg);
+            border-radius: 6px;
+            gap: 0.5rem;
+        }
+
+        .slot-alumna-info { flex: 1; }
+
+        .slot-alumna-name {
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .slot-alumna-tel {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            font-weight: 300;
+        }
+
+        .btn-cancel-reserva {
+            background: none;
+            border: 1px solid #e8c5c5;
+            color: #c0756d;
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-size: 0.72rem;
+            cursor: pointer;
+            white-space: nowrap;
+            font-family: 'Jost', sans-serif;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-cancel-reserva:hover { background: #fdf0f0; }
+
+        .slot-add-section {
+            border-top: 1px solid var(--border);
+            padding-top: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .btn-agregar-alumna {
+            width: 100%;
+            background: none;
+            border: 1.5px dashed var(--sage-light);
+            color: var(--sage);
+            border-radius: 6px;
+            padding: 0.5rem;
+            font-family: 'Jost', sans-serif;
+            font-size: 0.82rem;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-agregar-alumna:hover {
+            background: var(--sage-pale);
+            border-color: var(--sage);
+        }
+
+        .slot-add-form {
+            display: none;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 0.6rem;
+        }
+
+        .slot-add-form.open { display: flex; }
 
         /* ── Toast ── */
         .toast {
@@ -1235,7 +1386,7 @@
 
     <!-- Proyección de ingresos -->
     <div class="proyeccion-wrap">
-        <div class="proyeccion-title">Proyección de ingresos — basado en $45.000 por mes</div>
+        <div class="proyeccion-title">Proyección de ingresos — basado en $45.000 por clase</div>
         <div class="proyeccion-grid">
             <div class="proy-card">
                 <div class="proy-label">🔴 70% — Arranque</div>
@@ -1269,8 +1420,8 @@
         <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
             <input class="alum-search" id="alumSearch" type="text" placeholder="Buscar alumna…" oninput="renderAlumnas()">
             <div class="alum-filter">
-                <button class="filter-btn" id="filterTodas" onclick="setFiltro('todas')">Todas</button>
                 <button class="filter-btn active" id="filterActiva" onclick="setFiltro('activa')">Activas</button>
+                <button class="filter-btn" id="filterTodas" onclick="setFiltro('todas')">Todas</button>
                 <button class="filter-btn" id="filterInactiva" onclick="setFiltro('inactiva')">Inactivas</button>
             </div>
             <div class="alum-filter">
@@ -1314,66 +1465,65 @@
 </div>
 </div><!-- /tab-alumnas -->
 
-<!-- MODAL: Reservar -->
-<div class="modal-overlay" id="modalReservar">
-    <div class="modal">
+<!-- MODAL: Slot (ver + agregar) -->
+<div class="modal-overlay" id="modalSlot">
+    <div class="modal" style="max-width:480px;width:100%">
         <div class="modal-header">
-            <div class="modal-title">Nueva Reserva</div>
-            <div class="modal-slot-info" id="modalSlotInfo"></div>
+            <div class="modal-title" id="slotModalTitle">Turno</div>
+            <div class="modal-slot-info" id="slotModalInfo"></div>
         </div>
         <div class="modal-body">
-            <!-- Toggle: alumna registrada vs libre -->
-            <div class="reserva-mode-toggle">
-                <button class="mode-btn active" id="modeRegistrada" onclick="setReservaMode('registrada')">Alumna registrada</button>
-                <button class="mode-btn" id="modeLibre" onclick="setReservaMode('libre')">Sin registrar</button>
+            <!-- Barra de capacidad -->
+            <div class="slot-capacity-bar">
+                <div class="cap-dots" id="capDots"></div>
+                <span class="cap-label" id="capLabel"></span>
             </div>
 
-            <!-- Modo registrada -->
-            <div id="sectionRegistrada">
-                <div class="form-group">
-                    <label class="form-label">Alumna</label>
-                    <select class="form-input" id="inputAlumnaId" onchange="onAlumnaSelect()">
-                        <option value="">— Seleccioná una alumna —</option>
-                    </select>
-                </div>
-                <div class="alumna-info-preview" id="alumnaPreview" style="display:none"></div>
-            </div>
+            <!-- Lista de alumnas reservadas -->
+            <div class="slot-alumna-list" id="slotAlumnaList"></div>
 
-            <!-- Modo libre -->
-            <div id="sectionLibre" style="display:none">
-                <div class="form-group">
-                    <label class="form-label">Nombre</label>
-                    <input class="form-input" id="inputNombre" type="text" placeholder="Ej: María">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Apellido</label>
-                    <input class="form-input" id="inputApellido" type="text" placeholder="Ej: González">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Teléfono / Cel</label>
-                    <input class="form-input" id="inputTel" type="tel" placeholder="Ej: 264 555-1234">
+            <!-- Sección agregar (oculta si lleno) -->
+            <div class="slot-add-section" id="slotAddSection">
+                <button class="btn-agregar-alumna" onclick="toggleAddForm()">+ Agregar alumna</button>
+                <div class="slot-add-form" id="slotAddForm">
+                    <!-- Toggle registrada / libre -->
+                    <div class="reserva-mode-toggle">
+                        <button class="mode-btn active" id="modeRegistrada" onclick="setReservaMode('registrada')">Registrada</button>
+                        <button class="mode-btn" id="modeLibre" onclick="setReservaMode('libre')">Sin registrar</button>
+                    </div>
+                    <!-- Modo registrada -->
+                    <div id="sectionRegistrada">
+                        <div class="form-group">
+                            <label class="form-label">Alumna</label>
+                            <select class="form-input" id="inputAlumnaId" onchange="onAlumnaSelect()">
+                                <option value="">— Seleccioná una alumna —</option>
+                            </select>
+                        </div>
+                        <div class="alumna-info-preview" id="alumnaPreview" style="display:none"></div>
+                    </div>
+                    <!-- Modo libre -->
+                    <div id="sectionLibre" style="display:none">
+                        <div class="form-group">
+                            <label class="form-label">Nombre</label>
+                            <input class="form-input" id="inputNombre" type="text" placeholder="Ej: María">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Apellido</label>
+                            <input class="form-input" id="inputApellido" type="text" placeholder="Ej: González">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Teléfono</label>
+                            <input class="form-input" id="inputTel" type="tel" placeholder="Ej: 264 555-1234">
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:0.5rem;margin-top:0.25rem">
+                        <button class="btn btn-cancel" onclick="toggleAddForm()" style="flex:1">Cancelar</button>
+                        <button class="btn btn-confirm" id="btnConfirmReserva" onclick="confirmReserva()" style="flex:2">Confirmar</button>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
-            <button class="btn btn-confirm" onclick="confirmReserva()">Confirmar Turno</button>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL: Ver turno -->
-<div class="modal-overlay" id="modalVer">
-    <div class="modal">
-        <div class="modal-header">
-            <div class="modal-title">Detalle del Turno</div>
-            <div class="modal-slot-info" id="modalVerInfo"></div>
-        </div>
-        <div class="modal-body">
-            <div class="booked-detail" id="bookedDetail"></div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-delete" onclick="cancelarTurno()">Cancelar Turno</button>
             <button class="btn btn-cancel" onclick="closeModal()">Cerrar</button>
         </div>
     </div>
@@ -1559,18 +1709,6 @@ async function fetchReservas() {
     }
 }
 
-async function apiCrear(key, nombre, apellido, tel) {
-    return await fetch('/api/reservas', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ slot_key: key, nombre, apellido, tel })
-    });
-}
-
-async function apiEliminar(key) {
-    return await fetch(`/api/reservas/${key}`, { method: 'DELETE' });
-}
-
 // ── Navigation ──
 function goToday() {
     currentMonday = getMonday(new Date());
@@ -1637,20 +1775,39 @@ function render() {
 
             if (!sched || hour < sched.start || hour >= sched.end) {
                 slot.className = 'slot closed';
-            } else if (reservas[key]) {
-                slot.className = 'slot booked';
-                const r = reservas[key];
-                slot.innerHTML = `
-                    <div class="slot-content">
-                        <div class="slot-name">${r.nombre} ${r.apellido}</div>
-                        <div class="slot-phone">${r.tel}</div>
-                    </div>
-                    <div class="slot-dot"></div>
-                `;
-                slot.addEventListener('click', () => openVerModal(key, d, hour));
             } else {
-                slot.className = 'slot available';
-                slot.addEventListener('click', () => openReservarModal(key, d, hour));
+                const list  = reservas[key] || [];
+                const count = list.length;
+                const MAX   = 5;
+
+                if (count === 0) {
+                    slot.className = 'slot available';
+                    slot.addEventListener('click', () => openSlotModal(key, d, hour));
+                } else if (count < MAX) {
+                    slot.className = 'slot partial';
+                    const dots = Array.from({length: MAX}, (_,i) =>
+                        `<div class="slot-avatar-dot${i >= count ? ' empty' : ''}"></div>`
+                    ).join('');
+                    slot.innerHTML = `
+                        <div class="slot-content">
+                            <div class="slot-avatars">${dots}</div>
+                            <div class="slot-capacity">${count}/${MAX} alumnas</div>
+                        </div>`;
+                    slot.style.cssText += '; display:flex; align-items:center;';
+                    slot.addEventListener('click', () => openSlotModal(key, d, hour));
+                } else {
+                    slot.className = 'slot full';
+                    const dots = Array.from({length: MAX}, () =>
+                        `<div class="slot-avatar-dot full-color"></div>`
+                    ).join('');
+                    slot.innerHTML = `
+                        <div class="slot-content">
+                            <div class="slot-avatars">${dots}</div>
+                            <div class="slot-capacity">Completo</div>
+                        </div>`;
+                    slot.style.cssText += '; display:flex; align-items:center;';
+                    slot.addEventListener('click', () => openSlotModal(key, d, hour));
+                }
             }
             grid.appendChild(slot);
         });
@@ -1668,47 +1825,107 @@ function updateStats(days) {
     days.forEach(d => {
         const sc = SCHEDULE[d.getDay()];
         if (!sc) return;
-        for (let h = sc.start; h < sc.end; h++)
-            if (reservas[slotKey(d,h)]) weekCount++;
+        for (let h = sc.start; h < sc.end; h++) {
+            const list = reservas[slotKey(d,h)] || [];
+            weekCount += list.length;
+        }
     });
 
+    // Lugares disponibles hoy = (slots hoy × 5) - reservas hoy
     let todayAvail = 0;
     if (todaySc) {
-        for (let h = todaySc.start; h < todaySc.end; h++)
-            if (!reservas[slotKey(today,h)]) todayAvail++;
+        for (let h = todaySc.start; h < todaySc.end; h++) {
+            const list = reservas[slotKey(today,h)] || [];
+            todayAvail += Math.max(0, 5 - list.length);
+        }
     }
+
+    // Total de reservas de la semana
+    let totalRes = 0;
+    Object.values(reservas).forEach(list => totalRes += list.length);
 
     document.getElementById('statWeek').textContent  = weekCount;
     document.getElementById('statToday').textContent = todayAvail;
-    document.getElementById('statTotal').textContent = Object.keys(reservas).length;
+    document.getElementById('statTotal').textContent = totalRes;
 }
 
-// ── Modals ──
+// ── Modal slot (ver + agregar) ──
 let reservaMode = 'registrada';
+let addFormOpen = false;
 
-async function openReservarModal(key, date, hour) {
+async function openSlotModal(key, date, hour) {
     pendingKey  = key;
     pendingSlot = { date, hour };
-    document.getElementById('modalSlotInfo').textContent =
-        `${DAYS_ES[date.getDay()]} ${formatDate(date)} · ${String(hour).padStart(2,'0')}:00 — ${String(hour+1).padStart(2,'0')}:00`;
+
+    const timeStr = `${DAYS_ES[date.getDay()]} ${formatDate(date)} · ${String(hour).padStart(2,'0')}:00 — ${String(hour+1).padStart(2,'0')}:00`;
+    document.getElementById('slotModalInfo').textContent = timeStr;
+
+    // Cerrar form si estaba abierto
+    addFormOpen = false;
+    document.getElementById('slotAddForm').classList.remove('open');
+    document.getElementById('btnConfirmReserva') && (document.getElementById('btnConfirmReserva').textContent = 'Confirmar');
 
     // Reset modo
     setReservaMode('registrada');
+    document.getElementById('inputNombre').value   = '';
+    document.getElementById('inputApellido').value = '';
+    document.getElementById('inputTel').value      = '';
+    document.getElementById('alumnaPreview').style.display = 'none';
 
-    // Cargar alumnas activas en el selector
+    renderSlotModal(key);
+    document.getElementById('modalSlot').classList.add('open');
+
+    // Cargar alumnas en segundo plano
     const lista = await fetch('/api/alumnas?activa=1').then(r => r.json()).catch(() => []);
     const sel   = document.getElementById('inputAlumnaId');
     sel.innerHTML = '<option value="">— Seleccioná una alumna —</option>' +
         lista.map(a => `<option value="${a.id}" data-nombre="${a.nombre}" data-apellido="${a.apellido}" data-tel="${a.tel||''}" data-plan="${a.plan||''}">${a.apellido}, ${a.nombre}</option>`).join('');
     sel.value = '';
-    document.getElementById('alumnaPreview').style.display = 'none';
+}
 
-    // Reset campos libres
-    document.getElementById('inputNombre').value   = '';
-    document.getElementById('inputApellido').value = '';
-    document.getElementById('inputTel').value      = '';
+function renderSlotModal(key) {
+    const list  = reservas[key] || [];
+    const count = list.length;
+    const MAX   = 5;
 
-    document.getElementById('modalReservar').classList.add('open');
+    // Título
+    document.getElementById('slotModalTitle').textContent =
+        count === 0 ? 'Turno libre' : count === MAX ? 'Turno completo' : `Turno · ${count}/${MAX}`;
+
+    // Dots de capacidad
+    document.getElementById('capDots').innerHTML = Array.from({length: MAX}, (_,i) =>
+        `<div class="cap-dot${i < count ? (count===MAX ? ' used full-color' : ' used') : ''}"></div>`
+    ).join('');
+    document.getElementById('capLabel').textContent =
+        count === 0 ? '5 lugares disponibles' :
+        count === MAX ? 'Sin lugares' :
+        `${MAX - count} lugar${MAX-count!==1?'es':''} disponible${MAX-count!==1?'s':''}`;
+
+    // Lista de alumnas
+    document.getElementById('slotAlumnaList').innerHTML = list.length
+        ? list.map(r => `
+            <div class="slot-alumna-row">
+                <div class="slot-alumna-info">
+                    <div class="slot-alumna-name">${r.nombre} ${r.apellido}</div>
+                    <div class="slot-alumna-tel">${r.tel}</div>
+                </div>
+                <button class="btn-cancel-reserva" onclick="cancelarReserva(${r.id})">✕ Cancelar</button>
+            </div>`).join('')
+        : '<div style="font-size:0.82rem;color:var(--text-light);padding:0.3rem 0">Sin reservas aún.</div>';
+
+    // Mostrar / ocultar botón agregar
+    document.getElementById('slotAddSection').style.display = count >= MAX ? 'none' : '';
+}
+
+function toggleAddForm() {
+    addFormOpen = !addFormOpen;
+    document.getElementById('slotAddForm').classList.toggle('open', addFormOpen);
+}
+
+function closeModal() {
+    document.getElementById('modalSlot').classList.remove('open');
+    pendingKey = null;
+    addFormOpen = false;
 }
 
 function setReservaMode(mode) {
@@ -1730,34 +1947,6 @@ function onAlumnaSelect() {
     preview.innerHTML = `<strong>${opt.dataset.nombre} ${opt.dataset.apellido}</strong> &nbsp;·&nbsp; ${opt.dataset.tel || 'sin tel'} &nbsp;·&nbsp; ${plan}`;
 }
 
-function openVerModal(key, date, hour) {
-    pendingKey = key;
-    const r    = reservas[key];
-    document.getElementById('modalVerInfo').textContent =
-        `${DAYS_ES[date.getDay()]} ${formatDate(date)} · ${String(hour).padStart(2,'0')}:00 — ${String(hour+1).padStart(2,'0')}:00`;
-    document.getElementById('bookedDetail').innerHTML = `
-        <div class="detail-row">
-            <span class="detail-key">Nombre</span>
-            <span class="detail-val">${r.nombre} ${r.apellido}</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-key">Teléfono</span>
-            <span class="detail-val">${r.tel}</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-key">Reservado</span>
-            <span class="detail-val">${r.createdAt || '—'}</span>
-        </div>
-    `;
-    document.getElementById('modalVer').classList.add('open');
-}
-
-function closeModal() {
-    document.getElementById('modalReservar').classList.remove('open');
-    document.getElementById('modalVer').classList.remove('open');
-    pendingKey = null;
-}
-
 async function confirmReserva() {
     let nombre, apellido, tel, alumnaId = null;
 
@@ -1776,7 +1965,7 @@ async function confirmReserva() {
         if (!nombre || !apellido || !tel) { showToast('Completá todos los campos'); return; }
     }
 
-    const btn = document.querySelector('#modalReservar .btn-confirm');
+    const btn = document.getElementById('btnConfirmReserva');
     btn.textContent = 'Guardando…';
     btn.disabled    = true;
 
@@ -1787,9 +1976,13 @@ async function confirmReserva() {
             body:    JSON.stringify({ slot_key: pendingKey, nombre, apellido, tel, alumna_id: alumnaId })
         });
         if (res.ok) {
-            closeModal();
-            await loadAndRender();
-            showToast(`✓ Turno reservado para ${nombre} ${apellido}`);
+            await fetchReservas();
+            // Actualizar modal sin cerrarlo
+            document.getElementById('slotAddForm').classList.remove('open');
+            addFormOpen = false;
+            renderSlotModal(pendingKey);
+            render();
+            showToast(`✓ Reservado para ${nombre} ${apellido}`);
         } else {
             const data = await res.json();
             showToast(data.error || 'Error al reservar');
@@ -1797,22 +1990,25 @@ async function confirmReserva() {
     } catch(e) {
         showToast('Error de conexión');
     } finally {
-        btn.textContent = 'Confirmar Turno';
+        btn.textContent = 'Confirmar';
         btn.disabled    = false;
     }
 }
 
-async function cancelarTurno() {
-    if (!pendingKey) return;
-    const r    = reservas[pendingKey];
-    const name = `${r.nombre} ${r.apellido}`;
+async function cancelarReserva(id) {
+    if (!confirm('¿Cancelar este turno?')) return;
     try {
-        await apiEliminar(pendingKey);
-        closeModal();
-        await loadAndRender();
-        showToast(`Turno de ${name} cancelado`);
+        const res = await fetch(`/api/reservas/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            await fetchReservas();
+            renderSlotModal(pendingKey);
+            render();
+            showToast('Turno cancelado');
+        } else {
+            showToast('Error al cancelar');
+        }
     } catch(e) {
-        showToast('Error al cancelar');
+        showToast('Error de conexión');
     }
 }
 
@@ -1825,8 +2021,7 @@ function showToast(msg) {
 }
 
 // ── Cerrar modales ──
-document.getElementById('modalReservar').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
-document.getElementById('modalVer').addEventListener('click',      e => { if (e.target === e.currentTarget) closeModal(); });
+document.getElementById('modalSlot').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 document.getElementById('modalMovimiento').addEventListener('click', e => { if (e.target === e.currentTarget) closeMovModal(); });
 document.getElementById('modalAlumna').addEventListener('click',   e => { if (e.target === e.currentTarget) closeAlumnaModal(); });
 document.addEventListener('keydown', e => {

@@ -90,6 +90,26 @@ def init_db():
         if 'alumna_id' not in cols_res:
             conn.execute("ALTER TABLE reservas ADD COLUMN alumna_id INTEGER REFERENCES alumnas(id) ON DELETE SET NULL")
 
+        # Migración: quitar UNIQUE de slot_key para permitir hasta 5 reservas por turno
+        schema = conn.execute(
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='reservas'"
+        ).fetchone()
+        if schema and 'UNIQUE' in schema[0].upper():
+            conn.execute('ALTER TABLE reservas RENAME TO reservas_old')
+            conn.execute('''
+                CREATE TABLE reservas (
+                    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                    slot_key   TEXT    NOT NULL,
+                    nombre     TEXT    NOT NULL,
+                    apellido   TEXT    NOT NULL,
+                    tel        TEXT    NOT NULL,
+                    alumna_id  INTEGER REFERENCES alumnas(id) ON DELETE SET NULL,
+                    created_at DATETIME DEFAULT (datetime('now','-3 hours'))
+                )
+            ''')
+            conn.execute('INSERT INTO reservas SELECT id, slot_key, nombre, apellido, tel, alumna_id, created_at FROM reservas_old')
+            conn.execute('DROP TABLE reservas_old')
+
         conn.commit()
 
 # Inicializar DB al arrancar
@@ -179,21 +199,26 @@ def get_reservas():
         with get_db() as conn:
             if desde and hasta:
                 rows = conn.execute(
-                    'SELECT * FROM reservas WHERE slot_key BETWEEN ? AND ? ORDER BY slot_key',
+                    'SELECT * FROM reservas WHERE slot_key BETWEEN ? AND ? ORDER BY slot_key, id',
                     (desde, hasta + '_99')
                 ).fetchall()
             else:
-                rows = conn.execute('SELECT * FROM reservas ORDER BY slot_key').fetchall()
+                rows = conn.execute('SELECT * FROM reservas ORDER BY slot_key, id').fetchall()
 
+        # Cada slot_key → lista de reservas (máx 5)
         result = {}
         for row in rows:
-            result[row['slot_key']] = {
+            k = row['slot_key']
+            if k not in result:
+                result[k] = []
+            result[k].append({
                 'id':        row['id'],
                 'nombre':    row['nombre'],
                 'apellido':  row['apellido'],
                 'tel':       row['tel'],
+                'alumna_id': row['alumna_id'],
                 'createdAt': row['created_at']
-            }
+            })
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -213,23 +238,26 @@ def create_reserva():
 
     try:
         with get_db() as conn:
+            count = conn.execute(
+                'SELECT COUNT(*) FROM reservas WHERE slot_key = ?', (slot_key,)
+            ).fetchone()[0]
+            if count >= 5:
+                return jsonify({'error': 'Turno completo (máximo 5 alumnas)'}), 409
             conn.execute(
                 'INSERT INTO reservas (slot_key, nombre, apellido, tel, alumna_id) VALUES (?, ?, ?, ?, ?)',
                 (slot_key, nombre, apellido, tel, alumna_id if alumna_id else None)
             )
             conn.commit()
         return jsonify({'ok': True}), 201
-    except sqlite3.IntegrityError:
-        return jsonify({'error': 'Ese turno ya está reservado'}), 409
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/reservas/<path:slot_key>', methods=['DELETE'])
+@app.route('/api/reservas/<int:reserva_id>', methods=['DELETE'])
 @login_required
-def delete_reserva(slot_key):
+def delete_reserva(reserva_id):
     try:
         with get_db() as conn:
-            conn.execute('DELETE FROM reservas WHERE slot_key = ?', (slot_key,))
+            conn.execute('DELETE FROM reservas WHERE id = ?', (reserva_id,))
             conn.commit()
         return jsonify({'ok': True})
     except Exception as e:
