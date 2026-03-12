@@ -27,7 +27,7 @@ RECOVERY_CODE   = 'sanjuan2025'
 # ── Configuración de email ────────────────────────────
 # Obtené tu App Password en: myaccount.google.com → Seguridad → Contraseñas de aplicaciones
 EMAIL_FROM     = 'clubpilatesanjuan@gmail.com'
-EMAIL_PASSWORD = 'kldnaidcrdxcdftw'   # ← pegá acá tu App Password de 16 caracteres
+EMAIL_PASSWORD = 'kldn aidc rdxc dftw'   # ← pegá acá tu App Password de 16 caracteres
 EMAIL_ENABLED  = True                     # ← poné False para desactivar sin borrar la config
 
 # ── Decorador: requiere login ─────────────────────────
