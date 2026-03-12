@@ -1,2200 +1,445 @@
-<!DOCTYPE html>
-<html lang="es-AR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agenda — Club Pilates</title>
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --sage:       #8aab85;
-            --sage-light: #b5c9b1;
-            --sage-pale:  #eaf3e8;
-            --sage-bg:    #f2f7f1;
-            --cream:      #f7f4ef;
-            --text:       #3d4f3c;
-            --text-light: #7a8f79;
-            --white:      #ffffff;
-            --border:     rgba(138,171,133,0.25);
-            --booked:     #8aab85;
-            --booked-bg:  #ddeedd;
-            --shadow:     0 2px 20px rgba(61,79,60,0.08);
-        }
-
-        * { margin:0; padding:0; box-sizing:border-box; }
-
-        body {
-            font-family: 'Jost', sans-serif;
-            background: var(--sage-bg);
-            color: var(--text);
-            min-height: 100vh;
-        }
-
-        /* ── Header ── */
-        .app-header {
-            background: rgba(255,255,255,0.85);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
-            padding: 0 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            height: 64px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .header-logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-        }
-
-        .header-cp {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.85rem;
-            font-weight: 300;
-            color: var(--sage);
-            letter-spacing: -0.02em;
-            line-height: 1;
-        }
-
-        .header-divider {
-            width: 1px;
-            height: 24px;
-            background: var(--sage-light);
-        }
-
-        .header-title {
-            font-family: 'Jost', sans-serif;
-            font-weight: 300;
-            font-size: 0.88rem;
-            letter-spacing: 0.3em;
-            color: var(--text);
-            text-transform: uppercase;
-        }
-
-        .header-sub {
-            font-size: 0.66rem;
-            color: var(--text-light);
-            letter-spacing: 0.25em;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .week-nav {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .week-nav button {
-            background: none;
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            cursor: pointer;
-            color: var(--text);
-            font-size: 0.96rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-
-        .week-nav button:hover {
-            background: var(--sage-pale);
-            border-color: var(--sage);
-        }
-
-        .week-label {
-            font-size: 0.88rem;
-            font-weight: 300;
-            letter-spacing: 0.1em;
-            color: var(--text);
-            min-width: 160px;
-            text-align: center;
-        }
-
-        .btn-today {
-            font-family: 'Jost', sans-serif;
-            font-size: 0.78rem;
-            letter-spacing: 0.25em;
-            text-transform: uppercase;
-            background: var(--sage-pale);
-            border: 1px solid var(--sage-light);
-            color: var(--sage);
-            padding: 6px 14px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-today:hover { background: var(--sage); color: white; }
-
-        /* ── Layout ── */
-        .app-body {
-            padding: 1.5rem 2rem;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        /* ── Stats row ── */
-        .stats-row {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .stat-card {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem 1.5rem;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .stat-label {
-            font-size: 0.72rem;
-            letter-spacing: 0.3em;
-            text-transform: uppercase;
-            color: var(--text-light);
-        }
-
-        .stat-value {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 2.2rem;
-            font-weight: 300;
-            color: var(--sage);
-            line-height: 1;
-        }
-
-        /* ── Calendar grid ── */
-        .calendar-wrap {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: var(--shadow);
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: 60px repeat(7, 1fr);
-            overflow-x: auto;
-        }
-
-        /* Day headers */
-        .col-header {
-            padding: 1rem 0.5rem 0.75rem;
-            text-align: center;
-            border-bottom: 1px solid var(--border);
-            border-right: 1px solid var(--border);
-            background: var(--cream);
-            position: sticky;
-            top: 0;
-        }
-
-        .col-header:first-child { background: var(--cream); }
-
-        .col-header.today-col {
-            background: var(--sage-pale);
-        }
-
-        .day-name {
-            font-size: 0.72rem;
-            letter-spacing: 0.25em;
-            text-transform: uppercase;
-            color: var(--text-light);
-            font-weight: 300;
-        }
-
-        .day-num {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.65rem;
-            font-weight: 300;
-            color: var(--text);
-            line-height: 1.2;
-        }
-
-        .day-num.today {
-            color: var(--sage);
-        }
-
-        /* Time labels column */
-        .time-label {
-            padding: 0 0.5rem;
-            text-align: right;
-            font-size: 0.72rem;
-            color: var(--text-light);
-            letter-spacing: 0.05em;
-            border-right: 1px solid var(--border);
-            display: flex;
-            align-items: flex-start;
-            padding-top: 6px;
-            height: 56px;
-        }
-
-        /* Slot cells */
-        .slot {
-            height: 56px;
-            border-bottom: 1px solid var(--border);
-            border-right: 1px solid var(--border);
-            position: relative;
-            transition: background 0.15s;
-        }
-
-        .slot.available {
-            cursor: pointer;
-        }
-
-        .slot.available:hover {
-            background: var(--sage-pale);
-        }
-
-        .slot.available:hover::after {
-            content: '+ Reservar';
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.72rem;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            color: var(--sage);
-            font-weight: 400;
-        }
-
-        .slot.booked {
-            background: var(--booked-bg);
-            cursor: pointer;
-        }
-
-        .slot.closed {
-            background: repeating-linear-gradient(
-                45deg,
-                transparent,
-                transparent 4px,
-                rgba(0,0,0,0.03) 4px,
-                rgba(0,0,0,0.03) 8px
-            );
-            cursor: not-allowed;
-        }
-
-        .slot-content {
-            padding: 5px 8px;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .slot-name {
-            font-size: 0.80rem;
-            font-weight: 500;
-            color: var(--text);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            line-height: 1.2;
-        }
-
-        .slot-phone {
-            font-size: 0.70rem;
-            color: var(--text-light);
-            font-weight: 300;
-        }
-
-        .slot-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--sage);
-            position: absolute;
-            top: 8px;
-            right: 8px;
-        }
-
-        /* ── Modal ── */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(61,79,60,0.25);
-            backdrop-filter: blur(4px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 200;
-        }
-
-        .modal-overlay.open { display: flex; }
-
-        .modal {
-            background: white;
-            border-radius: 8px;
-            width: 420px;
-            max-width: 95vw;
-            box-shadow: 0 20px 60px rgba(61,79,60,0.2);
-            overflow: hidden;
-            animation: modalIn 0.25s ease;
-        }
-
-        @keyframes modalIn {
-            from { opacity:0; transform: translateY(12px) scale(0.98); }
-            to   { opacity:1; transform: translateY(0) scale(1); }
-        }
-
-        .modal-header {
-            background: var(--sage-pale);
-            padding: 1.5rem 2rem 1.2rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .modal-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.55rem;
-            font-weight: 300;
-            color: var(--text);
-            margin-bottom: 4px;
-        }
-
-        .modal-slot-info {
-            font-size: 0.78rem;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            color: var(--sage);
-        }
-
-        .modal-body {
-            padding: 1.75rem 2rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.1rem;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 0.74rem;
-            letter-spacing: 0.25em;
-            text-transform: uppercase;
-            color: var(--text-light);
-            margin-bottom: 6px;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-family: 'Jost', sans-serif;
-            font-size: 1.0rem;
-            font-weight: 300;
-            color: var(--text);
-            background: var(--cream);
-            transition: border-color 0.2s;
-            outline: none;
-        }
-
-        .form-input:focus {
-            border-color: var(--sage);
-            background: white;
-        }
-
-        .modal-footer {
-            padding: 1rem 2rem 1.5rem;
-            display: flex;
-            gap: 0.75rem;
-            justify-content: flex-end;
-        }
-
-        .btn {
-            font-family: 'Jost', sans-serif;
-            font-size: 0.84rem;
-            letter-spacing: 0.25em;
-            text-transform: uppercase;
-            padding: 10px 22px;
-            border-radius: 4px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-            min-width: 90px;
-        }
-
-        .btn-cancel {
-            background: none;
-            border: 1px solid var(--border);
-            color: var(--text-light);
-        }
-
-        .btn-cancel:hover { border-color: var(--sage-light); color: var(--text); }
-
-        .btn-confirm {
-            background: var(--sage);
-            color: white;
-        }
-
-        .btn-confirm:hover { background: var(--text); }
-
-        .btn-delete {
-            background: none;
-            border: 1px solid #e8c5c5;
-            color: #c0756d;
-        }
-
-        .btn-delete:hover { background: #fdf0f0; }
-
-        /* View booked modal */
-        .booked-detail {
-            display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
-        }
-
-        .detail-row {
-            display: flex;
-            gap: 1rem;
-            align-items: baseline;
-        }
-
-        .detail-key {
-            font-size: 0.72rem;
-            letter-spacing: 0.25em;
-            text-transform: uppercase;
-            color: var(--text-light);
-            width: 80px;
-            flex-shrink: 0;
-        }
-
-        .detail-val {
-            font-size: 1.05rem;
-            font-weight: 300;
-            color: var(--text);
-        }
-
-        /* ── Toast ── */
-        .toast {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: var(--text);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 4px;
-            font-size: 0.88rem;
-            letter-spacing: 0.1em;
-            opacity: 0;
-            transform: translateY(10px);
-            transition: all 0.3s;
-            z-index: 300;
-        }
-
-        .toast.show { opacity: 1; transform: translateY(0); }
-
-        /* ── Responsive ── */
-        @media (max-width: 900px) {
-            .stats-row { flex-wrap: wrap; }
-            .stat-card { min-width: 140px; }
-            .app-body { padding: 1rem; }
-            .header-sub { display: none; }
-        }
-
-        @media (max-width: 600px) {
-            .app-header { padding: 0 1rem; }
-            .btn-today { display: none; }
-        }
-        /* ── Tabs ── */
-        .tabs-bar {
-            display: flex;
-            gap: 0;
-            border-bottom: 1px solid var(--border);
-            background: white;
-            padding: 0 2rem;
-            position: sticky;
-            top: 64px;
-            z-index: 90;
-        }
-
-        .tab-btn {
-            font-family: 'Jost', sans-serif;
-            font-size: 0.75rem;
-            letter-spacing: 0.28em;
-            text-transform: uppercase;
-            font-weight: 400;
-            color: var(--text-light);
-            background: none;
-            border: none;
-            border-bottom: 2px solid transparent;
-            padding: 14px 20px;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: -1px;
-        }
-
-        .tab-btn:hover { color: var(--sage); }
-        .tab-btn.active { color: var(--sage); border-bottom-color: var(--sage); }
-
-        .tab-panel { display: none; }
-        .tab-panel.active { display: block; }
-
-        /* ── Finanzas ── */
-        .fin-body {
-            padding: 1.5rem 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .fin-header-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .fin-mes-selector {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .fin-mes-selector label {
-            font-size: 0.72rem;
-            letter-spacing: 0.25em;
-            text-transform: uppercase;
-            color: var(--text-light);
-        }
-
-        .fin-mes-selector input[type="month"] {
-            font-family: 'Jost', sans-serif;
-            font-size: 0.88rem;
-            font-weight: 300;
-            color: var(--text);
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 6px 12px;
-            outline: none;
-            cursor: pointer;
-        }
-
-        .btn-nuevo-mov {
-            font-family: 'Jost', sans-serif;
-            font-size: 0.72rem;
-            letter-spacing: 0.25em;
-            text-transform: uppercase;
-            background: var(--sage);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 9px 18px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn-nuevo-mov:hover { background: var(--text); }
-
-        /* Balance cards */
-        .balance-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .balance-card {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1.25rem 1.5rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .balance-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0;
-            width: 3px; height: 100%;
-        }
-
-        .balance-card.ingresos::before { background: #8aab85; }
-        .balance-card.gastos::before   { background: #c08080; }
-        .balance-card.balance::before  { background: #8aabab; }
-
-        .balance-label {
-            font-size: 0.68rem;
-            letter-spacing: 0.3em;
-            text-transform: uppercase;
-            color: var(--text-light);
-            margin-bottom: 6px;
-        }
-
-        .balance-amount {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 2rem;
-            font-weight: 300;
-            line-height: 1;
-        }
-
-        .balance-card.ingresos .balance-amount { color: #5a8a6a; }
-        .balance-card.gastos   .balance-amount { color: #c08080; }
-        .balance-card.balance  .balance-amount { color: var(--sage); }
-
-        .balance-amount.negativo { color: #c08080 !important; }
-
-        /* Tabla movimientos */
-        .mov-table-wrap {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            margin-bottom: 1.5rem;
-        }
-
-        .mov-table-header {
-            display: grid;
-            grid-template-columns: 90px 110px 1fr 1fr 120px 40px;
-            padding: 10px 16px;
-            background: var(--cream);
-            border-bottom: 1px solid var(--border);
-            gap: 8px;
-        }
-
-        .mov-th {
-            font-size: 0.65rem;
-            letter-spacing: 0.25em;
-            text-transform: uppercase;
-            color: var(--text-light);
-            font-weight: 400;
-        }
-
-        .mov-row {
-            display: grid;
-            grid-template-columns: 90px 110px 1fr 1fr 120px 40px;
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border);
-            align-items: center;
-            gap: 8px;
-            transition: background 0.15s;
-        }
-
-        .mov-row:last-child { border-bottom: none; }
-        .mov-row:hover { background: var(--sage-bg); }
-
-        .mov-tipo {
-            display: inline-block;
-            font-size: 0.65rem;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            padding: 3px 9px;
-            border-radius: 20px;
-            font-weight: 500;
-        }
-
-        .mov-tipo.ingreso { background: #e8f3e8; color: #5a8a6a; }
-        .mov-tipo.gasto   { background: #fdf0f0; color: #c08080; }
-
-        .mov-cat {
-            font-size: 0.78rem;
-            color: var(--text-light);
-            font-weight: 300;
-        }
-
-        .mov-desc {
-            font-size: 0.88rem;
-            font-weight: 300;
-            color: var(--text);
-        }
-
-        .mov-fecha {
-            font-size: 0.78rem;
-            color: var(--text-light);
-            font-weight: 300;
-        }
-
-        .mov-monto {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.2rem;
-            font-weight: 300;
-            text-align: right;
-        }
-
-        .mov-monto.ingreso { color: #5a8a6a; }
-        .mov-monto.gasto   { color: #c08080; }
-
-        .mov-del {
-            background: none;
-            border: none;
-            color: var(--text-light);
-            cursor: pointer;
-            font-size: 1rem;
-            opacity: 0.4;
-            transition: opacity 0.2s;
-            text-align: center;
-        }
-
-        .mov-del:hover { opacity: 1; color: #c08080; }
-
-        .mov-empty {
-            padding: 3rem;
-            text-align: center;
-            color: var(--text-light);
-            font-size: 0.88rem;
-            letter-spacing: 0.1em;
-        }
-
-        /* Proyección */
-        .proyeccion-wrap {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: var(--shadow);
-        }
-
-        .proyeccion-title {
-            padding: 1rem 1.5rem;
-            background: var(--cream);
-            border-bottom: 1px solid var(--border);
-            font-size: 0.72rem;
-            letter-spacing: 0.3em;
-            text-transform: uppercase;
-            color: var(--text-light);
-        }
-
-        .proyeccion-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0;
-        }
-
-        .proy-card {
-            padding: 1.25rem 1.5rem;
-            border-right: 1px solid var(--border);
-        }
-
-        .proy-card:last-child { border-right: none; }
-
-        .proy-label {
-            font-size: 0.7rem;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            color: var(--text-light);
-            margin-bottom: 8px;
-        }
-
-        .proy-alumnas {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.6rem;
-            font-weight: 300;
-            color: var(--text);
-            line-height: 1;
-        }
-
-        .proy-ingreso {
-            font-size: 0.88rem;
-            font-weight: 300;
-            color: var(--sage);
-            margin-top: 4px;
-        }
-
-        .proy-barra {
-            height: 4px;
-            border-radius: 2px;
-            margin-top: 10px;
-        }
-
-        /* Modal finanzas */
-        #modalMovimiento .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        @media (max-width: 900px) {
-            .balance-row { grid-template-columns: 1fr; }
-            .mov-table-header,
-            .mov-row { grid-template-columns: 80px 1fr 100px 32px; }
-            .mov-th:nth-child(3),
-            .mov-row > *:nth-child(3),
-            .mov-th:nth-child(4),
-            .mov-row > *:nth-child(4) { display: none; }
-            .proyeccion-grid { grid-template-columns: 1fr; }
-            .proy-card { border-right: none; border-bottom: 1px solid var(--border); }
-        }
-
-        /* ── Alumnas ── */
-        .alum-body {
-            padding: 1.5rem 2rem;
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-
-        .alum-header-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.5rem;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .alum-search {
-            font-family: 'Jost', sans-serif;
-            font-size: 0.88rem;
-            font-weight: 300;
-            color: var(--text);
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 8px 14px;
-            outline: none;
-            width: 240px;
-            transition: border-color 0.2s;
-        }
-
-        .alum-search:focus { border-color: var(--sage); }
-
-        .alum-filter {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .filter-btn {
-            font-family: 'Jost', sans-serif;
-            font-size: 0.65rem;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            padding: 6px 14px;
-            border-radius: 20px;
-            border: 1px solid var(--border);
-            background: none;
-            color: var(--text-light);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .filter-btn.active, .filter-btn:hover {
-            background: var(--sage-pale);
-            border-color: var(--sage-light);
-            color: var(--sage);
-        }
-
-        /* Stats alumnas */
-        .alum-stats {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        /* Grid alumnas */
-        .alum-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .alum-card {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1.25rem;
-            position: relative;
-            transition: box-shadow 0.2s;
-            cursor: pointer;
-        }
-
-        .alum-card:hover { box-shadow: 0 4px 20px rgba(61,79,60,0.1); }
-
-        .alum-card.inactiva { opacity: 0.55; }
-
-        .alum-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: var(--sage-pale);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.2rem;
-            font-weight: 300;
-            color: var(--sage);
-            margin-bottom: 0.75rem;
-            flex-shrink: 0;
-        }
-
-        .alum-card-header {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 0.75rem;
-        }
-
-        .alum-nombre {
-            font-size: 1rem;
-            font-weight: 400;
-            color: var(--text);
-            line-height: 1.2;
-        }
-
-        .alum-apellido {
-            font-size: 0.78rem;
-            font-weight: 300;
-            color: var(--text-light);
-        }
-
-        .alum-badge {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            font-size: 0.6rem;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            padding: 3px 8px;
-            border-radius: 20px;
-        }
-
-        .alum-badge.activa   { background: #e8f3e8; color: #5a8a6a; }
-        .alum-badge.inactiva { background: #f5f5f5; color: #aaa; }
-
-        .alum-info {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-
-        .alum-info-row {
-            font-size: 0.78rem;
-            font-weight: 300;
-            color: var(--text-light);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .alum-empty {
-            grid-column: 1/-1;
-            padding: 3rem;
-            text-align: center;
-            color: var(--text-light);
-            font-size: 0.88rem;
-            letter-spacing: 0.1em;
-        }
-
-        /* Modal alumna */
-        #modalAlumna .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .alum-notas-area {
-            width: 100%;
-            font-family: 'Jost', sans-serif;
-            font-size: 0.88rem;
-            font-weight: 300;
-            color: var(--text);
-            background: var(--cream);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 10px 14px;
-            resize: vertical;
-            min-height: 70px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .alum-notas-area:focus { border-color: var(--sage); background: white; }
-
-        @media (max-width: 768px) {
-            .alum-grid { grid-template-columns: 1fr; }
-            #modalAlumna .form-row { grid-template-columns: 1fr; }
-        }
-
-        .pago-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.68rem;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            padding: 4px 10px;
-            border-radius: 20px;
-            margin-top: 10px;
-            font-weight: 500;
-        }
-
-        .pago-badge.pago-si {
-            background: #e8f3e8;
-            color: #5a8a6a;
-            border: 1px solid #c8e6c8;
-        }
-
-        .pago-badge.pago-no {
-            background: #fdf0f0;
-            color: #c08080;
-            border: 1px solid #f0d0d0;
-        }
-
-        .plan-badge {
-            display: inline-block;
-            font-size: 0.65rem;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            padding: 3px 9px;
-            border-radius: 20px;
-            font-weight: 500;
-            margin-bottom: 6px;
-        }
-        .plan-badge.plan8       { background: #e8eaf6; color: #5c6bc0; }
-        .plan-badge.plan4       { background: #fff8e1; color: #f9a825; }
-        .plan-badge.individual  { background: #f3e5f5; color: #8e24aa; }
-        .plan-badge.sin-plan    { background: #f5f5f5; color: #aaa; }
-
-        .clases-progress {
-            margin-top: 8px;
-        }
-        .clases-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.72rem;
-            color: var(--text-light);
-            margin-bottom: 4px;
-        }
-        .clases-label strong { color: var(--text); }
-        .clases-bar-bg {
-            height: 5px;
-            background: var(--sage-pale);
-            border-radius: 3px;
-            overflow: hidden;
-        }
-        .clases-bar-fill {
-            height: 100%;
-            border-radius: 3px;
-            transition: width 0.4s;
-        }
-        .clases-bar-fill.ok      { background: #8aab85; }
-        .clases-bar-fill.warning { background: #f9a825; }
-        .clases-bar-fill.over    { background: #c08080; }
-
-        /* Modal reservar: alumna selector */
-        .reserva-mode-toggle {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-        .mode-btn {
-            flex: 1;
-            font-family: 'Jost', sans-serif;
-            font-size: 0.7rem;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            padding: 7px;
-            border-radius: 4px;
-            border: 1px solid var(--border);
-            background: none;
-            color: var(--text-light);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .mode-btn.active {
-            background: var(--sage-pale);
-            border-color: var(--sage);
-            color: var(--sage);
-        }
-
-        .alumna-info-preview {
-            background: var(--sage-bg);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 10px 14px;
-            font-size: 0.88rem;
-            color: var(--text-light);
-            margin-bottom: 0.5rem;
-        }
-
-    </style>
-</head>
-<body>
-
-<!-- HEADER -->
-<header class="app-header">
-    <a href="/" class="header-logo">
-        <span class="header-cp">CP</span>
-        <span class="header-divider"></span>
-        <div>
-            <div class="header-title">Club Pilates</div>
-            <div class="header-sub">Agenda de Turnos</div>
-        </div>
-    </a>
-
-    <div class="header-right">
-        <button class="btn-today" onclick="goToday()">Hoy</button>
-        <div class="week-nav">
-            <button onclick="changeWeek(-1)">&#8592;</button>
-            <span class="week-label" id="weekLabel"></span>
-            <button onclick="changeWeek(1)">&#8594;</button>
-        </div>
-    </div>
-</header>
-
-<!-- TABS -->
-<div class="tabs-bar">
-    <button class="tab-btn active" onclick="switchTab('agenda')">📅 Agenda</button>
-    <button class="tab-btn" onclick="switchTab('finanzas')">💰 Finanzas</button>
-    <button class="tab-btn" onclick="switchTab('alumnas')">👩 Alumnas</button>
-</div>
-
-<!-- TAB: AGENDA -->
-<div class="tab-panel active" id="tab-agenda">
-
-<!-- BODY -->
-<div class="app-body">
-
-    <!-- Stats -->
-    <div class="stats-row">
-        <div class="stat-card">
-            <span class="stat-label">Turnos esta semana</span>
-            <span class="stat-value" id="statWeek">0</span>
-        </div>
-        <div class="stat-card">
-            <span class="stat-label">Disponibles hoy</span>
-            <span class="stat-value" id="statToday">0</span>
-        </div>
-        <div class="stat-card">
-            <span class="stat-label">Total reservados</span>
-            <span class="stat-value" id="statTotal">0</span>
-        </div>
-    </div>
-
-    <!-- Calendar -->
-    <div class="calendar-wrap">
-        <div class="calendar-grid" id="calendarGrid"></div>
-    </div>
-</div>
-</div><!-- /tab-agenda -->
-
-<!-- TAB: FINANZAS -->
-<div class="tab-panel" id="tab-finanzas">
-<div class="fin-body">
-
-    <!-- Header row -->
-    <div class="fin-header-row">
-        <div class="fin-mes-selector">
-            <label>Mes</label>
-            <input type="month" id="finMes" onchange="loadFinanzas()">
-        </div>
-        <button class="btn-nuevo-mov" onclick="openMovModal()">+ Nuevo movimiento</button>
-    </div>
-
-    <!-- Balance cards -->
-    <div class="balance-row">
-        <div class="balance-card ingresos">
-            <div class="balance-label">Ingresos del mes</div>
-            <div class="balance-amount" id="balIngresos">$0</div>
-        </div>
-        <div class="balance-card gastos">
-            <div class="balance-label">Gastos del mes</div>
-            <div class="balance-amount" id="balGastos">$0</div>
-        </div>
-        <div class="balance-card balance">
-            <div class="balance-label">Balance</div>
-            <div class="balance-amount" id="balBalance">$0</div>
-        </div>
-    </div>
-
-    <!-- Tabla movimientos -->
-    <div class="mov-table-wrap">
-        <div class="mov-table-header">
-            <span class="mov-th">Tipo</span>
-            <span class="mov-th">Categoría</span>
-            <span class="mov-th">Descripción</span>
-            <span class="mov-th">Fecha</span>
-            <span class="mov-th" style="text-align:right">Monto</span>
-            <span class="mov-th"></span>
-        </div>
-        <div id="movList"></div>
-    </div>
-
-    <!-- Proyección de ingresos -->
-    <div class="proyeccion-wrap">
-        <div class="proyeccion-title">Proyección de ingresos — basado en $45.000 por clase</div>
-        <div class="proyeccion-grid">
-            <div class="proy-card">
-                <div class="proy-label">🔴 70% — Arranque</div>
-                <div class="proy-alumnas">~75 alumnas</div>
-                <div class="proy-ingreso">$3.375.000 / mes</div>
-                <div class="proy-barra" style="background:#e8c5c5;width:70%"></div>
-            </div>
-            <div class="proy-card">
-                <div class="proy-label">🟡 80% — Normal</div>
-                <div class="proy-alumnas">~86 alumnas</div>
-                <div class="proy-ingreso">$3.870.000 / mes</div>
-                <div class="proy-barra" style="background:#e8dda0;width:80%"></div>
-            </div>
-            <div class="proy-card">
-                <div class="proy-label">🟢 100% — Máximo</div>
-                <div class="proy-alumnas">107 alumnas</div>
-                <div class="proy-ingreso">$4.815.000 / mes</div>
-                <div class="proy-barra" style="background:#b5c9b1;width:100%"></div>
-            </div>
-        </div>
-    </div>
-
-</div>
-</div><!-- /tab-finanzas -->
-
-<!-- TAB: ALUMNAS -->
-<div class="tab-panel" id="tab-alumnas">
-<div class="alum-body">
-
-    <div class="alum-header-row">
-        <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
-            <input class="alum-search" id="alumSearch" type="text" placeholder="Buscar alumna…" oninput="renderAlumnas()">
-            <div class="alum-filter">
-                <button class="filter-btn active" id="filterActiva" onclick="setFiltro('activa')">Activas</button>
-                <button class="filter-btn" id="filterTodas" onclick="setFiltro('todas')">Todas</button>
-                <button class="filter-btn" id="filterInactiva" onclick="setFiltro('inactiva')">Inactivas</button>
-            </div>
-            <div class="alum-filter">
-                <button class="filter-btn active" id="filterPagoTodas" onclick="setFiltroPago('todas')">Todas</button>
-                <button class="filter-btn" id="filterPagoPago" onclick="setFiltroPago('pagaron')">✓ Pagaron</button>
-                <button class="filter-btn" id="filterPagoDebe" onclick="setFiltroPago('deben')">✗ Deben</button>
-            </div>
-        </div>
-        <div style="display:flex;gap:0.75rem;align-items:center">
-            <div class="fin-mes-selector">
-                <label>Mes</label>
-                <input type="month" id="alumMes" onchange="loadAlumnas()">
-            </div>
-            <button class="btn-nuevo-mov" onclick="openAlumnaModal()">+ Nueva alumna</button>
-        </div>
-    </div>
-
-    <!-- Stats -->
-    <div class="alum-stats">
-        <div class="stat-card">
-            <span class="stat-label">Alumnas activas</span>
-            <span class="stat-value" id="statAlumActivas">0</span>
-        </div>
-        <div class="stat-card">
-            <span class="stat-label">Total registradas</span>
-            <span class="stat-value" id="statAlumTotal">0</span>
-        </div>
-        <div class="stat-card">
-            <span class="stat-label">Pagaron este mes</span>
-            <span class="stat-value" id="statAlumPagaron" style="color:#5a8a6a">0</span>
-        </div>
-        <div class="stat-card">
-            <span class="stat-label">Deben este mes</span>
-            <span class="stat-value" id="statAlumDeben" style="color:#c08080">0</span>
-        </div>
-    </div>
-
-    <!-- Grid -->
-    <div class="alum-grid" id="alumGrid"></div>
-
-</div>
-</div><!-- /tab-alumnas -->
-
-<!-- MODAL: Reservar -->
-<div class="modal-overlay" id="modalReservar">
-    <div class="modal">
-        <div class="modal-header">
-            <div class="modal-title">Nueva Reserva</div>
-            <div class="modal-slot-info" id="modalSlotInfo"></div>
-        </div>
-        <div class="modal-body">
-            <!-- Toggle: alumna registrada vs libre -->
-            <div class="reserva-mode-toggle">
-                <button class="mode-btn active" id="modeRegistrada" onclick="setReservaMode('registrada')">Alumna registrada</button>
-                <button class="mode-btn" id="modeLibre" onclick="setReservaMode('libre')">Sin registrar</button>
-            </div>
-
-            <!-- Modo registrada -->
-            <div id="sectionRegistrada">
-                <div class="form-group">
-                    <label class="form-label">Alumna</label>
-                    <select class="form-input" id="inputAlumnaId" onchange="onAlumnaSelect()">
-                        <option value="">— Seleccioná una alumna —</option>
-                    </select>
-                </div>
-                <div class="alumna-info-preview" id="alumnaPreview" style="display:none"></div>
-            </div>
-
-            <!-- Modo libre -->
-            <div id="sectionLibre" style="display:none">
-                <div class="form-group">
-                    <label class="form-label">Nombre</label>
-                    <input class="form-input" id="inputNombre" type="text" placeholder="Ej: María">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Apellido</label>
-                    <input class="form-input" id="inputApellido" type="text" placeholder="Ej: González">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Teléfono / Cel</label>
-                    <input class="form-input" id="inputTel" type="tel" placeholder="Ej: 264 555-1234">
-                </div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-cancel" onclick="closeModal()">Cancelar</button>
-            <button class="btn btn-confirm" onclick="confirmReserva()">Confirmar Turno</button>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL: Ver turno -->
-<div class="modal-overlay" id="modalVer">
-    <div class="modal">
-        <div class="modal-header">
-            <div class="modal-title">Detalle del Turno</div>
-            <div class="modal-slot-info" id="modalVerInfo"></div>
-        </div>
-        <div class="modal-body">
-            <div class="booked-detail" id="bookedDetail"></div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-delete" onclick="cancelarTurno()">Cancelar Turno</button>
-            <button class="btn btn-cancel" onclick="closeModal()">Cerrar</button>
-        </div>
-    </div>
-</div>
-
-<!-- Toast -->
-<div class="toast" id="toast"></div>
-
-<!-- MODAL: Nueva/Editar alumna -->
-<div class="modal-overlay" id="modalAlumna">
-    <div class="modal" style="max-width:560px;width:100%">
-        <div class="modal-header">
-            <div class="modal-title" id="alumnaModalTitle">Nueva Alumna</div>
-        </div>
-        <div class="modal-body">
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Nombre *</label>
-                    <input class="form-input" id="alumNombre" type="text" placeholder="Ej: María">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Apellido *</label>
-                    <input class="form-input" id="alumApellido" type="text" placeholder="Ej: González">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Teléfono</label>
-                    <input class="form-input" id="alumTel" type="tel" placeholder="264 555-1234">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Email</label>
-                    <input class="form-input" id="alumEmail" type="email" placeholder="mail@ejemplo.com">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Fecha de nacimiento</label>
-                    <input class="form-input" id="alumFechaNac" type="date" lang="es-AR">
-                </div>
-            <div class="form-row">
-                <div class="form-group" style="display:flex;flex-direction:column">
-                    <label class="form-label">Plan</label>
-                    <select class="form-input" id="alumPlan" style="flex:1">
-                        <option value="">— Sin plan asignado —</option>
-                        <option value="plan8">Plan 8 clases (2×semana)</option>
-                        <option value="plan4">Plan 4 clases (1×semana)</option>
-                        <option value="individual">Clase individual</option>
-                    </select>
-                </div>
-                <div class="form-group" style="display:flex;flex-direction:column">
-                    <label class="form-label">Estado</label>
-                    <select class="form-input" id="alumActiva" style="flex:1">
-                        <option value="1">Activa</option>
-                        <option value="0">Inactiva</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Notas</label>
-                <textarea class="alum-notas-area" id="alumNotas" placeholder="Lesiones, preferencias, observaciones…"></textarea>
-            </div>
-        </div>
-        <div class="modal-footer" style="justify-content:space-between;align-items:center;gap:0.75rem">
-            <button class="btn btn-delete" id="alumBtnDelete" onclick="deleteAlumna()" style="display:none">Eliminar</button>
-            <button class="btn btn-cancel" onclick="closeAlumnaModal()" style="margin-left:auto">Cancelar</button>
-            <button class="btn btn-confirm" onclick="confirmAlumna()">Guardar</button>
-        </div>
-    </div>
-</div>
-<div class="modal-overlay" id="modalMovimiento">
-    <div class="modal">
-        <div class="modal-header">
-            <div class="modal-title">Nuevo Movimiento</div>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label class="form-label">Tipo</label>
-                <select class="form-input" id="movTipo" onchange="updateCategorias()">
-                    <option value="ingreso">Ingreso</option>
-                    <option value="gasto">Gasto</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Categoría</label>
-                <select class="form-input" id="movCategoria"></select>
-            </div>
-            <div class="form-group" id="movAlumnaGroup" style="display:none">
-                <label class="form-label">Alumna (opcional)</label>
-                <select class="form-input" id="movAlumna">
-                    <option value="">— Sin asignar —</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Descripción</label>
-                <input class="form-input" id="movDesc" type="text" placeholder="Ej: Pack mensual">
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Monto ($)</label>
-                    <input class="form-input" id="movMonto" type="number" min="0" placeholder="45000">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Fecha</label>
-                    <input class="form-input" id="movFecha" type="date">
-                </div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-cancel" onclick="closeMovModal()">Cancelar</button>
-            <button class="btn btn-confirm" onclick="confirmMovimiento()">Guardar</button>
-        </div>
-    </div>
-</div>
-
-<script>
-// ── Config ──
-const SCHEDULE = {
-    1: { start: 8,  end: 21 },
-    2: { start: 8,  end: 21 },
-    3: { start: 8,  end: 21 },
-    4: { start: 8,  end: 21 },
-    5: { start: 8,  end: 21 },
-    6: { start: 9,  end: 14 },
-};
-
-const DAYS_ES   = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-
-// ── State ──
-let currentMonday = getMonday(new Date());
-let reservas      = {};
-let pendingSlot   = null;
-let pendingKey    = null;
-
-// ── Utils ──
-function getMonday(d) {
-    const date = new Date(d);
-    const day  = date.getDay();
-    const diff = (day === 0) ? -6 : 1 - day;
-    date.setDate(date.getDate() + diff);
-    date.setHours(0,0,0,0);
-    return date;
-}
-
-function addDays(date, n) {
-    const d = new Date(date);
-    d.setDate(d.getDate() + n);
-    return d;
-}
-
-function slotKey(date, hour) {
-    return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}_${String(hour).padStart(2,'0')}`;
-}
-
-function formatDate(d) {
-    return `${d.getDate()} ${MONTHS_ES[d.getMonth()]}`;
-}
-
-function isToday(d) {
-    const t = new Date();
-    return d.getDate()===t.getDate() && d.getMonth()===t.getMonth() && d.getFullYear()===t.getFullYear();
-}
-
-// ── API ──
-function getWeekDays() {
-    const days = [];
-    for (let i = 0; i < 7; i++) days.push(addDays(currentMonday, i));
-    return days;
-}
-
-async function fetchReservas() {
-    const days  = getWeekDays();
-    const desde = slotKey(days[0], 0).split('_')[0];
-    const hasta = slotKey(days[6], 0).split('_')[0];
-    try {
-        const res = await fetch(`/api/reservas?desde=${desde}&hasta=${hasta}`);
-        reservas  = await res.json();
-    } catch(e) {
-        reservas = {};
-        showToast('Error al cargar reservas');
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+from functools import wraps
+import sqlite3
+import os
+
+# ── App ──────────────────────────────────────────────
+app = Flask(__name__)
+
+# !! CAMBIÁ ESTO por una clave secreta larga y aleatoria !!
+app.secret_key = 'cambia-esto-por-una-clave-secreta-larga'
+
+app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+)
+
+# ── Credenciales de la agenda ─────────────────────────
+# Cambiá estos valores por los que quieras usar
+AGENDA_USER     = 'admin'
+AGENDA_PASSWORD = 'clubpilates2025'
+
+# Código secreto para recuperar la contraseña (solo vos lo sabés)
+RECOVERY_CODE   = 'sanjuan2025'
+
+# ── Decorador: requiere login ─────────────────────────
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('logged_in'):
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated
+
+# ── Base de datos ─────────────────────────────────────
+DB_PATH = os.path.join(os.path.dirname(__file__), 'agenda.db')
+
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    with get_db() as conn:
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS reservas (
+                id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                slot_key  TEXT    NOT NULL UNIQUE,
+                nombre    TEXT    NOT NULL,
+                apellido  TEXT    NOT NULL,
+                tel       TEXT    NOT NULL,
+                created_at DATETIME DEFAULT (datetime('now','-3 hours'))
+            )
+        ''')
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS alumnas (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                nombre      TEXT    NOT NULL,
+                apellido    TEXT    NOT NULL,
+                tel         TEXT,
+                email       TEXT,
+                fecha_nac   TEXT,
+                notas       TEXT,
+                activa      INTEGER DEFAULT 1,
+                created_at  DATETIME DEFAULT (datetime('now','-3 hours'))
+            )
+        ''')
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS movimientos (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                tipo        TEXT    NOT NULL CHECK(tipo IN ('ingreso','gasto')),
+                categoria   TEXT    NOT NULL,
+                descripcion TEXT    NOT NULL,
+                monto       REAL    NOT NULL,
+                fecha       TEXT    NOT NULL,
+                alumna_id   INTEGER REFERENCES alumnas(id) ON DELETE SET NULL,
+                created_at  DATETIME DEFAULT (datetime('now','-3 hours'))
+            )
+        ''')
+        # Migraciones automáticas
+        cols_mov = [r[1] for r in conn.execute("PRAGMA table_info(movimientos)").fetchall()]
+        if 'alumna_id' not in cols_mov:
+            conn.execute("ALTER TABLE movimientos ADD COLUMN alumna_id INTEGER REFERENCES alumnas(id) ON DELETE SET NULL")
+
+        cols_alum = [r[1] for r in conn.execute("PRAGMA table_info(alumnas)").fetchall()]
+        if 'plan' not in cols_alum:
+            conn.execute("ALTER TABLE alumnas ADD COLUMN plan TEXT DEFAULT NULL")
+
+        cols_res = [r[1] for r in conn.execute("PRAGMA table_info(reservas)").fetchall()]
+        if 'alumna_id' not in cols_res:
+            conn.execute("ALTER TABLE reservas ADD COLUMN alumna_id INTEGER REFERENCES alumnas(id) ON DELETE SET NULL")
+
+        conn.commit()
+
+# Inicializar DB al arrancar
+init_db()
+
+# ── Rutas principales ─────────────────────────────────
+@app.route('/favicon.ico')
+def favicon():
+    return redirect(url_for('static', filename='img/favicon.svg'))
+
+@app.route('/')
+def index():
+    contact_data = {
+        "whatsapp_link": "https://wa.me/5492645551234",
+        "email": "clubpilatesanjuan@gmail.com",
+        "address": "San Roque Sur 1044, Rawson, San Juan",
+        "google_maps_api_key": "TU_API_KEY_AQUI"
     }
-}
+    return render_template('index.html', data=contact_data)
 
-async function apiCrear(key, nombre, apellido, tel) {
-    return await fetch('/api/reservas', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ slot_key: key, nombre, apellido, tel })
-    });
-}
+# ── Login / Logout ────────────────────────────────────
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    if request.method == 'POST':
+        user = request.form.get('usuario', '').strip()
+        pwd  = request.form.get('password', '').strip()
+        if user == AGENDA_USER and pwd == AGENDA_PASSWORD:
+            session['logged_in'] = True
+            return redirect(url_for('agenda'))
+        else:
+            error = 'Usuario o contraseña incorrectos'
+    return render_template('login.html', error=error)
 
-async function apiEliminar(key) {
-    return await fetch(`/api/reservas/${key}`, { method: 'DELETE' });
-}
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
 
-// ── Navigation ──
-function goToday() {
-    currentMonday = getMonday(new Date());
-    loadAndRender();
-}
+@app.route('/recuperar', methods=['GET', 'POST'])
+def recuperar():
+    error   = None
+    success = None
+    if request.method == 'POST':
+        action = request.form.get('action')
 
-function changeWeek(dir) {
-    currentMonday = addDays(currentMonday, dir * 7);
-    loadAndRender();
-}
+        if action == 'verificar':
+            code = request.form.get('codigo', '').strip()
+            if code == RECOVERY_CODE:
+                session['recovery_verified'] = True
+                return render_template('recuperar.html', step='nueva', error=None)
+            else:
+                error = 'Código incorrecto'
+                return render_template('recuperar.html', step='codigo', error=error)
 
-async function loadAndRender() {
-    await fetchReservas();
-    render();
-}
+        elif action == 'cambiar':
+            if not session.get('recovery_verified'):
+                return redirect(url_for('recuperar'))
+            nueva    = request.form.get('nueva', '').strip()
+            confirma = request.form.get('confirma', '').strip()
+            if not nueva or len(nueva) < 6:
+                return render_template('recuperar.html', step='nueva', error='La contraseña debe tener al menos 6 caracteres')
+            if nueva != confirma:
+                return render_template('recuperar.html', step='nueva', error='Las contraseñas no coinciden')
+            # Actualizar en memoria (hasta el próximo restart)
+            global AGENDA_PASSWORD
+            AGENDA_PASSWORD = nueva
+            session.pop('recovery_verified', None)
+            return render_template('recuperar.html', step='ok')
 
-// ── Render ──
-function render() {
-    const grid = document.getElementById('calendarGrid');
-    grid.innerHTML = '';
-    const days = getWeekDays();
-    const sat  = days[6];
+    return render_template('recuperar.html', step='codigo', error=None)
 
-    document.getElementById('weekLabel').textContent =
-        `${formatDate(currentMonday)} — ${formatDate(sat)} ${sat.getFullYear()}`;
 
-    const allHours = new Set();
-    days.forEach(d => {
-        const dow = d.getDay();
-        if (SCHEDULE[dow]) {
-            for (let h = SCHEDULE[dow].start; h < SCHEDULE[dow].end; h++) allHours.add(h);
-        }
-    });
-    const hours = [...allHours].sort((a,b)=>a-b);
+@app.route('/agenda')
+@login_required
+def agenda():
+    return render_template('agenda.html')
 
-    // Header
-    const corner = document.createElement('div');
-    corner.className = 'col-header';
-    grid.appendChild(corner);
+# ── API de Reservas ───────────────────────────────────
 
-    days.forEach(d => {
-        const el = document.createElement('div');
-        el.className = 'col-header' + (isToday(d) ? ' today-col' : '');
-        el.innerHTML = `
-            <div class="day-name">${DAYS_ES[d.getDay()]}</div>
-            <div class="day-num ${isToday(d)?'today':''}">${d.getDate()}</div>
-        `;
-        if (!SCHEDULE[d.getDay()]) el.style.opacity = '0.4';
-        grid.appendChild(el);
-    });
+@app.route('/api/reservas', methods=['GET'])
+@login_required
+def get_reservas():
+    desde = request.args.get('desde', '')
+    hasta = request.args.get('hasta', '')
+    try:
+        with get_db() as conn:
+            if desde and hasta:
+                rows = conn.execute(
+                    'SELECT * FROM reservas WHERE slot_key BETWEEN ? AND ? ORDER BY slot_key',
+                    (desde, hasta + '_99')
+                ).fetchall()
+            else:
+                rows = conn.execute('SELECT * FROM reservas ORDER BY slot_key').fetchall()
 
-    // Rows
-    hours.forEach(hour => {
-        const timeEl = document.createElement('div');
-        timeEl.className = 'time-label';
-        timeEl.textContent = `${String(hour).padStart(2,'0')}:00`;
-        grid.appendChild(timeEl);
-
-        days.forEach(d => {
-            const dow   = d.getDay();
-            const sched = SCHEDULE[dow];
-            const slot  = document.createElement('div');
-            const key   = slotKey(d, hour);
-
-            if (!sched || hour < sched.start || hour >= sched.end) {
-                slot.className = 'slot closed';
-            } else if (reservas[key]) {
-                slot.className = 'slot booked';
-                const r = reservas[key];
-                slot.innerHTML = `
-                    <div class="slot-content">
-                        <div class="slot-name">${r.nombre} ${r.apellido}</div>
-                        <div class="slot-phone">${r.tel}</div>
-                    </div>
-                    <div class="slot-dot"></div>
-                `;
-                slot.addEventListener('click', () => openVerModal(key, d, hour));
-            } else {
-                slot.className = 'slot available';
-                slot.addEventListener('click', () => openReservarModal(key, d, hour));
+        result = {}
+        for row in rows:
+            result[row['slot_key']] = {
+                'id':        row['id'],
+                'nombre':    row['nombre'],
+                'apellido':  row['apellido'],
+                'tel':       row['tel'],
+                'createdAt': row['created_at']
             }
-            grid.appendChild(slot);
-        });
-    });
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    updateStats(days);
-}
+@app.route('/api/reservas', methods=['POST'])
+@login_required
+def create_reserva():
+    data      = request.get_json()
+    slot_key  = data.get('slot_key',  '').strip()
+    nombre    = data.get('nombre',    '').strip()
+    apellido  = data.get('apellido',  '').strip()
+    tel       = data.get('tel',       '').strip()
+    alumna_id = data.get('alumna_id', None)
 
-// ── Stats ──
-function updateStats(days) {
-    const today   = new Date();
-    const todaySc = SCHEDULE[today.getDay()];
-    let weekCount = 0;
+    if not all([slot_key, nombre, apellido, tel]):
+        return jsonify({'error': 'Faltan campos obligatorios'}), 400
 
-    days.forEach(d => {
-        const sc = SCHEDULE[d.getDay()];
-        if (!sc) return;
-        for (let h = sc.start; h < sc.end; h++)
-            if (reservas[slotKey(d,h)]) weekCount++;
-    });
+    try:
+        with get_db() as conn:
+            conn.execute(
+                'INSERT INTO reservas (slot_key, nombre, apellido, tel, alumna_id) VALUES (?, ?, ?, ?, ?)',
+                (slot_key, nombre, apellido, tel, alumna_id if alumna_id else None)
+            )
+            conn.commit()
+        return jsonify({'ok': True}), 201
+    except sqlite3.IntegrityError:
+        return jsonify({'error': 'Ese turno ya está reservado'}), 409
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    let todayAvail = 0;
-    if (todaySc) {
-        for (let h = todaySc.start; h < todaySc.end; h++)
-            if (!reservas[slotKey(today,h)]) todayAvail++;
-    }
+@app.route('/api/reservas/<path:slot_key>', methods=['DELETE'])
+@login_required
+def delete_reserva(slot_key):
+    try:
+        with get_db() as conn:
+            conn.execute('DELETE FROM reservas WHERE slot_key = ?', (slot_key,))
+            conn.commit()
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    document.getElementById('statWeek').textContent  = weekCount;
-    document.getElementById('statToday').textContent = todayAvail;
-    document.getElementById('statTotal').textContent = Object.keys(reservas).length;
-}
+# ── API de Alumnas ────────────────────────────────────
 
-// ── Modals ──
-let reservaMode = 'registrada';
+@app.route('/api/alumnas', methods=['GET'])
+@login_required
+def get_alumnas():
+    activa = request.args.get('activa', '')
+    try:
+        with get_db() as conn:
+            query = 'SELECT * FROM alumnas'
+            params = []
+            if activa != '':
+                query += ' WHERE activa = ?'
+                params.append(int(activa))
+            query += ' ORDER BY apellido, nombre'
+            rows = conn.execute(query, params).fetchall()
+        return jsonify([dict(r) for r in rows])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-async function openReservarModal(key, date, hour) {
-    pendingKey  = key;
-    pendingSlot = { date, hour };
-    document.getElementById('modalSlotInfo').textContent =
-        `${DAYS_ES[date.getDay()]} ${formatDate(date)} · ${String(hour).padStart(2,'0')}:00 — ${String(hour+1).padStart(2,'0')}:00`;
+@app.route('/api/alumnas', methods=['POST'])
+@login_required
+def create_alumna():
+    data     = request.get_json()
+    nombre   = data.get('nombre',    '').strip()
+    apellido = data.get('apellido',  '').strip()
+    tel      = data.get('tel',       '').strip()
+    email    = data.get('email',     '').strip()
+    fecha_nac= data.get('fecha_nac', '').strip()
+    notas    = data.get('notas',     '').strip()
+    plan     = data.get('plan',      None)
+    if not nombre or not apellido:
+        return jsonify({'error': 'Nombre y apellido son obligatorios'}), 400
+    try:
+        with get_db() as conn:
+            cur = conn.execute(
+                'INSERT INTO alumnas (nombre, apellido, tel, email, fecha_nac, notas, plan) VALUES (?,?,?,?,?,?,?)',
+                (nombre, apellido, tel, email, fecha_nac, notas, plan)
+            )
+            conn.commit()
+            row = conn.execute('SELECT * FROM alumnas WHERE id = ?', (cur.lastrowid,)).fetchone()
+        return jsonify(dict(row)), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    // Reset modo
-    setReservaMode('registrada');
+# IMPORTANTE: estas rutas deben estar ANTES de /<int:alumna_id>
+@app.route('/api/alumnas/pagos', methods=['GET'])
+@login_required
+def get_pagos():
+    mes = request.args.get('mes', '')
+    try:
+        with get_db() as conn:
+            rows = conn.execute('''
+                SELECT alumna_id, MIN(fecha) as fecha_pago
+                FROM movimientos
+                WHERE tipo = 'ingreso'
+                  AND alumna_id IS NOT NULL
+                  AND fecha LIKE ?
+                GROUP BY alumna_id
+            ''', (f'{mes}%',)).fetchall()
+        return jsonify({str(r['alumna_id']): r['fecha_pago'] for r in rows})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    // Cargar alumnas activas en el selector
-    const lista = await fetch('/api/alumnas?activa=1').then(r => r.json()).catch(() => []);
-    const sel   = document.getElementById('inputAlumnaId');
-    sel.innerHTML = '<option value="">— Seleccioná una alumna —</option>' +
-        lista.map(a => `<option value="${a.id}" data-nombre="${a.nombre}" data-apellido="${a.apellido}" data-tel="${a.tel||''}" data-plan="${a.plan||''}">${a.apellido}, ${a.nombre}</option>`).join('');
-    sel.value = '';
-    document.getElementById('alumnaPreview').style.display = 'none';
+@app.route('/api/alumnas/clases', methods=['GET'])
+@login_required
+def get_clases():
+    mes = request.args.get('mes', '')
+    try:
+        with get_db() as conn:
+            rows = conn.execute('''
+                SELECT alumna_id, COUNT(*) as usadas
+                FROM reservas
+                WHERE alumna_id IS NOT NULL
+                  AND substr(slot_key, 1, 7) = ?
+                GROUP BY alumna_id
+            ''', (mes,)).fetchall()
+        return jsonify({str(r['alumna_id']): r['usadas'] for r in rows})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    // Reset campos libres
-    document.getElementById('inputNombre').value   = '';
-    document.getElementById('inputApellido').value = '';
-    document.getElementById('inputTel').value      = '';
+@app.route('/api/alumnas/<int:alumna_id>', methods=['PUT'])
+@login_required
+def update_alumna(alumna_id):
+    data = request.get_json()
+    try:
+        with get_db() as conn:
+            conn.execute('''
+                UPDATE alumnas SET nombre=?, apellido=?, tel=?, email=?, fecha_nac=?, notas=?, activa=?, plan=?
+                WHERE id=?
+            ''', (
+                data.get('nombre','').strip(),
+                data.get('apellido','').strip(),
+                data.get('tel','').strip(),
+                data.get('email','').strip(),
+                data.get('fecha_nac','').strip(),
+                data.get('notas','').strip(),
+                int(data.get('activa', 1)),
+                data.get('plan', None),
+                alumna_id
+            ))
+            conn.commit()
+            row = conn.execute('SELECT * FROM alumnas WHERE id = ?', (alumna_id,)).fetchone()
+        return jsonify(dict(row))
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    document.getElementById('modalReservar').classList.add('open');
-}
+@app.route('/api/alumnas/<int:alumna_id>', methods=['DELETE'])
+@login_required
+def delete_alumna(alumna_id):
+    try:
+        with get_db() as conn:
+            conn.execute('DELETE FROM alumnas WHERE id = ?', (alumna_id,))
+            conn.commit()
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-function setReservaMode(mode) {
-    reservaMode = mode;
-    document.getElementById('modeRegistrada').classList.toggle('active', mode === 'registrada');
-    document.getElementById('modeLibre').classList.toggle('active', mode === 'libre');
-    document.getElementById('sectionRegistrada').style.display = mode === 'registrada' ? '' : 'none';
-    document.getElementById('sectionLibre').style.display      = mode === 'libre'      ? '' : 'none';
-}
+# ── API de Finanzas ───────────────────────────────────
 
-function onAlumnaSelect() {
-    const sel     = document.getElementById('inputAlumnaId');
-    const opt     = sel.options[sel.selectedIndex];
-    const preview = document.getElementById('alumnaPreview');
-    if (!sel.value) { preview.style.display = 'none'; return; }
-    const planLabels = { plan8: 'Plan 8 clases', plan4: 'Plan 4 clases', individual: 'Clase individual', '': 'Sin plan' };
-    const plan = planLabels[opt.dataset.plan] || 'Sin plan';
-    preview.style.display = '';
-    preview.innerHTML = `<strong>${opt.dataset.nombre} ${opt.dataset.apellido}</strong> &nbsp;·&nbsp; ${opt.dataset.tel || 'sin tel'} &nbsp;·&nbsp; ${plan}`;
-}
+@app.route('/api/movimientos', methods=['GET'])
+@login_required
+def get_movimientos():
+    mes  = request.args.get('mes', '')
+    tipo = request.args.get('tipo', '')
+    try:
+        with get_db() as conn:
+            query  = '''SELECT m.*, a.nombre || ' ' || a.apellido as alumna_nombre
+                        FROM movimientos m LEFT JOIN alumnas a ON m.alumna_id = a.id
+                        WHERE 1=1'''
+            params = []
+            if mes:
+                query  += ' AND m.fecha LIKE ?'
+                params.append(f'{mes}%')
+            if tipo:
+                query  += ' AND m.tipo = ?'
+                params.append(tipo)
+            query += ' ORDER BY m.fecha DESC, m.id DESC'
+            rows = conn.execute(query, params).fetchall()
+        return jsonify([dict(r) for r in rows])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-function openVerModal(key, date, hour) {
-    pendingKey = key;
-    const r    = reservas[key];
-    document.getElementById('modalVerInfo').textContent =
-        `${DAYS_ES[date.getDay()]} ${formatDate(date)} · ${String(hour).padStart(2,'0')}:00 — ${String(hour+1).padStart(2,'0')}:00`;
-    document.getElementById('bookedDetail').innerHTML = `
-        <div class="detail-row">
-            <span class="detail-key">Nombre</span>
-            <span class="detail-val">${r.nombre} ${r.apellido}</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-key">Teléfono</span>
-            <span class="detail-val">${r.tel}</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-key">Reservado</span>
-            <span class="detail-val">${r.createdAt || '—'}</span>
-        </div>
-    `;
-    document.getElementById('modalVer').classList.add('open');
-}
+@app.route('/api/movimientos', methods=['POST'])
+@login_required
+def create_movimiento():
+    data        = request.get_json()
+    tipo        = data.get('tipo', '').strip()
+    categoria   = data.get('categoria', '').strip()
+    descripcion = data.get('descripcion', '').strip()
+    monto       = data.get('monto', 0)
+    fecha       = data.get('fecha', '').strip()
+    alumna_id   = data.get('alumna_id', None)
 
-function closeModal() {
-    document.getElementById('modalReservar').classList.remove('open');
-    document.getElementById('modalVer').classList.remove('open');
-    pendingKey = null;
-}
+    if not all([tipo, categoria, descripcion, monto, fecha]):
+        return jsonify({'error': 'Faltan campos obligatorios'}), 400
+    if tipo not in ('ingreso', 'gasto'):
+        return jsonify({'error': 'Tipo inválido'}), 400
 
-async function confirmReserva() {
-    let nombre, apellido, tel, alumnaId = null;
+    try:
+        with get_db() as conn:
+            cur = conn.execute(
+                'INSERT INTO movimientos (tipo, categoria, descripcion, monto, fecha, alumna_id) VALUES (?, ?, ?, ?, ?, ?)',
+                (tipo, categoria, descripcion, float(monto), fecha, alumna_id if alumna_id else None)
+            )
+            conn.commit()
+            row = conn.execute(
+                '''SELECT m.*, a.nombre || ' ' || a.apellido as alumna_nombre
+                   FROM movimientos m LEFT JOIN alumnas a ON m.alumna_id = a.id
+                   WHERE m.id = ?''', (cur.lastrowid,)
+            ).fetchone()
+        return jsonify(dict(row)), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    if (reservaMode === 'registrada') {
-        const sel = document.getElementById('inputAlumnaId');
-        if (!sel.value) { showToast('Seleccioná una alumna'); return; }
-        const opt = sel.options[sel.selectedIndex];
-        alumnaId  = parseInt(sel.value);
-        nombre    = opt.dataset.nombre;
-        apellido  = opt.dataset.apellido;
-        tel       = opt.dataset.tel || '—';
-    } else {
-        nombre   = document.getElementById('inputNombre').value.trim();
-        apellido = document.getElementById('inputApellido').value.trim();
-        tel      = document.getElementById('inputTel').value.trim();
-        if (!nombre || !apellido || !tel) { showToast('Completá todos los campos'); return; }
-    }
+@app.route('/api/movimientos/<int:mov_id>', methods=['DELETE'])
+@login_required
+def delete_movimiento(mov_id):
+    try:
+        with get_db() as conn:
+            conn.execute('DELETE FROM movimientos WHERE id = ?', (mov_id,))
+            conn.commit()
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    const btn = document.querySelector('#modalReservar .btn-confirm');
-    btn.textContent = 'Guardando…';
-    btn.disabled    = true;
+@app.route('/api/movimientos/resumen', methods=['GET'])
+@login_required
+def resumen_movimientos():
+    mes = request.args.get('mes', '')
+    try:
+        with get_db() as conn:
+            params = [f'{mes}%'] if mes else ['%']
+            ingresos = conn.execute(
+                'SELECT COALESCE(SUM(monto),0) as total FROM movimientos WHERE tipo="ingreso" AND fecha LIKE ?',
+                params
+            ).fetchone()['total']
+            gastos = conn.execute(
+                'SELECT COALESCE(SUM(monto),0) as total FROM movimientos WHERE tipo="gasto" AND fecha LIKE ?',
+                params
+            ).fetchone()['total']
+        return jsonify({'ingresos': ingresos, 'gastos': gastos, 'balance': ingresos - gastos})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    try {
-        const res = await fetch('/api/reservas', {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ slot_key: pendingKey, nombre, apellido, tel, alumna_id: alumnaId })
-        });
-        if (res.ok) {
-            closeModal();
-            await loadAndRender();
-            showToast(`✓ Turno reservado para ${nombre} ${apellido}`);
-        } else {
-            const data = await res.json();
-            showToast(data.error || 'Error al reservar');
-        }
-    } catch(e) {
-        showToast('Error de conexión');
-    } finally {
-        btn.textContent = 'Confirmar Turno';
-        btn.disabled    = false;
-    }
-}
 
-async function cancelarTurno() {
-    if (!pendingKey) return;
-    const r    = reservas[pendingKey];
-    const name = `${r.nombre} ${r.apellido}`;
-    try {
-        await apiEliminar(pendingKey);
-        closeModal();
-        await loadAndRender();
-        showToast(`Turno de ${name} cancelado`);
-    } catch(e) {
-        showToast('Error al cancelar');
-    }
-}
-
-// ── Toast ──
-function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3000);
-}
-
-// ── Cerrar modales ──
-document.getElementById('modalReservar').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
-document.getElementById('modalVer').addEventListener('click',      e => { if (e.target === e.currentTarget) closeModal(); });
-document.getElementById('modalMovimiento').addEventListener('click', e => { if (e.target === e.currentTarget) closeMovModal(); });
-document.getElementById('modalAlumna').addEventListener('click',   e => { if (e.target === e.currentTarget) closeAlumnaModal(); });
-document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeModal(); closeMovModal(); closeAlumnaModal(); }
-});
-
-// ── Init ──
-loadAndRender();
-
-// ── Tabs ──
-function switchTab(tab) {
-    document.querySelectorAll('.tab-btn').forEach((b,i) => {
-        b.classList.toggle('active',
-            (i===0 && tab==='agenda') ||
-            (i===1 && tab==='finanzas') ||
-            (i===2 && tab==='alumnas')
-        );
-    });
-    document.getElementById('tab-agenda').classList.toggle('active',   tab==='agenda');
-    document.getElementById('tab-finanzas').classList.toggle('active', tab==='finanzas');
-    document.getElementById('tab-alumnas').classList.toggle('active',  tab==='alumnas');
-    if (tab === 'finanzas') loadFinanzas();
-    if (tab === 'alumnas')  loadAlumnas();
-}
-
-// ── Finanzas config ──
-const CATS_INGRESO = ['Pack mensual','Clase individual','Clase grupal','Inscripción','Otro ingreso'];
-const CATS_GASTO   = ['Alquiler','Luz','Gas','Agua','Internet','Sueldos','Mantenimiento','Equipamiento','Marketing','Limpieza','Otro gasto'];
-
-function fmt(n) {
-    return '$' + Math.abs(n).toLocaleString('es-AR', { maximumFractionDigits: 0 });
-}
-
-// ── Load finanzas ──
-async function loadFinanzas() {
-    const mes = document.getElementById('finMes').value;
-    const [movs, resumen] = await Promise.all([
-        fetch(`/api/movimientos?mes=${mes}`).then(r=>r.json()),
-        fetch(`/api/movimientos/resumen?mes=${mes}`).then(r=>r.json())
-    ]);
-
-    document.getElementById('balIngresos').textContent = fmt(resumen.ingresos);
-    document.getElementById('balGastos').textContent   = fmt(resumen.gastos);
-    const balEl = document.getElementById('balBalance');
-    balEl.textContent = fmt(resumen.balance);
-    balEl.className   = 'balance-amount' + (resumen.balance < 0 ? ' negativo' : '');
-
-    const list = document.getElementById('movList');
-    if (!movs.length) {
-        list.innerHTML = '<div class="mov-empty">Sin movimientos este mes. Agregá el primero 🌿</div>';
-        return;
-    }
-    list.innerHTML = movs.map(m => `
-        <div class="mov-row">
-            <span><span class="mov-tipo ${m.tipo}">${m.tipo}</span></span>
-            <span class="mov-cat">${m.categoria}${m.alumna_nombre ? `<br><span style="color:var(--sage);font-size:0.72rem">👩 ${m.alumna_nombre}</span>` : ''}</span>
-            <span class="mov-desc">${m.descripcion}</span>
-            <span class="mov-fecha">${m.fecha}</span>
-            <span class="mov-monto ${m.tipo}">${m.tipo==='ingreso'?'+':'-'}${fmt(m.monto)}</span>
-            <button class="mov-del" onclick="deleteMov(${m.id})" title="Eliminar">✕</button>
-        </div>
-    `).join('');
-}
-
-// ── Modal movimiento ──
-async function openMovModal() {
-    const today = new Date();
-    const y = today.getFullYear();
-    const m = String(today.getMonth()+1).padStart(2,'0');
-    const d = String(today.getDate()).padStart(2,'0');
-    document.getElementById('movFecha').value = `${y}-${m}-${d}`;
-    document.getElementById('movDesc').value  = '';
-    document.getElementById('movMonto').value = '';
-    document.getElementById('movTipo').value  = 'ingreso';
-    updateCategorias();
-    // Cargar alumnas activas en el selector
-    await loadAlumnaSelector();
-    document.getElementById('modalMovimiento').classList.add('open');
-}
-
-async function loadAlumnaSelector() {
-    try {
-        const lista = await fetch('/api/alumnas?activa=1').then(r => r.json());
-        const sel = document.getElementById('movAlumna');
-        sel.innerHTML = '<option value="">— Sin asignar —</option>' +
-            lista.map(a => `<option value="${a.id}">${a.apellido}, ${a.nombre}</option>`).join('');
-    } catch(e) {
-        console.error('Error cargando alumnas:', e);
-    }
-}
-
-function closeMovModal() {
-    document.getElementById('modalMovimiento').classList.remove('open');
-}
-
-function updateCategorias() {
-    const tipo = document.getElementById('movTipo').value;
-    const cats = tipo === 'ingreso' ? CATS_INGRESO : CATS_GASTO;
-    const sel  = document.getElementById('movCategoria');
-    sel.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
-    // Mostrar/ocultar selector de alumna solo en ingresos
-    document.getElementById('movAlumnaGroup').style.display = tipo === 'ingreso' ? '' : 'none';
-}
-
-async function confirmMovimiento() {
-    const tipo      = document.getElementById('movTipo').value;
-    const cat       = document.getElementById('movCategoria').value;
-    const desc      = document.getElementById('movDesc').value.trim();
-    const monto     = document.getElementById('movMonto').value;
-    const fecha     = document.getElementById('movFecha').value;
-    const alumnaId  = document.getElementById('movAlumna').value || null;
-
-    if (!desc || !monto || !fecha) { showToast('Completá todos los campos'); return; }
-
-    const btn = document.querySelector('#modalMovimiento .btn-confirm');
-    btn.textContent = 'Guardando…';
-    btn.disabled    = true;
-
-    try {
-        const res = await fetch('/api/movimientos', {
-            method:  'POST',
-            headers: {'Content-Type':'application/json'},
-            body:    JSON.stringify({ tipo, categoria: cat, descripcion: desc, monto: parseFloat(monto), fecha, alumna_id: alumnaId })
-        });
-        if (res.ok) {
-            closeMovModal();
-            document.getElementById('finMes').value = fecha.slice(0,7);
-            await loadFinanzas();
-            showToast('✓ Movimiento guardado');
-        } else {
-            const d = await res.json();
-            showToast(d.error || 'Error al guardar');
-        }
-    } catch(e) {
-        showToast('Error de conexión');
-    } finally {
-        btn.textContent = 'Guardar';
-        btn.disabled    = false;
-    }
-}
-
-async function deleteMov(id) {
-    if (!confirm('¿Eliminar este movimiento?')) return;
-    await fetch(`/api/movimientos/${id}`, { method: 'DELETE' });
-    await loadFinanzas();
-    showToast('Movimiento eliminado');
-}
-
-(function() {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth()+1).padStart(2,'0');
-    document.getElementById('finMes').value  = `${y}-${m}`;
-    document.getElementById('alumMes').value = `${y}-${m}`;
-})();
-
-document.getElementById('modalMovimiento').addEventListener('click', e => {
-    if (e.target === document.getElementById('modalMovimiento')) closeMovModal();
-});
-
-// ── ALUMNAS ──────────────────────────────────────────
-let alumnas         = [];
-let pagos           = {};
-let clasesUsadas    = {};   // { alumna_id: count }
-let alumnaFiltro    = 'activa';
-let alumnaFiltroPago = 'todas';
-let editingAlumnaId = null;
-
-const PLAN_INFO = {
-    plan8:      { label: 'Plan 8 clases', total: 8,  css: 'plan8' },
-    plan4:      { label: 'Plan 4 clases', total: 4,  css: 'plan4' },
-    individual: { label: 'Clase individual', total: 1, css: 'individual' },
-    '':         { label: 'Sin plan',  total: null, css: 'sin-plan' },
-};
-
-async function loadAlumnas() {
-    const mes = document.getElementById('alumMes').value;
-    [alumnas, pagos, clasesUsadas] = await Promise.all([
-        fetch('/api/alumnas').then(r => r.json()),
-        fetch(`/api/alumnas/pagos?mes=${mes}`).then(r => r.json()),
-        fetch(`/api/alumnas/clases?mes=${mes}`).then(r => r.json())
-    ]);
-    renderAlumnas();
-    updateAlumStats();
-}
-
-function setFiltro(f) {
-    alumnaFiltro = f;
-    document.querySelectorAll('#filterActiva,#filterTodas,#filterInactiva').forEach(b => b.classList.remove('active'));
-    document.getElementById('filter' + f.charAt(0).toUpperCase() + f.slice(1)).classList.add('active');
-    renderAlumnas();
-}
-
-function setFiltroPago(f) {
-    alumnaFiltroPago = f;
-    document.querySelectorAll('#filterPagoTodas,#filterPagoPago,#filterPagoDebe').forEach(b => b.classList.remove('active'));
-    const map = { todas: 'filterPagoTodas', pagaron: 'filterPagoPago', deben: 'filterPagoDebe' };
-    document.getElementById(map[f]).classList.add('active');
-    renderAlumnas();
-}
-
-function renderAlumnas() {
-    const q    = (document.getElementById('alumSearch').value || '').toLowerCase();
-    const grid = document.getElementById('alumGrid');
-
-    let lista = alumnas.filter(a => {
-        if (alumnaFiltro === 'activa'   && !a.activa) return false;
-        if (alumnaFiltro === 'inactiva' && a.activa)  return false;
-        const pagada = !!pagos[String(a.id)];
-        if (alumnaFiltroPago === 'pagaron' && !pagada) return false;
-        if (alumnaFiltroPago === 'deben'   && pagada)  return false;
-        if (q) {
-            const full = `${a.nombre} ${a.apellido} ${a.tel||''} ${a.email||''}`.toLowerCase();
-            if (!full.includes(q)) return false;
-        }
-        return true;
-    });
-
-    if (!lista.length) {
-        grid.innerHTML = '<div class="alum-empty">No hay alumnas que coincidan 🌿</div>';
-        return;
-    }
-
-    grid.innerHTML = lista.map(a => {
-        const initials  = (a.nombre[0]||'') + (a.apellido[0]||'');
-        const fechaPago = pagos[String(a.id)];
-        const pagoBadge = fechaPago
-            ? `<div class="pago-badge pago-si">✓ Pagó · ${fechaPago}</div>`
-            : `<div class="pago-badge pago-no">✗ Debe</div>`;
-
-        const planKey  = a.plan || '';
-        const planData = PLAN_INFO[planKey] || PLAN_INFO[''];
-        const planBadge = `<span class="plan-badge ${planData.css}">${planData.label}</span>`;
-
-        let clasesHtml = '';
-        if (planData.total !== null) {
-            const usadas    = clasesUsadas[String(a.id)] || 0;
-            const restantes = Math.max(0, planData.total - usadas);
-            const pct       = Math.min(100, Math.round((usadas / planData.total) * 100));
-            const barClass  = pct >= 100 ? 'over' : pct >= 75 ? 'warning' : 'ok';
-            clasesHtml = `
-                <div class="clases-progress">
-                    <div class="clases-label">
-                        <span>Clases usadas</span>
-                        <strong>${usadas} / ${planData.total} &nbsp;·&nbsp; quedan ${restantes}</strong>
-                    </div>
-                    <div class="clases-bar-bg">
-                        <div class="clases-bar-fill ${barClass}" style="width:${pct}%"></div>
-                    </div>
-                </div>`;
-        }
-
-        return `
-        <div class="alum-card ${a.activa?'':'inactiva'}" onclick="openAlumnaModal(${a.id})">
-            <span class="alum-badge ${a.activa?'activa':'inactiva'}">${a.activa?'activa':'inactiva'}</span>
-            <div class="alum-card-header">
-                <div class="alum-avatar">${initials.toUpperCase()}</div>
-                <div>
-                    <div class="alum-nombre">${a.nombre}</div>
-                    <div class="alum-apellido">${a.apellido}</div>
-                </div>
-            </div>
-            <div style="margin-bottom:4px">${planBadge}</div>
-            <div class="alum-info">
-                ${a.tel   ? `<div class="alum-info-row">📱 ${a.tel}</div>` : ''}
-                ${a.email ? `<div class="alum-info-row">✉️ ${a.email}</div>` : ''}
-                ${a.notas ? `<div class="alum-info-row" style="font-style:italic">${a.notas.slice(0,60)}${a.notas.length>60?'…':''}</div>` : ''}
-            </div>
-            ${clasesHtml}
-            ${pagoBadge}
-        </div>`;
-    }).join('');
-}
-
-function updateAlumStats() {
-    const activas  = alumnas.filter(a => a.activa);
-    const pagaron  = activas.filter(a => pagos[String(a.id)]).length;
-    document.getElementById('statAlumActivas').textContent = activas.length;
-    document.getElementById('statAlumTotal').textContent   = alumnas.length;
-    document.getElementById('statAlumPagaron').textContent = pagaron;
-    document.getElementById('statAlumDeben').textContent   = activas.length - pagaron;
-}
-
-function openAlumnaModal(id) {
-    editingAlumnaId = id || null;
-    const delBtn = document.getElementById('alumBtnDelete');
-
-    if (id) {
-        const a = alumnas.find(x => x.id === id);
-        if (!a) return;
-        document.getElementById('alumnaModalTitle').textContent = 'Editar Alumna';
-        document.getElementById('alumNombre').value   = a.nombre;
-        document.getElementById('alumApellido').value = a.apellido;
-        document.getElementById('alumTel').value      = a.tel    || '';
-        document.getElementById('alumEmail').value    = a.email  || '';
-        document.getElementById('alumFechaNac').value = a.fecha_nac || '';
-        document.getElementById('alumNotas').value    = a.notas  || '';
-        document.getElementById('alumActiva').value   = a.activa ? '1' : '0';
-        document.getElementById('alumPlan').value     = a.plan   || '';
-        delBtn.style.display = '';
-    } else {
-        document.getElementById('alumnaModalTitle').textContent = 'Nueva Alumna';
-        ['alumNombre','alumApellido','alumTel','alumEmail','alumFechaNac','alumNotas'].forEach(id => {
-            document.getElementById(id).value = '';
-        });
-        document.getElementById('alumActiva').value = '1';
-        document.getElementById('alumPlan').value   = '';
-        delBtn.style.display = 'none';
-    }
-    document.getElementById('modalAlumna').classList.add('open');
-    setTimeout(() => document.getElementById('alumNombre').focus(), 100);
-}
-
-function closeAlumnaModal() {
-    document.getElementById('modalAlumna').classList.remove('open');
-    editingAlumnaId = null;
-}
-
-async function confirmAlumna() {
-    const payload = {
-        nombre:    document.getElementById('alumNombre').value.trim(),
-        apellido:  document.getElementById('alumApellido').value.trim(),
-        tel:       document.getElementById('alumTel').value.trim(),
-        email:     document.getElementById('alumEmail').value.trim(),
-        fecha_nac: document.getElementById('alumFechaNac').value,
-        notas:     document.getElementById('alumNotas').value.trim(),
-        activa:    parseInt(document.getElementById('alumActiva').value),
-        plan:      document.getElementById('alumPlan').value || null
-    };
-
-    if (!payload.nombre || !payload.apellido) { showToast('Nombre y apellido son obligatorios'); return; }
-
-    const btn = document.querySelector('#modalAlumna .btn-confirm');
-    btn.textContent = 'Guardando…';
-    btn.disabled    = true;
-
-    try {
-        const url    = editingAlumnaId ? `/api/alumnas/${editingAlumnaId}` : '/api/alumnas';
-        const method = editingAlumnaId ? 'PUT' : 'POST';
-        const res    = await fetch(url, {
-            method,
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify(payload)
-        });
-        if (res.ok) {
-            closeAlumnaModal();
-            await loadAlumnas();
-            showToast(editingAlumnaId ? '✓ Alumna actualizada' : '✓ Alumna registrada');
-        } else {
-            const d = await res.json();
-            showToast(d.error || 'Error al guardar');
-        }
-    } catch(e) {
-        showToast('Error de conexión');
-    } finally {
-        btn.textContent = 'Guardar';
-        btn.disabled    = false;
-    }
-}
-
-async function deleteAlumna() {
-    if (!editingAlumnaId) return;
-    if (!confirm('¿Eliminar esta alumna? Esta acción no se puede deshacer.')) return;
-    await fetch(`/api/alumnas/${editingAlumnaId}`, { method: 'DELETE' });
-    closeAlumnaModal();
-    await loadAlumnas();
-    showToast('Alumna eliminada');
-}
-
-</script>
-</body>
-</html>
+# ── Arranque ──────────────────────────────────────────
+if __name__ == '__main__':
+    app.run(debug=True)
