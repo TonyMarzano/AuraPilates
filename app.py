@@ -4,6 +4,8 @@ import sqlite3
 import os
 import smtplib
 import threading
+import json
+from datetime import date, timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -27,8 +29,14 @@ RECOVERY_CODE   = 'sanjuan2025'
 # ── Configuración de email ────────────────────────────
 # Obtené tu App Password en: myaccount.google.com → Seguridad → Contraseñas de aplicaciones
 EMAIL_FROM     = 'clubpilatesanjuan@gmail.com'
-EMAIL_PASSWORD = 'kldn aidc rdxc dftw'   # ← pegá acá tu App Password de 16 caracteres
-EMAIL_ENABLED  = True                     # ← poné False para desactivar sin borrar la config
+EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD', '')
+EMAIL_ENABLED  = True
+
+# ── Configuración del Bot de WhatsApp (Twilio) ────────
+TWILIO_ACCOUNT_SID  = os.environ.get('TWILIO_ACCOUNT_SID', '')
+TWILIO_AUTH_TOKEN   = os.environ.get('TWILIO_AUTH_TOKEN', '')
+TWILIO_WA_NUMBER    = os.environ.get('TWILIO_WA_NUMBER', 'whatsapp:+14155238886')
+ANTHROPIC_API_KEY   = os.environ.get('ANTHROPIC_API_KEY', '')
 
 # ── Decorador: requiere login ─────────────────────────
 def login_required(f):
@@ -242,6 +250,16 @@ def init_db():
             ''')
             conn.execute('INSERT INTO reservas SELECT id, slot_key, nombre, apellido, tel, alumna_id, created_at FROM reservas_old')
             conn.execute('DROP TABLE reservas_old')
+
+        # Tabla para el estado de conversaciones del bot
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS conversaciones (
+                telefono   TEXT PRIMARY KEY,
+                estado     TEXT DEFAULT 'MENU',
+                datos      TEXT DEFAULT '{}',
+                updated_at DATETIME DEFAULT (datetime('now','-3 hours'))
+            )
+        ''')
 
         conn.commit()
 
@@ -604,6 +622,427 @@ def resumen_movimientos():
         return jsonify({'ingresos': ingresos, 'gastos': gastos, 'balance': ingresos - gastos})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+# ── Bot de WhatsApp ───────────────────────────────────
+#
+# Horario del estudio (Python weekday: Lun=0, Mar=1 … Sáb=5, Dom=6)
+HORARIO_BOT = {
+    0: (8, 21),   # Lunes
+    1: (8, 21),   # Martes
+    2: (8, 21),   # Miércoles
+    3: (8, 21),   # Jueves
+    4: (8, 21),   # Viernes
+    5: (9, 12),   # Sábado
+}
+MAX_POR_TURNO = 5
+DIAS_ES_BOT   = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
+PLANES_BOT    = {
+    '1': ('plan8',      'Plan 8 clases – 2 veces por semana'),
+    '2': ('plan4',      'Plan 4 clases – 1 vez por semana'),
+    '3': ('individual', 'Clase individual'),
+    '4': (None,         'Sin plan por ahora'),
+}
+
+# ── Helpers de DB para el bot ─────────────────────────
+
+def _slot_key_bot(d, h):
+    return f"{d.strftime('%Y-%m-%d')}_{h:02d}"
+
+def _get_conv(tel):
+    try:
+        with get_db() as conn:
+            row = conn.execute(
+                'SELECT estado, datos FROM conversaciones WHERE telefono=?', (tel,)
+            ).fetchone()
+        if row:
+            return row['estado'], json.loads(row['datos'])
+    except Exception:
+        pass
+    return 'MENU', {}
+
+def _set_conv(tel, estado, datos=None):
+    if datos is None:
+        datos = {}
+    with get_db() as conn:
+        conn.execute('''
+            INSERT INTO conversaciones (telefono, estado, datos)
+            VALUES (?, ?, ?)
+            ON CONFLICT(telefono) DO UPDATE SET
+                estado     = excluded.estado,
+                datos      = excluded.datos,
+                updated_at = datetime('now','-3 hours')
+        ''', (tel, estado, json.dumps(datos, ensure_ascii=False)))
+        conn.commit()
+
+def _normalizar_tel(raw):
+    """'whatsapp:+5492645797486' → '2645797486' (últimos 10 dígitos)"""
+    digits = ''.join(c for c in raw if c.isdigit())
+    return digits[-10:] if len(digits) >= 10 else digits
+
+def _buscar_alumna_por_tel(tel_normalizado):
+    with get_db() as conn:
+        rows = conn.execute(
+            'SELECT * FROM alumnas WHERE activa=1 ORDER BY id'
+        ).fetchall()
+        for r in rows:
+            if r['tel'] and _normalizar_tel(str(r['tel'])) == tel_normalizado:
+                return dict(r)
+    return None
+
+def _get_dias_disponibles():
+    """Próximos 6 días hábiles a partir de hoy."""
+    dias, d = [], date.today()
+    for _ in range(21):
+        if d.weekday() in HORARIO_BOT:
+            dias.append(d)
+        if len(dias) >= 6:
+            break
+        d += timedelta(days=1)
+    return dias
+
+def _get_horas_disponibles(fecha):
+    wd = fecha.weekday()
+    if wd not in HORARIO_BOT:
+        return []
+    start, end = HORARIO_BOT[wd]
+    disponibles = []
+    with get_db() as conn:
+        for h in range(start, end):
+            key   = _slot_key_bot(fecha, h)
+            count = conn.execute(
+                'SELECT COUNT(*) FROM reservas WHERE slot_key=?', (key,)
+            ).fetchone()[0]
+            if count < MAX_POR_TURNO:
+                disponibles.append(h)
+    return disponibles
+
+def _hacer_reserva_bot(slot_key, nombre, apellido, tel, alumna_id):
+    with get_db() as conn:
+        count = conn.execute(
+            'SELECT COUNT(*) FROM reservas WHERE slot_key=?', (slot_key,)
+        ).fetchone()[0]
+        if count >= MAX_POR_TURNO:
+            raise Exception('Turno completo')
+        conn.execute(
+            'INSERT INTO reservas (slot_key, nombre, apellido, tel, alumna_id) VALUES (?,?,?,?,?)',
+            (slot_key, nombre, apellido, tel, alumna_id)
+        )
+        conn.commit()
+
+def _responder_ia(pregunta):
+    try:
+        import anthropic as ant
+        client = ant.Anthropic(api_key=ANTHROPIC_API_KEY)
+        msg = client.messages.create(
+            model='claude-haiku-4-5-20251001',
+            max_tokens=250,
+            system=(
+                'Sos el asistente virtual de Club Pilates San Juan, Argentina. '
+                'Respondé de forma amable, breve y en español rioplatense. Máximo 3 oraciones. '
+                'Datos del estudio: San Roque Sur 1044, Rawson, San Juan. '
+                'Horarios: Lunes a Viernes 8-21hs, Sábados 9-12hs. '
+                'Planes: Plan 8 clases (2×semana), Plan 4 clases (1×semana), Clase individual. '
+                'WhatsApp: +54 9 264 579-7486. Email: clubpilatesanjuan@gmail.com. '
+                'Si preguntan algo que no sabés, deciles que se contacten directamente.'
+            ),
+            messages=[{'role': 'user', 'content': pregunta}]
+        )
+        return msg.content[0].text
+    except Exception as e:
+        print(f'[bot-ia] Error: {e}')
+        return 'Lo siento, no puedo responder en este momento. Contactanos directamente al +54 9 264 579-7486. 🌿'
+
+# ── Mensajes del bot ──────────────────────────────────
+
+def _msg_menu(alumna=None):
+    saludo = f'¡Hola, *{alumna["nombre"]}*!' if alumna else '¡Hola!'
+    return (f'{saludo} 👋 Bienvenida a *Club Pilates San Juan* 🌿\n\n'
+            '¿En qué puedo ayudarte?\n\n'
+            '*1* · 📅 Reservar un turno\n'
+            '*2* · ❌ Cancelar un turno\n'
+            '*3* · 🗓 Ver mis turnos\n'
+            '*4* · 🕐 Consultar horarios\n'
+            '*5* · 💬 Otra consulta\n\n'
+            'Respondé con el número de la opción.')
+
+def _msg_dias(dias):
+    txt = '📅 *¿Qué día querés reservar?*\n\n'
+    for i, d in enumerate(dias, 1):
+        horas   = _get_horas_disponibles(d)
+        lugares = len(horas)
+        emoji   = '🟢' if lugares > 2 else ('🟡' if lugares > 0 else '🔴')
+        txt += f'*{i}* · {emoji} {DIAS_ES_BOT[d.weekday()]} {d.strftime("%-d/%m")} — {lugares} lugar{"es" if lugares != 1 else ""}\n'
+    txt += '\nRespondé con el número del día.'
+    return txt
+
+# ── Lógica principal del bot ──────────────────────────
+
+def procesar_mensaje_bot(tel_raw, msg_in):
+    tel    = _normalizar_tel(tel_raw)
+    msg    = msg_in.strip()
+    estado, datos = _get_conv(tel)
+    alumna = _buscar_alumna_por_tel(tel)
+
+    # Palabras clave que siempre vuelven al menú
+    if msg.lower() in ('menu', 'menú', 'inicio', 'start', 'hola', 'buenas',
+                        'buenos días', 'buenas tardes', 'buenas noches', 'hi'):
+        _set_conv(tel, 'MENU', {})
+        return _msg_menu(alumna)
+
+    # ── MENU ──────────────────────────────────────────
+    if estado == 'MENU':
+        if msg == '1':
+            dias = _get_dias_disponibles()
+            _set_conv(tel, 'RESERVAR_DIA', {'dias': [d.isoformat() for d in dias]})
+            return _msg_dias(dias)
+
+        elif msg == '2':
+            if not alumna:
+                return ('Tu número no está registrado. '
+                        'Escribí *menú* para reservar tu primer turno. 🌿')
+            return _flujo_ver_turnos_cancelar(tel, alumna, modo='cancelar')
+
+        elif msg == '3':
+            if not alumna:
+                return 'Tu número no está registrado. Escribí *1* para reservar tu primer turno.'
+            return _flujo_ver_turnos_cancelar(tel, alumna, modo='ver')
+
+        elif msg == '4':
+            _set_conv(tel, 'MENU', {})
+            return ('🕐 *Horarios de Club Pilates San Juan*\n\n'
+                    '📍 San Roque Sur 1044, Rawson\n\n'
+                    '• Lunes a Viernes: 8:00 a 21:00 hs\n'
+                    '• Sábados: 9:00 a 12:00 hs\n\n'
+                    'Escribí *menú* para volver al inicio.')
+
+        elif msg == '5':
+            _set_conv(tel, 'CONSULTA_IA', {})
+            return ('🤖 Contame tu consulta y te respondo enseguida.\n\n'
+                    '_(Escribí *menú* para volver al inicio en cualquier momento)_')
+
+        else:
+            return _msg_menu(alumna)
+
+    # ── RESERVAR: elegir día ──────────────────────────
+    elif estado == 'RESERVAR_DIA':
+        dias = [date.fromisoformat(s) for s in datos.get('dias', [])]
+        try:
+            idx = int(msg) - 1
+            assert 0 <= idx < len(dias)
+        except (ValueError, AssertionError):
+            return f'Por favor respondé un número del 1 al {len(dias)}.'
+
+        dia_elegido = dias[idx]
+        horas = _get_horas_disponibles(dia_elegido)
+        if not horas:
+            return (f'😔 Ya no quedan lugares para el {DIAS_ES_BOT[dia_elegido.weekday()]}.\n'
+                    'Escribí *menú* para elegir otro día.')
+
+        txt = (f'🕐 *Horarios disponibles — '
+               f'{DIAS_ES_BOT[dia_elegido.weekday()]} {dia_elegido.strftime("%-d/%m")}*\n\n')
+        for i, h in enumerate(horas, 1):
+            txt += f'*{i}* · {h:02d}:00 — {h+1:02d}:00 hs\n'
+        txt += '\nRespondé con el número del horario.'
+
+        datos.update({'dia': dia_elegido.isoformat(), 'horas': horas})
+        _set_conv(tel, 'RESERVAR_HORA', datos)
+        return txt
+
+    # ── RESERVAR: elegir hora ─────────────────────────
+    elif estado == 'RESERVAR_HORA':
+        horas = datos.get('horas', [])
+        try:
+            idx = int(msg) - 1
+            assert 0 <= idx < len(horas)
+        except (ValueError, AssertionError):
+            return f'Por favor respondé un número del 1 al {len(horas)}.'
+
+        hora  = horas[idx]
+        dia   = date.fromisoformat(datos['dia'])
+        datos.update({'hora': hora})
+        _set_conv(tel, 'RESERVAR_CONFIRMAR', datos)
+
+        return (f'✅ *Confirmá tu reserva:*\n\n'
+                f'📅 {DIAS_ES_BOT[dia.weekday()]} {dia.strftime("%-d/%m/%Y")}\n'
+                f'🕐 {hora:02d}:00 — {hora+1:02d}:00 hs\n\n'
+                f'Respondé *sí* para confirmar o *no* para elegir otro horario.')
+
+    # ── RESERVAR: confirmar ───────────────────────────
+    elif estado == 'RESERVAR_CONFIRMAR':
+        if msg.lower() in ('si', 'sí', 's', 'yes', '1'):
+            dia  = date.fromisoformat(datos['dia'])
+            hora = datos['hora']
+            key  = _slot_key_bot(dia, hora)
+
+            if alumna:
+                try:
+                    _hacer_reserva_bot(key, alumna['nombre'], alumna['apellido'],
+                                       alumna['tel'] or tel, alumna['id'])
+                    _set_conv(tel, 'MENU', {})
+                    return (f'🎉 *¡Turno confirmado, {alumna["nombre"]}!*\n\n'
+                            f'📅 {DIAS_ES_BOT[dia.weekday()]} {dia.strftime("%-d/%m/%Y")}\n'
+                            f'🕐 {hora:02d}:00 — {hora+1:02d}:00 hs\n\n'
+                            '¡Nos vemos pronto! 🌿\n'
+                            'Escribí *2* si necesitás cancelar.')
+                except Exception as e:
+                    _set_conv(tel, 'MENU', {})
+                    return f'😔 No se pudo reservar: {e}\nEscribí *menú* para intentar de nuevo.'
+            else:
+                # Nueva alumna → pedir datos
+                _set_conv(tel, 'REG_NOMBRE', datos)
+                return ('¡Genial! Como es tu primera vez, necesito algunos datos 📝\n\n'
+                        '¿Cuál es tu *nombre*?')
+
+        elif msg.lower() in ('no', 'n'):
+            dias = _get_dias_disponibles()
+            _set_conv(tel, 'RESERVAR_DIA', {'dias': [d.isoformat() for d in dias]})
+            return _msg_dias(dias)
+        else:
+            return 'Respondé *sí* para confirmar o *no* para elegir otro horario.'
+
+    # ── REGISTRO: nombre ──────────────────────────────
+    elif estado == 'REG_NOMBRE':
+        datos['reg_nombre'] = msg.strip().title()
+        _set_conv(tel, 'REG_APELLIDO', datos)
+        return f'¡Hola, *{datos["reg_nombre"]}*! ¿Y tu *apellido*?'
+
+    # ── REGISTRO: apellido ────────────────────────────
+    elif estado == 'REG_APELLIDO':
+        datos['reg_apellido'] = msg.strip().title()
+        _set_conv(tel, 'REG_PLAN', datos)
+        return ('Perfecto! ¿Qué *plan* te interesa?\n\n'
+                '*1* · Plan 8 clases – 2 veces por semana\n'
+                '*2* · Plan 4 clases – 1 vez por semana\n'
+                '*3* · Clase individual\n'
+                '*4* · Sin plan por ahora\n')
+
+    # ── REGISTRO: plan → crear alumna + reservar ──────
+    elif estado == 'REG_PLAN':
+        if msg not in PLANES_BOT:
+            return 'Respondé *1*, *2*, *3* o *4* para elegir tu plan.'
+
+        plan_key, plan_label = PLANES_BOT[msg]
+        dia  = date.fromisoformat(datos['dia'])
+        hora = datos['hora']
+        key  = _slot_key_bot(dia, hora)
+
+        try:
+            with get_db() as conn:
+                cur = conn.execute(
+                    'INSERT INTO alumnas (nombre, apellido, tel, plan) VALUES (?,?,?,?)',
+                    (datos['reg_nombre'], datos['reg_apellido'], tel, plan_key)
+                )
+                conn.commit()
+                alumna_id = cur.lastrowid
+
+            _hacer_reserva_bot(key, datos['reg_nombre'], datos['reg_apellido'], tel, alumna_id)
+            _set_conv(tel, 'MENU', {})
+            return (f'🎉 *¡Todo listo, {datos["reg_nombre"]}!*\n\n'
+                    f'✅ Quedaste registrada · *{plan_label}*\n\n'
+                    f'📅 Tu primer turno:\n'
+                    f'{DIAS_ES_BOT[dia.weekday()]} {dia.strftime("%-d/%m/%Y")} · '
+                    f'{hora:02d}:00 — {hora+1:02d}:00 hs\n\n'
+                    '¡Nos vemos pronto! 🌿\n'
+                    'Escribí *menú* cuando necesites reservar o cancelar un turno.')
+        except Exception as e:
+            _set_conv(tel, 'MENU', {})
+            return f'Hubo un error al registrarte. Contactanos directamente. ({e})'
+
+    # ── CANCELAR: elegir turno ────────────────────────
+    elif estado == 'CANCELAR_TURNO':
+        turnos = datos.get('turnos', [])
+        if msg.lower() in ('no', 'n', 'ninguno', 'salir'):
+            _set_conv(tel, 'MENU', {})
+            return 'De acuerdo. Escribí *menú* si necesitás otra cosa. 🌿'
+        try:
+            idx = int(msg) - 1
+            assert 0 <= idx < len(turnos)
+        except (ValueError, AssertionError):
+            return f'Respondé un número del 1 al {len(turnos)}, o *no* para salir.'
+
+        turno = turnos[idx]
+        try:
+            with get_db() as conn:
+                conn.execute('DELETE FROM reservas WHERE id=?', (turno['id'],))
+                conn.commit()
+            dia  = date.fromisoformat(turno['slot_key'][:10])
+            hora = turno['slot_key'][-2:]
+            _set_conv(tel, 'MENU', {})
+            return (f'✅ *Turno cancelado:*\n'
+                    f'{DIAS_ES_BOT[dia.weekday()]} {dia.strftime("%-d/%m")} · {hora}:00 hs\n\n'
+                    'Escribí *1* si querés reservar otro turno. 🌿')
+        except Exception:
+            _set_conv(tel, 'MENU', {})
+            return '😔 No pude cancelar el turno. Contactanos directamente.'
+
+    # ── CONSULTA IA ───────────────────────────────────
+    elif estado == 'CONSULTA_IA':
+        respuesta = _responder_ia(msg)
+        return f'{respuesta}\n\n_(Escribí *menú* para volver al inicio)_'
+
+    # ── Default ───────────────────────────────────────
+    else:
+        _set_conv(tel, 'MENU', {})
+        return _msg_menu(alumna)
+
+
+def _flujo_ver_turnos_cancelar(tel, alumna, modo='ver'):
+    today = date.today().isoformat() + '_00'
+    with get_db() as conn:
+        rows = conn.execute(
+            '''SELECT id, slot_key FROM reservas
+               WHERE alumna_id=? AND slot_key >= ?
+               ORDER BY slot_key LIMIT 5''',
+            (alumna['id'], today)
+        ).fetchall()
+
+    if not rows:
+        return (f'No tenés turnos próximos reservados, *{alumna["nombre"]}*. '
+                'Escribí *1* para reservar uno. 🌿')
+
+    if modo == 'ver':
+        txt = f'📅 *Tus próximos turnos, {alumna["nombre"]}:*\n\n'
+        for r in rows:
+            dia  = date.fromisoformat(r['slot_key'][:10])
+            hora = r['slot_key'][-2:]
+            txt += f'• {DIAS_ES_BOT[dia.weekday()]} {dia.strftime("%-d/%m")} · {hora}:00 hs\n'
+        txt += '\nEscribí *menú* para volver al inicio.'
+        return txt
+    else:  # cancelar
+        txt = f'📅 *¿Cuál turno querés cancelar, {alumna["nombre"]}?*\n\n'
+        turnos = []
+        for i, r in enumerate(rows, 1):
+            dia  = date.fromisoformat(r['slot_key'][:10])
+            hora = r['slot_key'][-2:]
+            txt += f'*{i}* · {DIAS_ES_BOT[dia.weekday()]} {dia.strftime("%-d/%m")} · {hora}:00 hs\n'
+            turnos.append({'id': r['id'], 'slot_key': r['slot_key']})
+        txt += '\nRespondé con el número, o *no* para salir.'
+        _set_conv(tel, 'CANCELAR_TURNO', {'turnos': turnos})
+        return txt
+
+
+@app.route('/webhook/whatsapp', methods=['POST'])
+def whatsapp_webhook():
+    try:
+        from twilio.twiml.messaging_response import MessagingResponse
+    except ImportError:
+        return 'twilio no instalado', 500
+
+    tel_raw = request.form.get('From', '')
+    msg_in  = request.form.get('Body', '').strip()
+
+    print(f'[bot] {tel_raw}: {msg_in}')
+
+    try:
+        respuesta = procesar_mensaje_bot(tel_raw, msg_in)
+    except Exception as e:
+        print(f'[bot] Error procesando mensaje: {e}')
+        respuesta = '😔 Ocurrió un error. Por favor intentá de nuevo o contactanos directamente.'
+
+    resp = MessagingResponse()
+    resp.message(respuesta)
+    return str(resp), 200, {'Content-Type': 'text/xml'}
 
 
 # ── Arranque ──────────────────────────────────────────
