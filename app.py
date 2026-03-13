@@ -84,29 +84,41 @@ def _build_welcome_html(nombre, apellido, plan):
         <div style="margin:28px 0 0;">
             <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#7a8f79;margin-bottom:12px;">¿Cómo agendar tu turno?</div>
 
-            <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;">
-                <div style="background:#eaf3e8;border-radius:50%;width:32px;height:32px;min-width:32px;display:flex;align-items:center;justify-content:center;font-size:14px;">💬</div>
-                <div>
-                    <div style="font-size:14px;font-weight:500;color:#3d4f3c;">Por WhatsApp</div>
-                    <div style="font-size:13px;color:#7a8f79;margin-top:2px;">Envianos un mensaje al <a href="https://wa.me/542645797486" style="color:#8aab85;font-weight:500;text-decoration:none;">+54 9 264 579-7486</a> indicando el día y horario que preferís.</div>
-                </div>
-            </div>
+            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:14px;">
+                <tr>
+                    <td width="44" valign="top" style="padding-right:12px;">
+                        <div style="background:#eaf3e8;border-radius:50%;width:36px;height:36px;text-align:center;line-height:36px;font-size:16px;">💬</div>
+                    </td>
+                    <td valign="top">
+                        <div style="font-size:14px;font-weight:500;color:#3d4f3c;padding-top:2px;">Por WhatsApp</div>
+                        <div style="font-size:13px;color:#7a8f79;margin-top:3px;">Envianos un mensaje al <a href="https://wa.me/542645797486" style="color:#8aab85;font-weight:500;text-decoration:none;">+54 9 264 579-7486</a> indicando el día y horario que preferís.</div>
+                    </td>
+                </tr>
+            </table>
 
-            <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:14px;">
-                <div style="background:#eaf3e8;border-radius:50%;width:32px;height:32px;min-width:32px;display:flex;align-items:center;justify-content:center;font-size:14px;">📅</div>
-                <div>
-                    <div style="font-size:14px;font-weight:500;color:#3d4f3c;">Horarios disponibles</div>
-                    <div style="font-size:13px;color:#7a8f79;margin-top:2px;">Lunes a viernes de 8:00 a 21:00 hs · Sábados de 9:00 a 12:00 hs</div>
-                </div>
-            </div>
+            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:14px;">
+                <tr>
+                    <td width="44" valign="top" style="padding-right:12px;">
+                        <div style="background:#eaf3e8;border-radius:50%;width:36px;height:36px;text-align:center;line-height:36px;font-size:16px;">📅</div>
+                    </td>
+                    <td valign="top">
+                        <div style="font-size:14px;font-weight:500;color:#3d4f3c;padding-top:2px;">Horarios disponibles</div>
+                        <div style="font-size:13px;color:#7a8f79;margin-top:3px;">Lunes a viernes de 8:00 a 21:00 hs · Sábados de 9:00 a 12:00 hs</div>
+                    </td>
+                </tr>
+            </table>
 
-            <div style="display:flex;align-items:flex-start;gap:14px;">
-                <div style="background:#eaf3e8;border-radius:50%;width:32px;height:32px;min-width:32px;display:flex;align-items:center;justify-content:center;font-size:14px;">📍</div>
-                <div>
-                    <div style="font-size:14px;font-weight:500;color:#3d4f3c;">Dónde estamos</div>
-                    <div style="font-size:13px;color:#7a8f79;margin-top:2px;">San Roque Sur 1044, Rawson, San Juan</div>
-                </div>
-            </div>
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                    <td width="44" valign="top" style="padding-right:12px;">
+                        <div style="background:#eaf3e8;border-radius:50%;width:36px;height:36px;text-align:center;line-height:36px;font-size:16px;">📍</div>
+                    </td>
+                    <td valign="top">
+                        <div style="font-size:14px;font-weight:500;color:#3d4f3c;padding-top:2px;">Dónde estamos</div>
+                        <div style="font-size:13px;color:#7a8f79;margin-top:3px;">San Roque Sur 1044, Rawson, San Juan</div>
+                    </td>
+                </tr>
+            </table>
         </div>
 
         <!-- Importante -->
