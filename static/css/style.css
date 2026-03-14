@@ -966,21 +966,21 @@ details[open] summary::after {
     filter: drop-shadow(0 4px 24px rgba(0,0,0,0.18));
 }
 
-/* Anillo exterior — gira suavemente */
+/* Anillo exterior — gira muy lentamente */
 .hero-badge-ring-outer {
     position: absolute;
-    inset: 0;
+    inset: -10px;
     border-radius: 50%;
-    border: 2px solid rgba(138, 171, 133, 0.95);
-    animation: cpSpinRing 22s linear infinite;
+    border: 1px solid rgba(138, 171, 133, 0.35);
+    animation: cpSpinRing 40s linear infinite;
 }
 
-/* Anillo interior punteado */
+/* Anillo interior — estático, muy sutil */
 .hero-badge-ring-dashed {
     position: absolute;
-    inset: 12px;
+    inset: -2px;
     border-radius: 50%;
-    border: 1.5px dashed rgba(138, 171, 133, 0.6);
+    border: 1px solid rgba(138, 171, 133, 0.15);
 }
 
 @keyframes cpSpinRing {
@@ -988,30 +988,21 @@ details[open] summary::after {
     to   { transform: rotate(360deg); }
 }
 
-/* Puntos cardinales */
+/* Cuatro marcas cardinales elegantes — estilo reloj */
 .hero-dot {
     position: absolute;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #8aab85;
-    z-index: 3;
-}
-.hero-dot-top    { top: -3px;  left: 50%; transform: translateX(-50%); }
-.hero-dot-bottom { bottom: -3px; left: 50%; transform: translateX(-50%); }
-.hero-dot-left   { left: -3px; top: 50%;  transform: translateY(-50%); }
-.hero-dot-right  { right: -3px; top: 50%; transform: translateY(-50%); }
-
-/* Ticks decorativos */
-.hero-tick {
-    position: absolute;
+    width: 1px;
+    height: 10px;
     background: rgba(138, 171, 133, 0.7);
-    z-index: 2;
+    border-radius: 1px;
 }
-.hero-tick-top    { width: 1.5px; height: 16px; top: 14px;   left: 50%; transform: translateX(-50%); }
-.hero-tick-bottom { width: 1.5px; height: 16px; bottom: 14px; left: 50%; transform: translateX(-50%); }
-.hero-tick-left   { height: 1.5px; width: 16px; left: 14px;  top: 50%;  transform: translateY(-50%); }
-.hero-tick-right  { height: 1.5px; width: 16px; right: 14px; top: 50%;  transform: translateY(-50%); }
+.hero-dot-top    { top: -16px;  left: 50%; transform: translateX(-50%); }
+.hero-dot-bottom { bottom: -16px; left: 50%; transform: translateX(-50%); }
+.hero-dot-left   { left: -16px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+.hero-dot-right  { right: -16px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+
+/* Ticks — ocultos, reemplazados por los dots */
+.hero-tick { display: none; }
 
 /* Círculo interior — blanco sólido para contrastar con la imagen */
 .hero-badge-inner {
