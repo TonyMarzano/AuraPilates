@@ -263,8 +263,39 @@ def init_db():
 
         conn.commit()
 
-# Inicializar DB al arrancar
+def limpiar_datos_viejos():
+    """
+    Limpieza automática al arrancar:
+      - Reservas con más de 2 meses → se eliminan (turnos pasados sin utilidad)
+      - Conversaciones del bot sin actividad hace más de 7 días → se eliminan
+    Nunca toca alumnas ni movimientos.
+    """
+    try:
+        with get_db() as conn:
+            # Reservas pasadas con más de 2 meses
+            res = conn.execute('''
+                DELETE FROM reservas
+                WHERE slot_key < strftime('%Y-%m-%d', datetime('now', '-2 months', '-3 hours'))
+            ''')
+            borradas_res = res.rowcount
+
+            # Conversaciones del bot inactivas hace más de 7 días
+            res2 = conn.execute('''
+                DELETE FROM conversaciones
+                WHERE updated_at < datetime('now', '-7 days', '-3 hours')
+            ''')
+            borradas_conv = res2.rowcount
+
+            conn.commit()
+
+        if borradas_res or borradas_conv:
+            print(f'[limpieza] {borradas_res} reservas viejas y {borradas_conv} conversaciones eliminadas')
+    except Exception as e:
+        print(f'[limpieza] Error: {e}')
+
+# Inicializar DB y limpiar al arrancar
 init_db()
+limpiar_datos_viejos()
 
 # ── Rutas principales ─────────────────────────────────
 @app.route('/favicon.ico')
