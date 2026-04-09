@@ -300,8 +300,8 @@ section.visible .service-card:nth-child(3) { transition-delay: 0.5s; }
 footer {
     text-align: center;
     padding: 2rem 10%;
-    background-color: var(--color-acento-menta); 
-    color: var(--color-texto-oscuro);
+    background-color: #1e2a1d;
+    color: rgba(220, 232, 219, 0.75);
     font-size: 0.9rem;
 }
 
