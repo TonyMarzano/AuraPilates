@@ -82,9 +82,7 @@
             <div class="loader-cp-badge">
                 <div class="loader-ring"></div>
                 <div class="loader-inner">
-                    <img src="{{ url_for('static', filename='img/logo_cp.svg') }}" 
-                        alt="Club Pilates" 
-                        style="width: 70px; height: auto;">
+                    <span class="loader-cp"><span>C</span>P</span>
                 </div>
             </div>
             <div class="loader-line"></div>
@@ -96,13 +94,12 @@
         <div class="logo-nav">
             <a href="#inicio" class="logo-link">
                 <!-- Logo Versión Horizontal -->
-                    <div class="cp-logo-horizontal">
-                        <span class="cp-initials">CP</span>
-                        <span class="cp-logo-vdivider"></span>
-                        <div class="cp-logo-text">
-                            <span class="cp-logo-name">Club Pilates</span>
-                            <span class="cp-logo-tagline">Studio &amp; Wellness</span>
-                        </div>
+                <div class="cp-logo-horizontal">
+                    <span class="cp-initials">CP</span>
+                    <span class="cp-logo-vdivider"></span>
+                    <div class="cp-logo-text">
+                        <span class="cp-logo-name">Club Pilates</span>
+                        <span class="cp-logo-tagline">Studio &amp; Wellness</span>
                     </div>
                 </div>
             </a>
@@ -118,32 +115,31 @@
             <a href="#galeria">Galería</a>
             <a href="#contacto">Contacto</a>
             <a href="#preguntas">Preguntas</a>
-            <a href="https://wa.me/5492645797486" class="nav-btn">Reservar Clase</a>
+            <a href="https://wa.me/5492645551234" class="nav-btn">Reservar Clase</a>
         </div>
     </nav>
 
     <!-- HERO -->
     <header class="hero-section section" id="inicio">
 
-        <!-- Logo Versión Principal (circular) centrado en el hero -->
+        <!-- Texto principal izquierda -->
+        <div class="hero-eyebrow">San Juan · Argentina · Studio &amp; Wellness</div>
+        <h1 class="hero-title-main">El arte<br>del <em>movimiento</em><br>consciente</h1>
+        <div class="hero-divider"></div>
+        <div class="hero-subtitle">Pilates Reformer · San Roque Sur 1044, Rawson</div>
+
+        <!-- Badge derecha -->
         <div class="hero-badge-wrapper">
             <div class="hero-badge">
                 <div class="hero-badge-ring-outer"></div>
                 <div class="hero-badge-ring-dashed"></div>
-                <!-- Dots -->
                 <div class="hero-dot hero-dot-top"></div>
                 <div class="hero-dot hero-dot-bottom"></div>
                 <div class="hero-dot hero-dot-left"></div>
                 <div class="hero-dot hero-dot-right"></div>
-                <!-- Ticks -->
-                <div class="hero-tick hero-tick-top"></div>
-                <div class="hero-tick hero-tick-bottom"></div>
-                <div class="hero-tick hero-tick-left"></div>
-                <div class="hero-tick hero-tick-right"></div>
                 <div class="hero-badge-inner">
-                    <img src="{{ url_for('static', filename='img/logo_cp.svg') }}" 
-                        alt="Club Pilates" 
-                        style="width: 160px; height: auto;">
+                    <img src="{{ url_for('static', filename='img/logo_cp.svg') }}"
+                         alt="Club Pilates" style="width: 130px; height: auto;">
                 </div>
             </div>
             <div class="hero-wordmark">
@@ -153,11 +149,6 @@
             </div>
         </div>
 
-        <p class="slogan">{{ data.slogan }}</p>
-
-        <div class="hero-image-container">
-            <img src="{{ url_for('static', filename='img/hero_image.webp') }}" alt="Estudio de Pilates Minimalista" loading="lazy">
-        </div>
     </header>
 
     <!-- NOSOTROS -->
@@ -257,7 +248,7 @@
             </a>
             <p>Email:</p>
             <a href="https://mail.google.com/mail/?view=cm&to=clubpilatesanjuan@gmail.com" target="_blank">
-                <i class="far fa-envelope"></i> clubpilatesanjuan@gmail.com
+                <i class="far fa-envelope"></i> <span class="__cf_email__" data-cfemail="7a19160f180a13161b0e1f091b14100f1b143a1d171b131654191517">[email&#160;protected]</span>
             </a>
         </div>
     </section>
@@ -292,11 +283,11 @@
         <div class="footer-container">
             <h3>Reservá tu turno ahora o contactanos para más información</h3>
             <div class="contact-info">
-                <a href="https://wa.me/5492645797486" target="_blank">
-                    <i class="fab fa-whatsapp"></i> +54 9 264 579-7486
+                <a href="https://wa.me/5492645551234" target="_blank">
+                    <i class="fab fa-whatsapp"></i> +54 9 264 555-1234
                 </a>
                 <a href="https://mail.google.com/mail/?view=cm&to=clubpilatesanjuan@gmail.com" target="_blank">
-                    <i class="far fa-envelope"></i> clubpilatesanjuan@gmail.com
+                    <i class="far fa-envelope"></i> <span class="__cf_email__" data-cfemail="5c3f30293e2c35303d28392f3d3236293d321c3b313d3530723f3331">[email&#160;protected]</span>
                 </a>
             </div>
             <div class="social-links">
@@ -314,7 +305,7 @@
         </div>
     </footer>
 
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script>
@@ -327,16 +318,4 @@
                 rotate: 0,
                 stretch: 0,
                 depth: 100,
-                modifier: 2,
-                slideShadows: true,
-            },
-            loop: true,
-            pagination: { el: ".swiper-pagination" },
-            navigation: {
-                nextEl: ".swiper-button-next",
-                prevEl: ".swiper-button-prev",
-            },
-        });
-    </script>
-</body>
-</html>
+                modifier:

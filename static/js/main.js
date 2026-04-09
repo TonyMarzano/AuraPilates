@@ -134,3 +134,12 @@ window.addEventListener('scroll', function() {
         parallax.style.backgroundPositionY = (distance * speed) + 'px';
     }
 });
+// Navbar: fondo más sólido al hacer scroll
+const mainNav = document.querySelector('.main-nav');
+window.addEventListener('scroll', () => {
+    if (window.scrollY > 60) {
+        mainNav.classList.add('scrolled');
+    } else {
+        mainNav.classList.remove('scrolled');
+    }
+});

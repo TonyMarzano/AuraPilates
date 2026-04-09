@@ -95,75 +95,135 @@ section > .about-content {
 
 /* Excepción para el Hero */
 #inicio.hero-section {
-    background-color: var(--color-acento-lavanda) !important;
+    background: linear-gradient(150deg, #243323 0%, #3a5237 50%, #4a6647 100%) !important;
     min-height: 95vh;
 }
 
 /* 3. Header y Hero Section */
 .hero-section {
-    min-height: 90vh; /* Un poco más alto para impacto visual */
+    min-height: 95vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
-    text-align: center;
+    align-items: flex-start;
+    text-align: left;
     position: relative;
-    padding: 120px 10% 80px 10%; /* El padding superior (120px) compensa la Navbar fija */
-    margin-top: 0; /* Aseguramos que no haya margen superior */
-    margin-bottom: 0; /* Eliminamos el margen inferior de 2rem que tienen todas tus secciones */
-    overflow: hidden; 
-    background-color: var(--color-acento-lavanda); 
+    padding: 140px 8% 100px 8%;
+    overflow: hidden;
     width: 100%;
-    max-width: none; /* El Hero debe ocupar todo el ancho */
+    max-width: none;
+    background: linear-gradient(150deg, #243323 0%, #3a5237 50%, #4a6647 100%);
 }
 
-.slogan {
-    font-size: 1.5rem;
-    font-weight: 300;
-    margin-top: 10px;
-    color: var(--color-texto-oscuro);
-}
-
-.hero-image-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-}
-
-/* Esto crea una capa suave sobre la imagen para que el texto resalte */
-.hero-image-container::after {
+/* Textura sutil de fondo */
+.hero-section::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        to bottom, 
-        rgba(255, 255, 255, 0.3) 0%, 
-        rgba(247, 245, 239, 0.5) 100% /* Mezcla con tu color crema de fondo */
-    );
-    z-index: 1;
-}
-
-/* Aseguramos que la imagen esté por debajo de la capa */
-.hero-image-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0.7; /* Subimos un poco la opacidad ya que ahora tenemos el gradiente */
+    inset: 0;
+    background-image: radial-gradient(circle at 70% 50%, rgba(138,171,133,0.12) 0%, transparent 60%);
     z-index: 0;
 }
 
-
-.hero-section > h1, .hero-section > p {
-    position: relative; 
-    z-index: 2; /* Subimos a 2 para que esté por encima de la capa ::after */
-    text-shadow: 0 2px 4px rgba(255, 255, 255, 0.5); /* Sombra blanca muy suave tras las letras */
+/* Label superior */
+.hero-eyebrow {
+    position: relative;
+    z-index: 2;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.45em;
+    text-transform: uppercase;
+    color: rgba(181,201,177,0.65);
+    font-weight: 300;
+    margin-bottom: 28px;
 }
+
+/* Título principal */
+.hero-title-main {
+    position: relative;
+    z-index: 2;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(52px, 7vw, 88px);
+    font-weight: 300;
+    color: #ffffff;
+    line-height: 1.0;
+    margin-bottom: 32px;
+    max-width: 640px;
+}
+
+.hero-title-main em {
+    font-style: italic;
+    color: #b5c9b1;
+}
+
+/* Línea divisora */
+.hero-divider {
+    position: relative;
+    z-index: 2;
+    width: 48px;
+    height: 1px;
+    background: rgba(181,201,177,0.5);
+    margin-bottom: 28px;
+}
+
+/* Subtítulo */
+.hero-subtitle {
+    position: relative;
+    z-index: 2;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(181,201,177,0.55);
+    font-weight: 300;
+}
+
+/* Badge — reposicionado a la derecha */
+.hero-badge-wrapper {
+    position: absolute;
+    right: 10%;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 0;
+}
+
+.hero-wordmark {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.hero-brand-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 400;
+    font-size: 1.2rem;
+    letter-spacing: 0.35em;
+    color: rgba(255,255,255,0.75);
+    text-transform: uppercase;
+}
+
+.hero-divider-line {
+    width: 50px;
+    height: 1px;
+    background: rgba(181,201,177,0.4);
+}
+
+.hero-brand-sub {
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    font-size: 0.55rem;
+    letter-spacing: 0.5em;
+    color: rgba(181,201,177,0.5);
+    text-transform: uppercase;
+}
+
+.slogan { display: none; }
+.hero-image-container { display: none; }
 
 /* Contenedor de Servicios */
 .services-grid {
@@ -276,14 +336,19 @@ footer {
     position: fixed;
     top: 0; left: 0; width: 100%;
     display: flex; justify-content: space-between; align-items: center;
-    padding: 1rem 10%;
-    /* Fondo verde pastel translúcido */
-    background-color: rgba(221, 238, 221, 0.82);
+    padding: 1rem 8%;
+    background-color: rgba(30, 42, 29, 0.75);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    border-bottom: 2px solid rgba(181, 201, 177, 0.5);
-    box-shadow: 0 4px 24px rgba(138, 171, 133, 0.15);
+    border-bottom: 1px solid rgba(181, 201, 177, 0.12);
     z-index: 1000;
+    transition: background-color 0.4s ease;
+}
+
+/* Cuando se hace scroll — fondo más sólido */
+.main-nav.scrolled {
+    background-color: rgba(30, 42, 29, 0.96);
+    border-bottom: 1px solid rgba(181, 201, 177, 0.18);
 }
 
 .logo-nav {
@@ -305,13 +370,17 @@ footer {
 
 .nav-links a {
     margin-left: 1.5rem;
-    font-weight: 500;
+    font-weight: 300;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(220, 232, 219, 0.75);
     padding: 0.5rem 0;
     transition: color var(--transicion-suave);
 }
 
 .nav-links a:hover {
-    color: var(--color-acento-lavanda);
+    color: #ffffff;
 }
 
 /* Estilo base actualizado del botón */
