@@ -665,8 +665,8 @@ details[open] summary::after {
 
 .main-footer {
     /* Usamos la misma variable que el botón del navbar */
-    background-color: var(--color-acento-menta); 
-    color: #444;
+    background-color: #1e2a1d;
+    color: rgba(220, 232, 219, 0.75);
     padding: 60px 20px 30px 20px;
     text-align: center;
 }
