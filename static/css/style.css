@@ -690,7 +690,7 @@ details[open] summary::after {
 }
 
 .contact-info a {
-    color: #444;
+    color: rgba(220, 232, 219, 0.75);
     text-decoration: none;
     margin: 0 15px;
     display: inline-block; /* Los ponemos uno al lado del otro */
