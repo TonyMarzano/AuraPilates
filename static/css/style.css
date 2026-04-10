@@ -34,7 +34,7 @@ body {
 
 h1, h2, h3 {
     font-family: 'Poppins', sans-serif;
-    color: rgba(220, 232, 219, 0.75);
+    color: var(--color-texto-oscuro);
     margin-bottom: 0.5em;
 }
 
@@ -671,6 +671,10 @@ details[open] summary::after {
     text-align: center;
 }
 
+.main-footer h3 {
+    color: rgba(255, 255, 255, 0.85);
+}
+
 /* Si quieres que el footer sea un poco más transparente como el navbar (opcional) */
 /* background-color: rgba(232, 245, 241, 0.95); */
 
@@ -690,7 +694,7 @@ details[open] summary::after {
 }
 
 .contact-info a {
-    color: rgba(220, 232, 219, 0.75);
+    color: #444;
     text-decoration: none;
     margin: 0 15px;
     display: inline-block; /* Los ponemos uno al lado del otro */
