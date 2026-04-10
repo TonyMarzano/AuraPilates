@@ -34,7 +34,7 @@ body {
 
 h1, h2, h3 {
     font-family: 'Poppins', sans-serif;
-    color: var(--color-texto-oscuro);
+    color: rgba(220, 232, 219, 0.75);
     margin-bottom: 0.5em;
 }
 
