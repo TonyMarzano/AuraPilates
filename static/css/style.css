@@ -632,11 +632,12 @@ details[open] summary::after {
 }
 
 /* Ajuste del Carrusel */
-.swiper-container {
+.swiper-container,
+.swiper {
     width: 100%;
-    max-width: 1200px; /* Igualamos al ancho del título */
-    padding: 20px 0 50px 0; /* Espacio para que las sombras no se corten */
-    overflow: hidden; /* Evita scrolls horizontales raros */
+    max-width: 1200px;
+    padding: 20px 0 50px 0;
+    overflow: visible !important;
 }
 
 .swiper-slide {
