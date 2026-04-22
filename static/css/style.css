@@ -635,9 +635,9 @@ details[open] summary::after {
 .swiper-container,
 .swiper {
     width: 100%;
-    max-width: 1200px;
+    max-width: 900px;
     padding: 20px 0 50px 0;
-    overflow: visible !important;
+    overflow: hidden;
 }
 
 .swiper-slide {
