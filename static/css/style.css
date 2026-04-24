@@ -96,12 +96,12 @@ section > .about-content {
 /* Excepción para el Hero */
 #inicio.hero-section {
     background: linear-gradient(150deg, #243323 0%, #3a5237 50%, #4a6647 100%) !important;
-    min-height: 95vh;
+    min-height: 100vh;
 }
 
 /* 3. Header y Hero Section */
 .hero-section {
-    min-height: 95vh;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
