@@ -695,7 +695,7 @@ details[open] summary::after {
 }
 
 .contact-info a {
-    color: rgba(220, 232, 219, 0.85);
+    color: rgba(220, 232, 219, 0.85) !important;
     text-decoration: none;
     margin: 0 15px;
     display: inline-block; /* Los ponemos uno al lado del otro */
@@ -770,7 +770,7 @@ details[open] summary::after {
         top: 70px; 
         left: 0;
         width: 100%;
-        background-color: rgba(255, 255, 255, 0.98);
+        background-color: #1e2a1d;
         backdrop-filter: blur(10px);
         padding: 2rem;
         text-align: center;
@@ -961,7 +961,7 @@ details[open] summary::after {
     font-weight: 300;
     font-size: 1.25rem;
     letter-spacing: 0.18em;
-    color: var(--cp-text);
+    color: rgba(220, 232, 219, 0.85);
     text-transform: uppercase;
     line-height: 1.1;
     white-space: nowrap;
@@ -973,7 +973,7 @@ details[open] summary::after {
     font-weight: 200;
     font-size: 0.62rem;
     letter-spacing: 0.4em;
-    color: var(--cp-sage-deep);
+    color: rgba(181, 201, 177, 0.7);
     text-transform: uppercase;
     white-space: nowrap;
     display: block;
