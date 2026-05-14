@@ -1637,8 +1637,8 @@
                                 <label class="form-label">Plan</label>
                                 <select class="form-input" id="inputPlan">
                                     <option value="">— Sin plan —</option>
-                                    <option value="plan8">Plan 8 clases</option>
                                     <option value="plan12">Plan 12 clases</option>
+                                    <option value="plan8">Plan 8 clases</option>
                                     <option value="plan4">Plan 4 clases</option>
                                     <option value="individual">Clase individual</option>
                                 </select>
@@ -1778,8 +1778,8 @@
                     <label class="form-label">Plan</label>
                     <select class="form-input" id="alumPlan" style="flex:1">
                         <option value="">— Sin plan asignado —</option>
-                        <option value="plan8">Plan 8 clases (2×semana)</option>
                         <option value="plan12">Plan 12 clases (3×semana)</option>
+                        <option value="plan8">Plan 8 clases (2×semana)</option>
                         <option value="plan4">Plan 4 clases (1×semana)</option>
                         <option value="individual">Clase individual</option>
                     </select>
@@ -2154,7 +2154,7 @@ function onAlumnaSelect() {
     const opt     = sel.options[sel.selectedIndex];
     const preview = document.getElementById('alumnaPreview');
     if (!sel.value) { preview.style.display = 'none'; return; }
-    const planLabels = { plan8: 'Plan 8 clases', plan12: 'Plan 12 clases', plan4: 'Plan 4 clases', individual: 'Clase individual', '': 'Sin plan' };
+    const planLabels = { plan12: 'Plan 12 clases', plan8: 'Plan 8 clases', plan4: 'Plan 4 clases', individual: 'Clase individual', '': 'Sin plan' };
     const plan = planLabels[opt.dataset.plan] || 'Sin plan';
     preview.style.display = '';
     preview.innerHTML = `<strong>${opt.dataset.nombre} ${opt.dataset.apellido}</strong> &nbsp;·&nbsp; ${opt.dataset.tel || 'sin tel'} &nbsp;·&nbsp; ${plan}`;
@@ -2210,7 +2210,7 @@ async function confirmReserva() {
             addFormOpen = false;
             renderSlotModal(pendingKey);
             render();
-            const planLabel = { plan8: 'Plan 8', plan12: 'Plan 12', plan4: 'Plan 4', individual: 'Individual' };
+            const planLabel = { plan12: 'Plan 12', plan8: 'Plan 8', plan4: 'Plan 4', individual: 'Individual' };
             const plan = document.getElementById('inputPlan')?.value;
             const extra = (reservaMode === 'libre' && alumnaId) ? ' · registrada como alumna' + (plan ? ` (${planLabel[plan]||plan})` : '') : '';
             showToast(`✓ Reservado para ${nombre} ${apellido}${extra}`);
@@ -2437,7 +2437,7 @@ async function loadHorarios() {
         return;
     }
 
-    const PLAN_LABEL = {plan8:'Plan 8', plan12:'Plan 12', plan4:'Plan 4', individual:'Individual'};
+    const PLAN_LABEL = {plan12:'Plan 12', plan8:'Plan 8', plan4:'Plan 4', individual:'Individual'};
 
     cont.innerHTML = lista.map(h => {
         const dias  = JSON.parse(h.dias_semana).map(d => DIAS_ES_SHORT[d]).join(' · ');
@@ -2666,8 +2666,8 @@ let alumnaFiltroPago = 'todas';
 let editingAlumnaId = null;
 
 const PLAN_INFO = {
-    plan8:      { label: 'Plan 8 clases',   total: 8,  css: 'plan8' },
     plan12:     { label: 'Plan 12 clases',  total: 12, css: 'plan12' },
+    plan8:      { label: 'Plan 8 clases',   total: 8,  css: 'plan8' },
     plan4:      { label: 'Plan 4 clases',   total: 4,  css: 'plan4' },
     individual: { label: 'Clase individual', total: 1, css: 'individual' },
     '':         { label: 'Sin plan',  total: null, css: 'sin-plan' },
