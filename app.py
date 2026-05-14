@@ -50,6 +50,7 @@ def login_required(f):
 # ── Email de bienvenida ───────────────────────────────
 
 PLAN_INFO = {
+    'plan12':     ('Plan 12 clases',     '3 clases por semana', '$55.000'),
     'plan8':      ('Plan 8 clases',      '2 clases por semana', '$45.000'),
     'plan4':      ('Plan 4 clases',      '1 clase por semana',  '$25.000'),
     'individual': ('Clase individual',   '1 clase',             '$6.000'),
@@ -123,7 +124,7 @@ def _build_welcome_html(nombre, apellido, plan):
                     </td>
                     <td valign="top">
                         <div style="font-size:14px;font-weight:500;color:#3d4f3c;padding-top:2px;">Dónde estamos</div>
-                        <div style="font-size:13px;color:#7a8f79;margin-top:3px;">Urquiza 991 Sur, Capital, San Juan</div>
+                        <div style="font-size:13px;color:#7a8f79;margin-top:3px;">San Roque Sur 1044, Rawson, San Juan</div>
                     </td>
                 </tr>
             </table>
@@ -327,7 +328,7 @@ def index():
     contact_data = {
         "whatsapp_link": "https://wa.me/5492645551234",
         "email": "clubpilatesanjuan@gmail.com",
-        "address": "Urquiza 991 Sur, Capital, San Juan",
+        "address": "San Roque Sur 1044, Rawson, San Juan",
         "google_maps_api_key": "TU_API_KEY_AQUI"
     }
     return render_template('index.html', data=contact_data)
@@ -970,10 +971,11 @@ HORARIO_BOT = {
 MAX_POR_TURNO = 5
 DIAS_ES_BOT   = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
 PLANES_BOT    = {
-    '1': ('plan8',      'Plan 8 clases – 2 veces por semana'),
-    '2': ('plan4',      'Plan 4 clases – 1 vez por semana'),
-    '3': ('individual', 'Clase individual'),
-    '4': (None,         'Sin plan por ahora'),
+    '1': ('plan12',     'Plan 12 clases – 3 veces por semana'),
+    '2': ('plan8',      'Plan 8 clases – 2 veces por semana'),
+    '3': ('plan4',      'Plan 4 clases – 1 vez por semana'),
+    '4': ('individual', 'Clase individual'),
+    '5': (None,         'Sin plan por ahora'),
 }
 
 # ── Helpers de DB para el bot ─────────────────────────
@@ -1072,9 +1074,9 @@ def _responder_ia(pregunta):
             system=(
                 'Sos el asistente virtual de Club Pilates San Juan, Argentina. '
                 'Respondé de forma amable, breve y en español rioplatense. Máximo 3 oraciones. '
-                'Datos del estudio: Urquiza 991 Sur, Capital, San Juan. '
+                'Datos del estudio: San Roque Sur 1044, Rawson, San Juan. '
                 'Horarios: Lunes a Viernes 8-21hs, Sábados 9-12hs. '
-                'Planes: Plan 8 clases (2×semana), Plan 4 clases (1×semana), Clase individual. '
+                'Planes: Plan 12 clases (3×semana), Plan 8 clases (2×semana),  Plan 4 clases (1×semana), Clase individual. '
                 'WhatsApp: +54 9 264 579-7486. Email: clubpilatesanjuan@gmail.com. '
                 'Si preguntan algo que no sabés, deciles que se contacten directamente.'
             ),
@@ -1143,7 +1145,7 @@ def procesar_mensaje_bot(tel_raw, msg_in):
         elif msg == '4':
             _set_conv(tel, 'MENU', {})
             return ('🕐 *Horarios de Club Pilates San Juan*\n\n'
-                    '📍 Urquiza 991 Sur, Capital\n\n'
+                    '📍 San Roque Sur 1044, Rawson\n\n'
                     '• Lunes a Viernes: 8:00 a 21:00 hs\n'
                     '• Sábados: 9:00 a 12:00 hs\n\n'
                     'Escribí *menú* para volver al inicio.')
@@ -1244,10 +1246,11 @@ def procesar_mensaje_bot(tel_raw, msg_in):
         datos['reg_apellido'] = msg.strip().title()
         _set_conv(tel, 'REG_PLAN', datos)
         return ('Perfecto! ¿Qué *plan* te interesa?\n\n'
-                '*1* · Plan 8 clases – 2 veces por semana\n'
-                '*2* · Plan 4 clases – 1 vez por semana\n'
-                '*3* · Clase individual\n'
-                '*4* · Sin plan por ahora\n')
+                '*1* · Plan 12 clases – 3 veces por semana\n'
+                '*2* · Plan 8 clases – 2 veces por semana\n'
+                '*3* · Plan 4 clases – 1 vez por semana\n'
+                '*4* · Clase individual\n'
+                '*5* · Sin plan por ahora\n')
 
     # ── REGISTRO: plan → crear alumna + reservar ──────
     elif estado == 'REG_PLAN':
