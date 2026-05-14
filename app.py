@@ -445,6 +445,99 @@ def delete_reserva(reserva_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/reservas/bulk', methods=['POST'])
+@login_required
+def create_reservas_bulk():
+    """
+    Crea reservas recurrentes para una alumna durante un mes completo.
+    Body: { alumna_id, dias_semana: [0,2,4], hora: 17, mes: "2026-05" }
+    dias_semana: 0=Lunes, 1=Martes, ... 5=Sábado
+    """
+    data        = request.get_json()
+    alumna_id   = data.get('alumna_id')
+    dias_semana = data.get('dias_semana', [])   # lista de ints 0-5
+    hora        = int(data.get('hora', 0))
+    mes         = data.get('mes', '')            # "YYYY-MM"
+
+    if not alumna_id or not dias_semana or not mes:
+        return jsonify({'error': 'Faltan campos obligatorios'}), 400
+
+    try:
+        year, month = int(mes[:4]), int(mes[5:7])
+    except (ValueError, IndexError):
+        return jsonify({'error': 'Formato de mes inválido'}), 400
+
+    # Horario válido del estudio
+    HORARIO = {0:(8,21), 1:(8,21), 2:(8,21), 3:(8,21), 4:(8,21), 5:(9,12)}
+    for dia in dias_semana:
+        sc = HORARIO.get(dia)
+        if sc and not (sc[0] <= hora < sc[1]):
+            return jsonify({'error': f'El horario {hora:02d}:00 no está disponible ese día'}), 400
+
+    try:
+        with get_db() as conn:
+            alumna = conn.execute(
+                'SELECT nombre, apellido, tel FROM alumnas WHERE id=?', (alumna_id,)
+            ).fetchone()
+            if not alumna:
+                return jsonify({'error': 'Alumna no encontrada'}), 404
+
+            nombre   = alumna['nombre']
+            apellido = alumna['apellido']
+            tel      = alumna['tel'] or ''
+
+            creadas   = []
+            saltadas  = []   # turno lleno
+            existentes = []  # ya tenía reserva
+
+            # Iterar todos los días del mes
+            import calendar as cal
+            _, dias_en_mes = cal.monthrange(year, month)
+
+            for day in range(1, dias_en_mes + 1):
+                fecha = date(year, month, day)
+                # Python weekday: 0=Lunes … 5=Sábado, 6=Domingo
+                if fecha.weekday() not in [int(d) for d in dias_semana]:
+                    continue
+
+                slot_key = f"{fecha.strftime('%Y-%m-%d')}_{hora:02d}"
+
+                # ¿Ya tiene reserva en ese slot?
+                ya_tiene = conn.execute(
+                    'SELECT id FROM reservas WHERE slot_key=? AND alumna_id=?',
+                    (slot_key, alumna_id)
+                ).fetchone()
+                if ya_tiene:
+                    existentes.append(slot_key)
+                    continue
+
+                # ¿Hay lugar (máx 5)?
+                count = conn.execute(
+                    'SELECT COUNT(*) FROM reservas WHERE slot_key=?', (slot_key,)
+                ).fetchone()[0]
+                if count >= 5:
+                    saltadas.append(slot_key)
+                    continue
+
+                conn.execute(
+                    'INSERT INTO reservas (slot_key, nombre, apellido, tel, alumna_id) VALUES (?,?,?,?,?)',
+                    (slot_key, nombre, apellido, tel, alumna_id)
+                )
+                creadas.append(slot_key)
+
+            conn.commit()
+
+        return jsonify({
+            'ok':        True,
+            'creadas':   len(creadas),
+            'saltadas':  len(saltadas),
+            'existentes': len(existentes),
+            'detalle':   creadas
+        }), 201
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 # ── API de Alumnas ────────────────────────────────────
 
 @app.route('/api/alumnas', methods=['GET'])
@@ -771,7 +864,7 @@ def _responder_ia(pregunta):
             system=(
                 'Sos el asistente virtual de Club Pilates San Juan, Argentina. '
                 'Respondé de forma amable, breve y en español rioplatense. Máximo 3 oraciones. '
-                'Datos del estudio: San Roque Sur 1044, Rawson, San Juan. '
+                'Datos del estudio: Urquiza 991 Sur, Capital, San Juan. '
                 'Horarios: Lunes a Viernes 8-21hs, Sábados 9-12hs. '
                 'Planes: Plan 8 clases (2×semana), Plan 4 clases (1×semana), Clase individual. '
                 'WhatsApp: +54 9 264 579-7486. Email: clubpilatesanjuan@gmail.com. '

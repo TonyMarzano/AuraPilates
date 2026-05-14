@@ -587,6 +587,29 @@
             font-weight: 300;
         }
 
+        /* Días bulk */
+        .bulk-day-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--sage-pale);
+            border: 1.5px solid var(--sage-light);
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.15s;
+            user-select: none;
+        }
+        .bulk-day-label:has(input:checked) {
+            background: var(--sage);
+            border-color: var(--sage);
+            color: white;
+        }
+        .bulk-day-label input { display: none; }
+
         .btn-cancel-reserva {
             background: none;
             border: 1px solid #e8c5c5;
@@ -1319,7 +1342,7 @@
 <!-- BODY -->
 <div class="app-body">
 
-    <!-- Stats -->
+    <!-- Stats + botón fijar horario -->
     <div class="stats-row">
         <div class="stat-card">
             <span class="stat-label">Turnos esta semana</span>
@@ -1333,6 +1356,10 @@
             <span class="stat-label">Total reservados</span>
             <span class="stat-value" id="statTotal">0</span>
         </div>
+        <button class="btn-nuevo-mov" onclick="event.stopPropagation();openBulkModal()"
+                style="margin-left:auto;align-self:center">
+            📅 Fijar horario mensual
+        </button>
     </div>
 
     <!-- Calendar -->
@@ -1386,7 +1413,7 @@
 
     <!-- Proyección de ingresos -->
     <div class="proyeccion-wrap">
-        <div class="proyeccion-title">Proyección de ingresos — basado en $45.000 por mes</div>
+        <div class="proyeccion-title">Proyección de ingresos — basado en $45.000 por clase</div>
         <div class="proyeccion-grid">
             <div class="proy-card">
                 <div class="proy-label">🔴 70% — Arranque</div>
@@ -1420,8 +1447,8 @@
         <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
             <input class="alum-search" id="alumSearch" type="text" placeholder="Buscar alumna…" oninput="renderAlumnas()">
             <div class="alum-filter">
-                <button class="filter-btn" id="filterTodas" onclick="setFiltro('todas')">Todas</button>
                 <button class="filter-btn active" id="filterActiva" onclick="setFiltro('activa')">Activas</button>
+                <button class="filter-btn" id="filterTodas" onclick="setFiltro('todas')">Todas</button>
                 <button class="filter-btn" id="filterInactiva" onclick="setFiltro('inactiva')">Inactivas</button>
             </div>
             <div class="alum-filter">
@@ -1442,12 +1469,12 @@
     <!-- Stats -->
     <div class="alum-stats">
         <div class="stat-card">
-            <span class="stat-label">Total registradas</span>
-            <span class="stat-value" id="statAlumTotal">0</span>
-        </div>
-        <div class="stat-card">
             <span class="stat-label">Alumnas activas</span>
             <span class="stat-value" id="statAlumActivas">0</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Total registradas</span>
+            <span class="stat-value" id="statAlumTotal">0</span>
         </div>
         <div class="stat-card">
             <span class="stat-label">Pagaron este mes</span>
@@ -1545,6 +1572,66 @@
         </div>
         <div class="modal-footer">
             <button class="btn btn-cancel" onclick="closeModal()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Fijar horario mensual -->
+<div class="modal-overlay" id="modalBulk">
+    <div class="modal" style="max-width:500px;width:100%">
+        <div class="modal-header">
+            <div class="modal-title">Fijar horario mensual</div>
+        </div>
+        <div class="modal-body">
+
+            <!-- Alumna -->
+            <div class="form-group">
+                <label class="form-label">Alumna</label>
+                <select class="form-input" id="bulkAlumna">
+                    <option value="">— Seleccioná una alumna —</option>
+                </select>
+            </div>
+
+            <!-- Mes -->
+            <div class="form-group">
+                <label class="form-label">Mes</label>
+                <input class="form-input" type="month" id="bulkMes">
+            </div>
+
+            <!-- Días de la semana -->
+            <div class="form-group">
+                <label class="form-label">Días de la semana</label>
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.4rem">
+                    <label class="bulk-day-label"><input type="checkbox" value="0"> Lun</label>
+                    <label class="bulk-day-label"><input type="checkbox" value="1"> Mar</label>
+                    <label class="bulk-day-label"><input type="checkbox" value="2"> Mié</label>
+                    <label class="bulk-day-label"><input type="checkbox" value="3"> Jue</label>
+                    <label class="bulk-day-label"><input type="checkbox" value="4"> Vie</label>
+                    <label class="bulk-day-label"><input type="checkbox" value="5"> Sáb</label>
+                </div>
+            </div>
+
+            <!-- Hora -->
+            <div class="form-group">
+                <label class="form-label">Hora</label>
+                <select class="form-input" id="bulkHora">
+                    <option value="">— Seleccioná un horario —</option>
+                    <script>
+                        for(let h=8;h<=20;h++){
+                            document.write(`<option value="${h}">${String(h).padStart(2,'0')}:00 — ${String(h+1).padStart(2,'0')}:00 hs</option>`);
+                        }
+                    </script>
+                </select>
+            </div>
+
+            <!-- Preview -->
+            <div id="bulkPreview" style="display:none;background:var(--sage-pale);border-radius:6px;padding:0.75rem 1rem;font-size:0.8rem;color:var(--text-light);margin-top:0.25rem">
+            </div>
+
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-cancel" onclick="closeBulkModal()">Cancelar</button>
+            <button class="btn btn-confirm" id="btnConfirmBulk" onclick="confirmBulk()">Confirmar turnos</button>
         </div>
     </div>
 </div>
@@ -2060,12 +2147,125 @@ function showToast(msg) {
     setTimeout(() => t.classList.remove('show'), 3000);
 }
 
+// ── Modal: Fijar horario mensual ──────────────────────
+
+async function openBulkModal() {
+    // Mes actual por defecto
+    const now = new Date();
+    document.getElementById('bulkMes').value =
+        `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+    // Cargar alumnas
+    const lista = await fetch('/api/alumnas?activa=1').then(r=>r.json()).catch(()=>[]);
+    const sel   = document.getElementById('bulkAlumna');
+    sel.innerHTML = '<option value="">— Seleccioná una alumna —</option>' +
+        lista.map(a=>`<option value="${a.id}">${a.apellido}, ${a.nombre}</option>`).join('');
+    sel.value = '';
+
+    // Reset checkboxes
+    document.querySelectorAll('#modalBulk input[type=checkbox]').forEach(c=>c.checked=false);
+    document.getElementById('bulkHora').value = '';
+    document.getElementById('bulkPreview').style.display = 'none';
+
+    document.getElementById('modalBulk').classList.add('open');
+}
+
+function closeBulkModal() {
+    document.getElementById('modalBulk').classList.remove('open');
+}
+
+function previewBulk() {
+    const mes   = document.getElementById('bulkMes').value;
+    const hora  = document.getElementById('bulkHora').value;
+    const dias  = [...document.querySelectorAll('#modalBulk input[type=checkbox]:checked')]
+                    .map(c => parseInt(c.value));
+    const preview = document.getElementById('bulkPreview');
+
+    if (!mes || !hora || dias.length === 0) { preview.style.display='none'; return; }
+
+    const DIAS_ES_SHORT = ['Lun','Mar','Mié','Jue','Vie','Sáb'];
+    const [y, m] = mes.split('-').map(Number);
+    const fechas = [];
+    const diasEnMes = new Date(y, m, 0).getDate();
+
+    for (let d = 1; d <= diasEnMes; d++) {
+        const fecha = new Date(y, m-1, d);
+        if (dias.includes(fecha.getDay() === 0 ? 6 : fecha.getDay()-1)) {
+            fechas.push(fecha);
+        }
+    }
+
+    const horaInt = parseInt(hora);
+    preview.style.display = '';
+    preview.innerHTML = `
+        <strong style="color:var(--text)">${fechas.length} turnos a crear</strong>
+        &nbsp;·&nbsp; ${DIAS_ES_SHORT.filter((_,i)=>dias.includes(i)).join(', ')}
+        a las ${String(horaInt).padStart(2,'0')}:00 hs<br>
+        <span style="opacity:0.7">Se saltarán los turnos llenos o ya reservados para esta alumna.</span>
+    `;
+}
+
+// Actualizar preview en tiempo real
+document.getElementById('bulkMes')?.addEventListener('change', previewBulk);
+document.getElementById('bulkHora')?.addEventListener('change', previewBulk);
+document.querySelectorAll('#modalBulk input[type=checkbox]').forEach(c =>
+    c.addEventListener('change', previewBulk)
+);
+
+async function confirmBulk() {
+    const alumna_id = document.getElementById('bulkAlumna').value;
+    const mes       = document.getElementById('bulkMes').value;
+    const hora      = document.getElementById('bulkHora').value;
+    const dias      = [...document.querySelectorAll('#modalBulk input[type=checkbox]:checked')]
+                        .map(c => parseInt(c.value));
+
+    if (!alumna_id) { showToast('Seleccioná una alumna'); return; }
+    if (!mes)       { showToast('Seleccioná un mes'); return; }
+    if (!hora)      { showToast('Seleccioná un horario'); return; }
+    if (dias.length === 0) { showToast('Seleccioná al menos un día'); return; }
+
+    const btn = document.getElementById('btnConfirmBulk');
+    btn.textContent = 'Guardando…';
+    btn.disabled    = true;
+
+    try {
+        const res = await fetch('/api/reservas/bulk', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({
+                alumna_id:   parseInt(alumna_id),
+                dias_semana: dias,
+                hora:        parseInt(hora),
+                mes
+            })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            closeBulkModal();
+            await fetchReservas();
+            render();
+            let msg = `✓ ${data.creadas} turno${data.creadas!==1?'s':''} creado${data.creadas!==1?'s':''}`;
+            if (data.saltadas)   msg += ` · ${data.saltadas} sin lugar`;
+            if (data.existentes) msg += ` · ${data.existentes} ya existían`;
+            showToast(msg);
+        } else {
+            showToast(data.error || 'Error al crear turnos');
+        }
+    } catch(e) {
+        showToast('Error de conexión');
+    } finally {
+        btn.textContent = 'Confirmar turnos';
+        btn.disabled    = false;
+    }
+}
+
 // ── Cerrar modales ──
 document.getElementById('modalSlot').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 document.getElementById('modalMovimiento').addEventListener('click', e => { if (e.target === e.currentTarget) closeMovModal(); });
 document.getElementById('modalAlumna').addEventListener('click',   e => { if (e.target === e.currentTarget) closeAlumnaModal(); });
+document.getElementById('modalBulk').addEventListener('click',     e => { if (e.target === e.currentTarget) closeBulkModal(); });
 document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeModal(); closeMovModal(); closeAlumnaModal(); }
+    if (e.key === 'Escape') { closeModal(); closeMovModal(); closeAlumnaModal(); closeBulkModal(); }
 });
 
 // ── Init ──
@@ -2091,7 +2291,7 @@ function switchTab(tab) {
 }
 
 // ── Finanzas config ──
-const CATS_INGRESO = ['Pack mensual','Clase individual','Inscripción','Otro ingreso'];
+const CATS_INGRESO = ['Pack mensual','Clase individual','Clase grupal','Inscripción','Otro ingreso'];
 const CATS_GASTO   = ['Alquiler','Luz','Gas','Agua','Internet','Sueldos','Mantenimiento','Equipamiento','Marketing','Limpieza','Otro gasto'];
 
 function fmt(n) {
