@@ -123,7 +123,7 @@ def _build_welcome_html(nombre, apellido, plan):
                     </td>
                     <td valign="top">
                         <div style="font-size:14px;font-weight:500;color:#3d4f3c;padding-top:2px;">Dónde estamos</div>
-                        <div style="font-size:13px;color:#7a8f79;margin-top:3px;">San Roque Sur 1044, Rawson, San Juan</div>
+                        <div style="font-size:13px;color:#7a8f79;margin-top:3px;">Urquiza 991 Sur, Capital, San Juan</div>
                     </td>
                 </tr>
             </table>
@@ -261,6 +261,26 @@ def init_db():
             )
         ''')
 
+        # Tabla de horarios fijos (patrones de recurrencia)
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS horarios_fijos (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                alumna_id   INTEGER NOT NULL REFERENCES alumnas(id) ON DELETE CASCADE,
+                dias_semana TEXT    NOT NULL,
+                hora        INTEGER NOT NULL,
+                tipo        TEXT    NOT NULL CHECK(tipo IN ('mensual','anual')),
+                mes_inicio  TEXT    NOT NULL,
+                mes_fin     TEXT    NOT NULL,
+                activo      INTEGER DEFAULT 1,
+                created_at  DATETIME DEFAULT (datetime('now','-3 hours'))
+            )
+        ''')
+
+        # Migración: agregar horario_id a reservas para rastrear origen
+        cols_res2 = [r[1] for r in conn.execute("PRAGMA table_info(reservas)").fetchall()]
+        if 'horario_id' not in cols_res2:
+            conn.execute("ALTER TABLE reservas ADD COLUMN horario_id INTEGER REFERENCES horarios_fijos(id) ON DELETE SET NULL")
+
         conn.commit()
 
 def limpiar_datos_viejos():
@@ -307,7 +327,7 @@ def index():
     contact_data = {
         "whatsapp_link": "https://wa.me/5492645551234",
         "email": "clubpilatesanjuan@gmail.com",
-        "address": "San Roque Sur 1044, Rawson, San Juan",
+        "address": "Urquiza 991 Sur, Capital, San Juan",
         "google_maps_api_key": "TU_API_KEY_AQUI"
     }
     return render_template('index.html', data=contact_data)
@@ -748,6 +768,194 @@ def resumen_movimientos():
         return jsonify({'error': str(e)}), 500
 
 
+# ── API de Horarios Fijos ─────────────────────────────
+
+def _generar_reservas_desde_patron(conn, horario_id, alumna_id, dias_semana,
+                                    hora, mes_inicio, mes_fin, nombre, apellido, tel):
+    """Genera reservas para todos los meses entre mes_inicio y mes_fin."""
+    import calendar as cal
+    from datetime import date
+
+    HORARIO_EST = {0:(8,21),1:(8,21),2:(8,21),3:(8,21),4:(8,21),5:(9,12)}
+    creadas = saltadas = existentes = 0
+
+    y_ini, m_ini = int(mes_inicio[:4]), int(mes_inicio[5:7])
+    y_fin, m_fin = int(mes_fin[:4]),    int(mes_fin[5:7])
+
+    y, m = y_ini, m_ini
+    while (y, m) <= (y_fin, m_fin):
+        _, dias_en_mes = cal.monthrange(y, m)
+        for day in range(1, dias_en_mes + 1):
+            fecha = date(y, m, day)
+            wd    = fecha.weekday()           # 0=Lun…5=Sáb
+            if wd not in dias_semana:
+                continue
+            sc = HORARIO_EST.get(wd)
+            if not sc or not (sc[0] <= hora < sc[1]):
+                continue
+            slot_key = f"{fecha.strftime('%Y-%m-%d')}_{hora:02d}"
+
+            ya = conn.execute(
+                'SELECT id FROM reservas WHERE slot_key=? AND alumna_id=?',
+                (slot_key, alumna_id)
+            ).fetchone()
+            if ya:
+                existentes += 1
+                continue
+
+            count = conn.execute(
+                'SELECT COUNT(*) FROM reservas WHERE slot_key=?', (slot_key,)
+            ).fetchone()[0]
+            if count >= 5:
+                saltadas += 1
+                continue
+
+            conn.execute(
+                'INSERT INTO reservas (slot_key, nombre, apellido, tel, alumna_id, horario_id) VALUES (?,?,?,?,?,?)',
+                (slot_key, nombre, apellido, tel, alumna_id, horario_id)
+            )
+            creadas += 1
+
+        m += 1
+        if m > 12:
+            m = 1
+            y += 1
+
+    return creadas, saltadas, existentes
+
+
+@app.route('/api/horarios-fijos', methods=['GET'])
+@login_required
+def get_horarios_fijos():
+    try:
+        with get_db() as conn:
+            rows = conn.execute('''
+                SELECT h.*, a.nombre || ' ' || a.apellido AS alumna_nombre, a.plan
+                FROM horarios_fijos h
+                JOIN alumnas a ON h.alumna_id = a.id
+                WHERE h.activo = 1
+                ORDER BY h.mes_inicio DESC, a.apellido
+            ''').fetchall()
+        return jsonify([dict(r) for r in rows])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/horarios-fijos', methods=['POST'])
+@login_required
+def create_horario_fijo():
+    data        = request.get_json()
+    alumna_id   = data.get('alumna_id')
+    dias_semana = [int(d) for d in data.get('dias_semana', [])]
+    hora        = int(data.get('hora', 0))
+    tipo        = data.get('tipo', 'mensual')
+    mes_inicio  = data.get('mes_inicio', '')
+    mes_fin     = data.get('mes_fin', '')
+
+    if not all([alumna_id, dias_semana, mes_inicio, mes_fin]):
+        return jsonify({'error': 'Faltan campos obligatorios'}), 400
+
+    try:
+        with get_db() as conn:
+            alumna = conn.execute(
+                'SELECT nombre, apellido, tel FROM alumnas WHERE id=?', (alumna_id,)
+            ).fetchone()
+            if not alumna:
+                return jsonify({'error': 'Alumna no encontrada'}), 404
+
+            cur = conn.execute('''
+                INSERT INTO horarios_fijos (alumna_id, dias_semana, hora, tipo, mes_inicio, mes_fin)
+                VALUES (?,?,?,?,?,?)
+            ''', (alumna_id, json.dumps(dias_semana), hora, tipo, mes_inicio, mes_fin))
+            horario_id = cur.lastrowid
+
+            creadas, saltadas, existentes = _generar_reservas_desde_patron(
+                conn, horario_id, alumna_id, dias_semana, hora,
+                mes_inicio, mes_fin, alumna['nombre'], alumna['apellido'], alumna['tel'] or ''
+            )
+            conn.commit()
+
+        return jsonify({
+            'ok': True, 'horario_id': horario_id,
+            'creadas': creadas, 'saltadas': saltadas, 'existentes': existentes
+        }), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/horarios-fijos/<int:hid>', methods=['PUT'])
+@login_required
+def update_horario_fijo(hid):
+    data        = request.get_json()
+    dias_semana = [int(d) for d in data.get('dias_semana', [])]
+    hora        = int(data.get('hora', 0))
+    tipo        = data.get('tipo', 'mensual')
+    mes_inicio  = data.get('mes_inicio', '')
+    mes_fin     = data.get('mes_fin', '')
+
+    try:
+        from datetime import date
+        today_str = date.today().strftime('%Y-%m')
+
+        with get_db() as conn:
+            horario = conn.execute(
+                'SELECT * FROM horarios_fijos WHERE id=?', (hid,)
+            ).fetchone()
+            if not horario:
+                return jsonify({'error': 'Horario no encontrado'}), 404
+
+            alumna_id = horario['alumna_id']
+            alumna    = conn.execute(
+                'SELECT nombre, apellido, tel FROM alumnas WHERE id=?', (alumna_id,)
+            ).fetchone()
+
+            # Borrar reservas futuras generadas por este horario
+            conn.execute('''
+                DELETE FROM reservas
+                WHERE horario_id=?
+                  AND substr(slot_key,1,7) >= ?
+            ''', (hid, today_str))
+
+            # Actualizar patrón
+            conn.execute('''
+                UPDATE horarios_fijos
+                SET dias_semana=?, hora=?, tipo=?, mes_inicio=?, mes_fin=?
+                WHERE id=?
+            ''', (json.dumps(dias_semana), hora, tipo, mes_inicio, mes_fin, hid))
+
+            # Regenerar desde hoy en adelante
+            mes_desde = max(mes_inicio, today_str)
+            creadas, saltadas, existentes = _generar_reservas_desde_patron(
+                conn, hid, alumna_id, dias_semana, hora,
+                mes_desde, mes_fin, alumna['nombre'], alumna['apellido'], alumna['tel'] or ''
+            )
+            conn.commit()
+
+        return jsonify({'ok': True, 'creadas': creadas, 'saltadas': saltadas})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/horarios-fijos/<int:hid>', methods=['DELETE'])
+@login_required
+def delete_horario_fijo(hid):
+    borrar_reservas = request.args.get('borrar_reservas', '0') == '1'
+    try:
+        from datetime import date
+        today_str = date.today().strftime('%Y-%m')
+        with get_db() as conn:
+            if borrar_reservas:
+                conn.execute('''
+                    DELETE FROM reservas
+                    WHERE horario_id=? AND substr(slot_key,1,7) >= ?
+                ''', (hid, today_str))
+            conn.execute('UPDATE horarios_fijos SET activo=0 WHERE id=?', (hid,))
+            conn.commit()
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 # ── Bot de WhatsApp ───────────────────────────────────
 #
 # Horario del estudio (Python weekday: Lun=0, Mar=1 … Sáb=5, Dom=6)
@@ -935,7 +1143,7 @@ def procesar_mensaje_bot(tel_raw, msg_in):
         elif msg == '4':
             _set_conv(tel, 'MENU', {})
             return ('🕐 *Horarios de Club Pilates San Juan*\n\n'
-                    '📍 San Roque Sur 1044, Rawson\n\n'
+                    '📍 Urquiza 991 Sur, Capital\n\n'
                     '• Lunes a Viernes: 8:00 a 21:00 hs\n'
                     '• Sábados: 9:00 a 12:00 hs\n\n'
                     'Escribí *menú* para volver al inicio.')

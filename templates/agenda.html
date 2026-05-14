@@ -587,6 +587,71 @@
             font-weight: 300;
         }
 
+        /* Horarios fijos — tarjetas del listado */
+        .horario-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .horario-card-info { flex: 1; }
+        .horario-card-nombre {
+            font-size: 0.92rem;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+        .horario-card-detalle {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            font-weight: 300;
+            letter-spacing: 0.03em;
+        }
+        .horario-card-badge {
+            font-size: 0.68rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: var(--sage-pale);
+            color: var(--sage);
+        }
+        .horario-card-badge.anual {
+            background: #e8eaf3;
+            color: #5c6bc0;
+        }
+        .horario-card-actions { display: flex; gap: 0.4rem; }
+        .btn-horario-edit {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-light);
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-size: 0.72rem;
+            cursor: pointer;
+            font-family: 'Jost', sans-serif;
+            letter-spacing: 0.05em;
+            transition: all 0.15s;
+        }
+        .btn-horario-edit:hover { border-color: var(--sage); color: var(--sage); }
+        .btn-horario-del {
+            background: none;
+            border: 1px solid #e8c5c5;
+            color: #c0756d;
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-size: 0.72rem;
+            cursor: pointer;
+            font-family: 'Jost', sans-serif;
+            letter-spacing: 0.05em;
+            transition: all 0.15s;
+        }
+        .btn-horario-del:hover { background: #fdf0f0; }
+
         /* Días bulk */
         .bulk-day-label {
             display: flex;
@@ -1334,6 +1399,7 @@
     <button class="tab-btn active" onclick="switchTab('agenda')">📅 Agenda</button>
     <button class="tab-btn" onclick="switchTab('finanzas')">💰 Finanzas</button>
     <button class="tab-btn" onclick="switchTab('alumnas')">👩 Alumnas</button>
+    <button class="tab-btn" onclick="switchTab('horarios')">🔁 Horarios</button>
 </div>
 
 <!-- TAB: AGENDA -->
@@ -1492,6 +1558,27 @@
 </div>
 </div><!-- /tab-alumnas -->
 
+<!-- TAB: HORARIOS FIJOS -->
+<div class="tab-panel" id="tab-horarios">
+<div class="fin-body">
+    <div class="fin-header-row">
+        <div style="font-size:0.8rem;color:var(--text-light);font-weight:300;letter-spacing:0.05em;">
+            Horarios recurrentes activos
+        </div>
+        <button class="btn-nuevo-mov" onclick="event.stopPropagation();openBulkModal()">
+            + Nuevo horario
+        </button>
+    </div>
+
+    <!-- Listado -->
+    <div id="horariosListado" style="margin-top:1rem;display:flex;flex-direction:column;gap:0.75rem;">
+        <div style="text-align:center;color:var(--text-light);padding:2rem;font-size:0.85rem;">
+            Cargando...
+        </div>
+    </div>
+</div>
+</div><!-- /tab-horarios -->
+
 <!-- MODAL: Slot (ver + agregar) -->
 <div class="modal-overlay" id="modalSlot">
     <div class="modal" style="max-width:480px;width:100%">
@@ -1580,7 +1667,7 @@
 <div class="modal-overlay" id="modalBulk">
     <div class="modal" style="max-width:500px;width:100%">
         <div class="modal-header">
-            <div class="modal-title">Fijar horario mensual</div>
+            <div class="modal-title" id="bulkModalTitle">Nuevo horario fijo</div>
         </div>
         <div class="modal-body">
 
@@ -1592,10 +1679,25 @@
                 </select>
             </div>
 
-            <!-- Mes -->
+            <!-- Tipo -->
             <div class="form-group">
-                <label class="form-label">Mes</label>
-                <input class="form-input" type="month" id="bulkMes">
+                <label class="form-label">Tipo de horario</label>
+                <div class="reserva-mode-toggle">
+                    <button class="mode-btn active" id="tipoMensual" onclick="setBulkTipo('mensual')">Mensual</button>
+                    <button class="mode-btn" id="tipoAnual" onclick="setBulkTipo('anual')">Anual / Período</button>
+                </div>
+            </div>
+
+            <!-- Período -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" id="labelMesInicio">Mes</label>
+                    <input class="form-input" type="month" id="bulkMesInicio" oninput="previewBulk()">
+                </div>
+                <div class="form-group" id="grupMesFin" style="display:none">
+                    <label class="form-label">Hasta</label>
+                    <input class="form-input" type="month" id="bulkMesFin" oninput="previewBulk()">
+                </div>
             </div>
 
             <!-- Días de la semana -->
@@ -1614,7 +1716,7 @@
             <!-- Hora -->
             <div class="form-group">
                 <label class="form-label">Hora</label>
-                <select class="form-input" id="bulkHora">
+                <select class="form-input" id="bulkHora" oninput="previewBulk()">
                     <option value="">— Seleccioná un horario —</option>
                     <script>
                         for(let h=8;h<=20;h++){
@@ -1625,13 +1727,12 @@
             </div>
 
             <!-- Preview -->
-            <div id="bulkPreview" style="display:none;background:var(--sage-pale);border-radius:6px;padding:0.75rem 1rem;font-size:0.8rem;color:var(--text-light);margin-top:0.25rem">
-            </div>
+            <div id="bulkPreview" style="display:none;background:var(--sage-pale);border-radius:6px;padding:0.75rem 1rem;font-size:0.8rem;color:var(--text-light);margin-top:0.25rem"></div>
 
         </div>
         <div class="modal-footer">
             <button class="btn btn-cancel" onclick="closeBulkModal()">Cancelar</button>
-            <button class="btn btn-confirm" id="btnConfirmBulk" onclick="confirmBulk()">Confirmar turnos</button>
+            <button class="btn btn-confirm" id="btnConfirmBulk" onclick="confirmBulk()">Confirmar</button>
         </div>
     </div>
 </div>
@@ -2147,115 +2248,244 @@ function showToast(msg) {
     setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// ── Modal: Fijar horario mensual ──────────────────────
+// ── Modal: Horario fijo (nuevo / editar) ─────────────
 
-async function openBulkModal() {
-    // Mes actual por defecto
+let bulkTipo        = 'mensual';
+let editingHorarioId = null;
+
+const DIAS_ES_SHORT = ['Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+function setBulkTipo(tipo) {
+    bulkTipo = tipo;
+    document.getElementById('tipoMensual').classList.toggle('active', tipo === 'mensual');
+    document.getElementById('tipoAnual').classList.toggle('active',   tipo === 'anual');
+    document.getElementById('grupMesFin').style.display  = tipo === 'anual' ? '' : 'none';
+    document.getElementById('labelMesInicio').textContent = tipo === 'anual' ? 'Desde' : 'Mes';
+    previewBulk();
+}
+
+async function openBulkModal(horario = null) {
+    editingHorarioId = horario ? horario.id : null;
+    document.getElementById('bulkModalTitle').textContent =
+        horario ? 'Editar horario fijo' : 'Nuevo horario fijo';
+
     const now = new Date();
-    document.getElementById('bulkMes').value =
-        `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const mesDef = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
 
     // Cargar alumnas
     const lista = await fetch('/api/alumnas?activa=1').then(r=>r.json()).catch(()=>[]);
     const sel   = document.getElementById('bulkAlumna');
     sel.innerHTML = '<option value="">— Seleccioná una alumna —</option>' +
         lista.map(a=>`<option value="${a.id}">${a.apellido}, ${a.nombre}</option>`).join('');
-    sel.value = '';
 
-    // Reset checkboxes
-    document.querySelectorAll('#modalBulk input[type=checkbox]').forEach(c=>c.checked=false);
-    document.getElementById('bulkHora').value = '';
+    if (horario) {
+        // Modo edición — precargar datos
+        sel.value = horario.alumna_id;
+        setBulkTipo(horario.tipo);
+        document.getElementById('bulkMesInicio').value = horario.mes_inicio;
+        document.getElementById('bulkMesFin').value    = horario.mes_fin;
+        const dias = JSON.parse(horario.dias_semana);
+        document.querySelectorAll('#modalBulk input[type=checkbox]').forEach(c => {
+            c.checked = dias.includes(parseInt(c.value));
+        });
+        document.getElementById('bulkHora').value = horario.hora;
+    } else {
+        // Modo nuevo — reset
+        sel.value = '';
+        setBulkTipo('mensual');
+        document.getElementById('bulkMesInicio').value = mesDef;
+        document.getElementById('bulkMesFin').value    = mesDef;
+        document.querySelectorAll('#modalBulk input[type=checkbox]').forEach(c=>c.checked=false);
+        document.getElementById('bulkHora').value = '';
+    }
+
     document.getElementById('bulkPreview').style.display = 'none';
-
     document.getElementById('modalBulk').classList.add('open');
+    previewBulk();
 }
 
 function closeBulkModal() {
     document.getElementById('modalBulk').classList.remove('open');
+    editingHorarioId = null;
 }
 
 function previewBulk() {
-    const mes   = document.getElementById('bulkMes').value;
+    const mesInicio = document.getElementById('bulkMesInicio').value;
+    const mesFin    = bulkTipo === 'anual'
+                        ? document.getElementById('bulkMesFin').value
+                        : mesInicio;
     const hora  = document.getElementById('bulkHora').value;
     const dias  = [...document.querySelectorAll('#modalBulk input[type=checkbox]:checked')]
                     .map(c => parseInt(c.value));
     const preview = document.getElementById('bulkPreview');
 
-    if (!mes || !hora || dias.length === 0) { preview.style.display='none'; return; }
+    if (!mesInicio || !hora || dias.length === 0) { preview.style.display='none'; return; }
 
-    const DIAS_ES_SHORT = ['Lun','Mar','Mié','Jue','Vie','Sáb'];
-    const [y, m] = mes.split('-').map(Number);
-    const fechas = [];
-    const diasEnMes = new Date(y, m, 0).getDate();
-
-    for (let d = 1; d <= diasEnMes; d++) {
-        const fecha = new Date(y, m-1, d);
-        if (dias.includes(fecha.getDay() === 0 ? 6 : fecha.getDay()-1)) {
-            fechas.push(fecha);
+    // Contar fechas
+    let count = 0;
+    let [y, m] = mesInicio.split('-').map(Number);
+    const [yf, mf] = (mesFin || mesInicio).split('-').map(Number);
+    while (y < yf || (y === yf && m <= mf)) {
+        const diasEnMes = new Date(y, m, 0).getDate();
+        for (let d = 1; d <= diasEnMes; d++) {
+            const wd = new Date(y, m-1, d).getDay();
+            const wdPy = wd === 0 ? 6 : wd - 1;
+            if (dias.includes(wdPy)) count++;
         }
+        m++; if (m > 12) { m = 1; y++; }
     }
 
-    const horaInt = parseInt(hora);
+    const diasLabel = dias.map(d => DIAS_ES_SHORT[d]).join(' · ');
+    const h = parseInt(hora);
     preview.style.display = '';
     preview.innerHTML = `
-        <strong style="color:var(--text)">${fechas.length} turnos a crear</strong>
-        &nbsp;·&nbsp; ${DIAS_ES_SHORT.filter((_,i)=>dias.includes(i)).join(', ')}
-        a las ${String(horaInt).padStart(2,'0')}:00 hs<br>
-        <span style="opacity:0.7">Se saltarán los turnos llenos o ya reservados para esta alumna.</span>
+        <strong style="color:var(--text)">${count} turno${count!==1?'s':''} a ${editingHorarioId?'regenerar':'crear'}</strong>
+        &nbsp;·&nbsp; ${diasLabel} · ${String(h).padStart(2,'0')}:00 hs
+        ${bulkTipo==='anual' ? `<br><span style="opacity:0.7">${mesInicio} → ${mesFin}</span>` : ''}
     `;
 }
 
-// Actualizar preview en tiempo real
-document.getElementById('bulkMes')?.addEventListener('change', previewBulk);
+// Listeners en tiempo real
+document.getElementById('bulkMesInicio')?.addEventListener('change', previewBulk);
+document.getElementById('bulkMesFin')?.addEventListener('change', previewBulk);
 document.getElementById('bulkHora')?.addEventListener('change', previewBulk);
 document.querySelectorAll('#modalBulk input[type=checkbox]').forEach(c =>
     c.addEventListener('change', previewBulk)
 );
 
 async function confirmBulk() {
-    const alumna_id = document.getElementById('bulkAlumna').value;
-    const mes       = document.getElementById('bulkMes').value;
-    const hora      = document.getElementById('bulkHora').value;
-    const dias      = [...document.querySelectorAll('#modalBulk input[type=checkbox]:checked')]
-                        .map(c => parseInt(c.value));
+    const alumna_id  = document.getElementById('bulkAlumna').value;
+    const mes_inicio = document.getElementById('bulkMesInicio').value;
+    const mes_fin    = bulkTipo === 'anual'
+                        ? document.getElementById('bulkMesFin').value
+                        : mes_inicio;
+    const hora  = document.getElementById('bulkHora').value;
+    const dias  = [...document.querySelectorAll('#modalBulk input[type=checkbox]:checked')]
+                    .map(c => parseInt(c.value));
 
-    if (!alumna_id) { showToast('Seleccioná una alumna'); return; }
-    if (!mes)       { showToast('Seleccioná un mes'); return; }
-    if (!hora)      { showToast('Seleccioná un horario'); return; }
-    if (dias.length === 0) { showToast('Seleccioná al menos un día'); return; }
+    if (!alumna_id)     { showToast('Seleccioná una alumna'); return; }
+    if (!mes_inicio)    { showToast('Seleccioná un mes'); return; }
+    if (bulkTipo === 'anual' && !mes_fin) { showToast('Seleccioná el mes final'); return; }
+    if (!hora)          { showToast('Seleccioná un horario'); return; }
+    if (!dias.length)   { showToast('Seleccioná al menos un día'); return; }
+    if (bulkTipo === 'anual' && mes_fin < mes_inicio) {
+        showToast('El mes final debe ser igual o posterior al inicio'); return;
+    }
 
     const btn = document.getElementById('btnConfirmBulk');
     btn.textContent = 'Guardando…';
     btn.disabled    = true;
 
+    const payload = {
+        alumna_id:   parseInt(alumna_id),
+        dias_semana: dias,
+        hora:        parseInt(hora),
+        tipo:        bulkTipo,
+        mes_inicio, mes_fin
+    };
+
     try {
-        const res = await fetch('/api/reservas/bulk', {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({
-                alumna_id:   parseInt(alumna_id),
-                dias_semana: dias,
-                hora:        parseInt(hora),
-                mes
-            })
-        });
+        let res;
+        if (editingHorarioId) {
+            res = await fetch(`/api/horarios-fijos/${editingHorarioId}`, {
+                method: 'PUT',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify(payload)
+            });
+        } else {
+            res = await fetch('/api/horarios-fijos', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify(payload)
+            });
+        }
         const data = await res.json();
         if (res.ok) {
             closeBulkModal();
             await fetchReservas();
             render();
-            let msg = `✓ ${data.creadas} turno${data.creadas!==1?'s':''} creado${data.creadas!==1?'s':''}`;
+            await loadHorarios();
+            let msg = editingHorarioId
+                ? `✓ Horario actualizado · ${data.creadas} turno${data.creadas!==1?'s':''} regenerado${data.creadas!==1?'s':''}`
+                : `✓ ${data.creadas} turno${data.creadas!==1?'s':''} creado${data.creadas!==1?'s':''}`;
             if (data.saltadas)   msg += ` · ${data.saltadas} sin lugar`;
-            if (data.existentes) msg += ` · ${data.existentes} ya existían`;
             showToast(msg);
         } else {
-            showToast(data.error || 'Error al crear turnos');
+            showToast(data.error || 'Error al guardar');
         }
     } catch(e) {
         showToast('Error de conexión');
     } finally {
-        btn.textContent = 'Confirmar turnos';
+        btn.textContent = 'Confirmar';
         btn.disabled    = false;
+    }
+}
+
+// ── Tab Horarios: listado ─────────────────────────────
+
+async function loadHorarios() {
+    const lista = await fetch('/api/horarios-fijos').then(r=>r.json()).catch(()=>[]);
+    const cont  = document.getElementById('horariosListado');
+    if (!lista.length) {
+        cont.innerHTML = `<div style="text-align:center;color:var(--text-light);padding:3rem;font-size:0.85rem;">
+            No hay horarios fijos activos.<br>
+            <span style="opacity:0.6">Usá "+ Nuevo horario" para fijar un horario recurrente.</span>
+        </div>`;
+        return;
+    }
+
+    const PLAN_LABEL = {plan8:'Plan 8', plan4:'Plan 4', individual:'Individual'};
+
+    cont.innerHTML = lista.map(h => {
+        const dias  = JSON.parse(h.dias_semana).map(d => DIAS_ES_SHORT[d]).join(' · ');
+        const hora  = parseInt(h.hora);
+        const horaStr = `${String(hora).padStart(2,'0')}:00 — ${String(hora+1).padStart(2,'0')}:00 hs`;
+        const periodo = h.mes_inicio === h.mes_fin
+            ? h.mes_inicio
+            : `${h.mes_inicio} → ${h.mes_fin}`;
+        const plan  = PLAN_LABEL[h.plan] || '';
+        return `
+        <div class="horario-card">
+            <div class="horario-card-info">
+                <div class="horario-card-nombre">${h.alumna_nombre}${plan ? ` <span style="font-weight:300;color:var(--text-light)">· ${plan}</span>` : ''}</div>
+                <div class="horario-card-detalle">${dias} &nbsp;·&nbsp; ${horaStr} &nbsp;·&nbsp; ${periodo}</div>
+            </div>
+            <span class="horario-card-badge ${h.tipo}">${h.tipo}</span>
+            <div class="horario-card-actions">
+                <button class="btn-horario-edit" onclick="editHorario(${h.id})">✏ Editar</button>
+                <button class="btn-horario-del"  onclick="deleteHorario(${h.id})">✕</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+async function editHorario(id) {
+    const lista = await fetch('/api/horarios-fijos').then(r=>r.json()).catch(()=>[]);
+    const h = lista.find(x => x.id === id);
+    if (h) openBulkModal(h);
+}
+
+async function deleteHorario(id) {
+    const borrarRes = confirm(
+        '¿Eliminar este horario fijo?\n\n' +
+        'Presioná OK para también cancelar los turnos futuros generados por este horario.\n' +
+        'Presioná Cancelar para solo eliminar el patrón y conservar los turnos.'
+    );
+    // null = presionó Cancelar del confirm → no borrar nada
+    // true/false = presionó OK / Cancelar del segundo confirm
+    const url = `/api/horarios-fijos/${id}?borrar_reservas=${borrarRes ? 1 : 0}`;
+    try {
+        const res = await fetch(url, { method: 'DELETE' });
+        if (res.ok) {
+            await loadHorarios();
+            await fetchReservas();
+            render();
+            showToast(borrarRes ? 'Horario y turnos futuros eliminados' : 'Horario eliminado');
+        } else {
+            showToast('Error al eliminar');
+        }
+    } catch(e) {
+        showToast('Error de conexión');
     }
 }
 
@@ -2273,21 +2503,23 @@ loadAndRender();
 
 // ── Tabs ──
 function switchTab(tab) {
-    // Cerrar cualquier modal abierto antes de cambiar de tab
     document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
 
     document.querySelectorAll('.tab-btn').forEach((b,i) => {
         b.classList.toggle('active',
             (i===0 && tab==='agenda') ||
             (i===1 && tab==='finanzas') ||
-            (i===2 && tab==='alumnas')
+            (i===2 && tab==='alumnas') ||
+            (i===3 && tab==='horarios')
         );
     });
-    document.getElementById('tab-agenda').classList.toggle('active',   tab==='agenda');
-    document.getElementById('tab-finanzas').classList.toggle('active', tab==='finanzas');
-    document.getElementById('tab-alumnas').classList.toggle('active',  tab==='alumnas');
+    document.getElementById('tab-agenda').classList.toggle('active',    tab==='agenda');
+    document.getElementById('tab-finanzas').classList.toggle('active',  tab==='finanzas');
+    document.getElementById('tab-alumnas').classList.toggle('active',   tab==='alumnas');
+    document.getElementById('tab-horarios').classList.toggle('active',  tab==='horarios');
     if (tab === 'finanzas') loadFinanzas();
     if (tab === 'alumnas')  loadAlumnas();
+    if (tab === 'horarios') loadHorarios();
 }
 
 // ── Finanzas config ──
