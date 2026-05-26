@@ -326,7 +326,7 @@ def favicon():
 @app.route('/')
 def index():
     contact_data = {
-        "whatsapp_link": "https://wa.me/5492645551234",
+        "whatsapp_link": "https://wa.me/5492645797486",
         "email": "clubpilatesanjuan@gmail.com",
         "address": "San Roque Sur 1044, Rawson, San Juan",
         "google_maps_api_key": "TU_API_KEY_AQUI"
