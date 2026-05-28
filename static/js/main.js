@@ -1,145 +1,49 @@
-/**
- * Aura Pilates - Lógica de Interactividad
- */
+// ── Navbar: hamburger + scroll ──────────────────────
+const navbar    = document.getElementById('navbar');
+const hamburger = document.getElementById('navHamburger');
+const navLinks  = document.getElementById('navLinks');
 
-// 1. Desplazamiento suave (Smooth Scroll)
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const targetId = this.getAttribute('href');
-        const targetElement = document.querySelector(targetId);
-
-        if (targetElement) {
-            targetElement.scrollIntoView({
-                behavior: 'smooth'
-            });
-        }
-    });
+hamburger?.addEventListener('click', () => {
+    hamburger.classList.toggle('open');
+    navLinks.classList.toggle('open');
+    document.body.style.overflow = navLinks.classList.contains('open') ? 'hidden' : '';
 });
 
-// 2. Lógica de Transición (Parallax sutil en el Hero)
-document.addEventListener('scroll', function() {
-    const header = document.querySelector('.hero-section');
-    if (header) {
-        const scrollPosition = window.pageYOffset;
-        header.style.backgroundPositionY = (scrollPosition * 0.5) + 'px';
-    }
-});
-
-// 3. Efecto de aparición (Fade-in) al hacer scroll
-const observerOptions = {
-    root: null,
-    rootMargin: '0px',
-    threshold: 0.1 
-};
-
-const sectionObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-            // Deja de observar para ahorrar recursos una vez que ya se ve
-            sectionObserver.unobserve(entry.target);
-        }
-    });
-}, observerOptions);
-
-// Aplicar el observador a todas las secciones
-document.querySelectorAll('section').forEach(section => {
-    sectionObserver.observe(section);
-});
-
-
-// Lógica para el menú hamburguesa
-const menuBtn = document.querySelector('.mobile-menu-btn');
-const navLinks = document.querySelector('.nav-links');
-
-menuBtn.addEventListener('click', () => {
-    navLinks.classList.toggle('active');
-    
-    // Opcional: Cambia el icono de hamburguesa por una X
-    const icon = menuBtn.querySelector('i');
-    icon.classList.toggle('fa-bars');
-    icon.classList.toggle('fa-times');
-});
-
-// Cerrar el menú automáticamente al hacer clic en un enlace
-document.querySelectorAll('.nav-links a').forEach(link => {
+// Cerrar menu al clickear un link
+navLinks?.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', () => {
-        navLinks.classList.remove('active');
-        const icon = menuBtn.querySelector('i');
-        icon.classList.add('fa-bars');
-        icon.classList.remove('fa-times');
+        hamburger.classList.remove('open');
+        navLinks.classList.remove('open');
+        document.body.style.overflow = '';
     });
 });
 
-// Cerrar el menú al hacer clic fuera de él
-document.addEventListener('click', (e) => {
-    const isInsideNav = menuBtn.contains(e.target) || navLinks.contains(e.target);
-    if (!isInsideNav && navLinks.classList.contains('active')) {
-        navLinks.classList.remove('active');
-        const icon = menuBtn.querySelector('i');
-        icon.classList.add('fa-bars');
-        icon.classList.remove('fa-times');
+// Cerrar menu al clickear fuera
+document.addEventListener('click', e => {
+    if (navLinks?.classList.contains('open') &&
+        !navLinks.contains(e.target) &&
+        !hamburger.contains(e.target)) {
+        hamburger.classList.remove('open');
+        navLinks.classList.remove('open');
+        document.body.style.overflow = '';
     }
 });
-// Opción A: Desaparecer cuando el DOM esté listo y el Hero haya cargado
-document.addEventListener('DOMContentLoaded', () => {
-    const preloader = document.getElementById('preloader');
-    const heroImg = new Image();
-    heroImg.src = "static/img/hero_image.webp"; // Cambia a .webp si lo conviertes
 
-    heroImg.onload = () => {
-        setTimeout(() => {
-            preloader.classList.add('hidden');
-        }, 500); // 500ms de gracia para la animación
-    };
-});
-
-// Opción B (Respaldo): Si tarda más de 4 segundos por mala conexión, quitarlo igual
-setTimeout(() => {
-    const preloader = document.getElementById('preloader');
-    if (!preloader.classList.contains('hidden')) {
-        preloader.classList.add('hidden');
-    }
-}, 4000);
-
-// Asegurar que el clic en el logo haga scroll suave al inicio
-document.querySelector('.logo-link').addEventListener('click', function(e) {
-    e.preventDefault();
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
-});
-
-window.addEventListener('load', () => {
-    const preloader = document.getElementById('preloader');
-    
-    // Agregamos un pequeño delay de 500ms para que la animación se aprecie
-    setTimeout(() => {
-        preloader.classList.add('hidden');
-    }, 1000);
-});
-
-window.addEventListener('scroll', function() {
-    const parallax = document.querySelector('.parallax-servicios');
-    if (parallax) {
-        // Obtenemos la posición de la sección respecto a la ventana
-        const distance = window.pageYOffset - parallax.offsetTop;
-        
-        /* Multiplicamos por un factor pequeño (0.2 o 0.3). 
-           Si el número es positivo, la imagen baja; si es negativo, sube.
-        */
-        const speed = 0.3;
-        parallax.style.backgroundPositionY = (distance * speed) + 'px';
-    }
-});
-// Navbar: fondo más sólido al hacer scroll
-const mainNav = document.querySelector('.main-nav');
+// Scroll effect en navbar
 window.addEventListener('scroll', () => {
-    if (window.scrollY > 60) {
-        mainNav.classList.add('scrolled');
-    } else {
-        mainNav.classList.remove('scrolled');
-    }
-});
+    navbar?.classList.toggle('scrolled', window.scrollY > 40);
+}, { passive: true });
+
+// ── Reveal on scroll ────────────────────────────────
+const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+            setTimeout(() => {
+                entry.target.classList.add('visible');
+            }, i * 80);
+            revealObserver.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));

@@ -4,37 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Club Pilates San Juan | Studio & Wellness · Capital, San Juan</title>
-
-    <!-- SEO básico -->
-    <meta name="description" content="Club Pilates San Juan — Estudio de Pilates Reformer en Capital, San Juan, Argentina. Clases individuales y grupales. Lunes a viernes 8-21hs, sábados 9-14hs.">
-    <meta name="keywords" content="pilates san juan, reformer pilates san juan, estudio pilates Capital, clases pilates san juan argentina, wellness san juan">
+    <meta name="description" content="Club Pilates San Juan — Estudio de Pilates Reformer en Capital, San Juan, Argentina. Clases individuales y grupales. Lunes a viernes 8-21hs, sábados 9-12hs.">
+    <meta name="keywords" content="pilates san juan, reformer pilates san juan, estudio pilates capital, clases pilates san juan argentina, wellness san juan">
     <meta name="author" content="Club Pilates San Juan">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://clubpilatesanjuan.com.ar/">
-
-    <!-- Open Graph (WhatsApp, Facebook, Instagram) -->
+    <link rel="canonical" href="https://clubpilates.com.ar/">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://clubpilatesanjuan.com.ar/">
+    <meta property="og:url" content="https://clubpilates.com.ar/">
     <meta property="og:title" content="Club Pilates San Juan | Studio & Wellness">
-    <meta property="og:description" content="Estudio de Pilates Reformer en Capital, San Juan. Clases individuales y grupales. Reservá tu turno online.">
-    <meta property="og:image" content="https://clubpilatesanjuan.com.ar/static/img/hero_image.webp">
+    <meta property="og:description" content="Estudio de Pilates Reformer en Capital, San Juan. Clases individuales y grupales. Reservá tu turno.">
+    <meta property="og:image" content="https://clubpilates.com.ar/static/img/estudio1.webp">
     <meta property="og:locale" content="es_AR">
     <meta property="og:site_name" content="Club Pilates San Juan">
-
-    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Club Pilates San Juan | Studio & Wellness">
-    <meta name="twitter:description" content="Estudio de Pilates Reformer en Capital, San Juan. Clases individuales y grupales.">
-    <meta name="twitter:image" content="https://clubpilatesanjuan.com.ar/static/img/hero_image.webp">
-
-    <!-- Datos estructurados (Google) -->
+    <meta name="twitter:description" content="Estudio de Pilates Reformer en Capital, San Juan.">
+    <meta name="twitter:image" content="https://clubpilates.com.ar/static/img/estudio1.webp">
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
         "@type": "LocalBusiness",
         "name": "Club Pilates San Juan",
         "description": "Estudio de Pilates Reformer en Capital, San Juan, Argentina.",
-        "url": "https://clubpilatesanjuan.com.ar",
+        "url": "https://clubpilates.com.ar",
         "telephone": "+5492645797486",
         "email": "clubpilatesanjuan@gmail.com",
         "address": {
@@ -45,116 +37,126 @@
             "addressCountry": "AR"
         },
         "openingHoursSpecification": [
-            {
-                "@type": "OpeningHoursSpecification",
-                "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
-                "opens": "08:00",
-                "closes": "21:00"
-            },
-            {
-                "@type": "OpeningHoursSpecification",
-                "dayOfWeek": "Saturday",
-                "opens": "09:00",
-                "closes": "14:00"
-            }
+            {"@type": "OpeningHoursSpecification","dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],"opens": "08:00","closes": "21:00"},
+            {"@type": "OpeningHoursSpecification","dayOfWeek": "Saturday","opens": "09:00","closes": "12:00"}
         ],
-        "image": "https://clubpilatesanjuan.com.ar/static/img/hero_image.webp",
         "priceRange": "$$",
-        "sameAs": [
-            "https://www.instagram.com/clubpilatesanjuan/"
-        ]
+        "sameAs": ["https://www.instagram.com/clubpilatesanjuan/"]
     }
     </script>
-
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
-    <link rel="preload" as="image" href="static/img/hero_image.webp">
 </head>
 <body>
 
-    <!-- PRELOADER -->
-    <div id="preloader">
-        <div class="loader-content">
-            <div class="loader-cp-badge">
-                <div class="loader-ring"></div>
-                <div class="loader-inner">
-                    <span class="loader-cp"><span>C</span>P</span>
-                </div>
-            </div>
-            <div class="loader-line"></div>
-        </div>
-    </div>
-
     <!-- NAVBAR -->
-    <nav class="main-nav">
-        <div class="logo-nav">
-            <a href="#inicio" class="logo-link">
-                <!-- Logo Versión Horizontal -->
-                <div class="cp-logo-horizontal">
-                    <span class="cp-initials">CP</span>
-                    <span class="cp-logo-vdivider"></span>
-                    <div class="cp-logo-text">
-                        <span class="cp-logo-name">Club Pilates</span>
-                        <span class="cp-logo-tagline">Studio &amp; Wellness</span>
-                    </div>
-                </div>
-            </a>
-        </div>
-        
-        <button class="mobile-menu-btn">
-            <i class="fas fa-bars"></i>
+    <nav class="nav" id="navbar">
+        <a href="#inicio" class="nav-logo">
+            <span class="nav-logo-cp">CP</span>
+            <span class="nav-logo-div"></span>
+            <div class="nav-logo-text">
+                <span class="nav-logo-name">Club Pilates</span>
+                <span class="nav-logo-tag">Studio &amp; Wellness</span>
+            </div>
+        </a>
+        <button class="nav-hamburger" id="navHamburger" aria-label="Menú">
+            <span></span><span></span><span></span>
         </button>
-
-        <div class="nav-links">
-            <a href="#nosotros">Nosotros</a>
-            <a href="#servicios">Servicios</a>
-            <a href="#galeria">Galería</a>
-            <a href="#contacto">Contacto</a>
-            <a href="#preguntas">Preguntas</a>
-            <a href="https://wa.me/5492645797486" class="nav-btn">Reservar Clase</a>
+        <div class="nav-links" id="navLinks">
+            <a href="#nosotros" class="nav-link">Nosotros</a>
+            <a href="#metodo" class="nav-link">Método</a>
+            <a href="#servicios" class="nav-link">Servicios</a>
+            <a href="#galeria" class="nav-link">Galería</a>
+            <a href="#contacto" class="nav-link">Contacto</a>
+            <a href="{{ data.whatsapp_link }}" target="_blank" class="nav-cta">
+                <i class="fab fa-whatsapp"></i> Reservar
+            </a>
         </div>
     </nav>
 
     <!-- HERO -->
-    <header class="hero-section section" id="inicio">
-
-        <!-- Texto principal izquierda -->
-        <div class="hero-eyebrow">San Juan · Argentina · Studio &amp; Wellness</div>
-        <h1 class="hero-title-main">El arte<br>del <em>movimiento</em><br>consciente</h1>
-        <div class="hero-divider"></div>
-        <div class="hero-subtitle">Pilates Reformer · Urquiza 991 Sur, Capital</div>
-
+    <header class="hero" id="inicio">
+        <div class="hero-content">
+            <p class="hero-eyebrow">San Juan · Argentina · Est. 2024</p>
+            <h1 class="hero-title">El arte<br>del <em>movimiento</em><br>consciente</h1>
+            <div class="hero-line"></div>
+            <p class="hero-sub">Pilates Reformer · Urquiza 991 Sur, Capital</p>
+            <div class="hero-actions">
+                <a href="{{ data.whatsapp_link }}" target="_blank" class="hero-btn-primary">
+                    <i class="fab fa-whatsapp"></i> Reservar clase
+                </a>
+                <a href="#nosotros" class="hero-btn-secondary">Conocer más</a>
+            </div>
+        </div>
+        <div class="hero-badge" aria-hidden="true">
+            <div class="hero-badge-ring"></div>
+            <div class="hero-badge-inner">CP</div>
+        </div>
     </header>
 
+    <!-- STATS STRIP -->
+    <div class="stats-strip">
+        <div class="stats-strip-item">
+            <span class="stats-n">5×</span>
+            <span class="stats-l">Días por semana</span>
+        </div>
+        <div class="stats-strip-item">
+            <span class="stats-n">5</span>
+            <span class="stats-l">Alumnas por turno</span>
+        </div>
+        <div class="stats-strip-item">
+            <span class="stats-n">4</span>
+            <span class="stats-l">Planes disponibles</span>
+        </div>
+        <div class="stats-strip-item">
+            <span class="stats-n">8h</span>
+            <span class="stats-l">Apertura diaria</span>
+        </div>
+    </div>
+
     <!-- NOSOTROS -->
-    <section class="about-section section" id="nosotros">
-        <div class="about-content">
-            <h2>Nuestra Filosofía</h2>
-            <p>En <strong>Club Pilates</strong>, creemos en el movimiento como una forma de cuidado personal. Nuestro espacio en San Juan está diseñado para ofrecerte una experiencia de bienestar integral, donde la precisión del método se encuentra con un ambiente de calma y equilibrio.</p>
+    <section class="section about" id="nosotros">
+        <div class="about-text reveal">
+            <span class="section-label">Nuestra filosofía</span>
+            <h2 class="section-title">Movimiento<br>que <em>transforma</em></h2>
+            <p>En <strong>Club Pilates</strong> creemos en el movimiento como una forma de cuidado personal. Nuestro espacio está diseñado para ofrecerte una experiencia de bienestar integral, donde la precisión del método se encuentra con un ambiente de calma y equilibrio.</p>
             <p>Ya sea que busques mejorar tu rendimiento deportivo o encontrar un momento de conexión consciente, estamos aquí para acompañar tu proceso.</p>
+        </div>
+        <div class="about-visual reveal">
+            <div class="about-visual-card">
+                <span class="about-visual-cp" aria-hidden="true">CP</span>
+                <div class="about-visual-tag">
+                    <span class="about-tag-city">Capital, San Juan</span>
+                    <span class="about-tag-addr">Urquiza 991 Sur</span>
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- MÉTODO -->
-    <section class="benefits-section section" id="metodo">
-        <h2>Nuestro Método</h2>
-        <div class="benefits-grid">
-            <div class="benefit-card">
-                <div class="benefit-icon"><i class="fas fa-leaf"></i></div>
+    <section class="section metodo" id="metodo">
+        <div class="metodo-header reveal">
+            <span class="section-label">Método</span>
+            <h2 class="section-title">Nuestro enfoque</h2>
+        </div>
+        <div class="metodo-grid">
+            <div class="metodo-card reveal">
+                <span class="metodo-num">01</span>
                 <h3>Bienestar Integral</h3>
-                <p>Buscamos el equilibrio entre cuerpo y mente mediante movimientos conscientes.</p>
+                <p>Equilibrio entre cuerpo y mente mediante movimientos conscientes y precisos.</p>
             </div>
-            <div class="benefit-card">
-                <div class="benefit-icon"><i class="fas fa-dna"></i></div>
+            <div class="metodo-card reveal">
+                <span class="metodo-num">02</span>
                 <h3>Precisión</h3>
-                <p>Cada ejercicio está diseñado para trabajar la alineación y la fuerza profunda.</p>
+                <p>Cada ejercicio diseñado para trabajar la alineación y la fuerza profunda.</p>
             </div>
-            <div class="benefit-card">
-                <div class="benefit-icon"><i class="fas fa-feather"></i></div>
+            <div class="metodo-card reveal">
+                <span class="metodo-num">03</span>
                 <h3>Fluidez</h3>
                 <p>Movimientos que conectan entre sí para mejorar tu movilidad diaria.</p>
             </div>
@@ -162,39 +164,45 @@
     </section>
 
     <!-- SERVICIOS -->
-    <section class="services-section section parallax-servicios" id="servicios">
-        <div class="parallax-content">
-            <h2>Clases y Servicios</h2>
-            <div class="services-grid">
-                <div class="service-card">
-                    <span style="text-transform: uppercase; font-size: 0.7rem; letter-spacing: 2px; color: #bcaaa4;">Equilibrio</span>
-                    <h3>Club Classic Reformer</h3>
-                    <p>La base del método, para fundir forma y fluidez. Ideal para construir una base sólida de fuerza central.</p>
-                </div>
-                <div class="service-card">
-                    <span style="text-transform: uppercase; font-size: 0.7rem; letter-spacing: 2px; color: #bcaaa4;">Rendimiento</span>
-                    <h3>Club Sport Performance</h3>
-                    <p>Sesiones dinámicas enfocadas en atletas y mejora del rendimiento deportivo. Uso de Wunda Chair y Cadillac.</p>
-                </div>
-                <div class="service-card">
-                    <span style="text-transform: uppercase; font-size: 0.7rem; letter-spacing: 2px; color: #bcaaa4;">Cuidado</span>
-                    <h3>Pilates &amp; Bienestar</h3>
-                    <p>Clases enfocadas en el alivio de dolor y objetivos terapéuticos. Máxima atención personalizada.</p>
-                </div>
+    <section class="section servicios" id="servicios">
+        <div class="servicios-header reveal">
+            <div>
+                <span class="section-label section-label--light">Servicios</span>
+                <h2 class="section-title section-title--light">Clases &amp; planes</h2>
+            </div>
+        </div>
+        <div class="servicios-grid">
+            <div class="servicio-card reveal">
+                <span class="servicio-tag">Equilibrio</span>
+                <h3>Club Classic Reformer</h3>
+                <p>La base del método, para fundir forma y fluidez. Ideal para construir una base sólida de fuerza central.</p>
+            </div>
+            <div class="servicio-card reveal">
+                <span class="servicio-tag">Rendimiento</span>
+                <h3>Club Sport Performance</h3>
+                <p>Sesiones dinámicas enfocadas en atletas y mejora del rendimiento deportivo. Uso de Wunda Chair y Cadillac.</p>
+            </div>
+            <div class="servicio-card reveal">
+                <span class="servicio-tag">Cuidado</span>
+                <h3>Pilates &amp; Bienestar</h3>
+                <p>Clases enfocadas en el alivio de dolor y objetivos terapéuticos. Máxima atención personalizada.</p>
             </div>
         </div>
     </section>
 
     <!-- GALERÍA -->
-    <section class="gallery-section section" id="galeria">
-        <h2>Nuestro Espacio</h2>
-        <div class="swiper-container mySwiper">
+    <section class="section galeria" id="galeria">
+        <div class="galeria-header reveal">
+            <span class="section-label">Espacio</span>
+            <h2 class="section-title">Nuestro estudio</h2>
+        </div>
+        <div class="swiper mySwiper reveal">
             <div class="swiper-wrapper">
                 <div class="swiper-slide">
                     <img src="{{ url_for('static', filename='img/estudio1.webp') }}" alt="Estudio Club Pilates" loading="lazy">
                 </div>
                 <div class="swiper-slide">
-                    <img src="{{ url_for('static', filename='img/estudio2.webp') }}" alt="Reformer" loading="lazy">
+                    <img src="{{ url_for('static', filename='img/estudio2.webp') }}" alt="Reformer Club Pilates" loading="lazy">
                 </div>
                 <div class="swiper-slide">
                     <img src="{{ url_for('static', filename='img/estudio3.webp') }}" alt="Clase de Pilates" loading="lazy">
@@ -205,105 +213,151 @@
             <div class="swiper-button-prev"></div>
         </div>
     </section>
-	
-    <!-- CONTACTO -->
-    <section id="contacto" class="contact-map-section section">
-        <h2>Encuéntranos</h2>
-        <div id="google-map-container">
-            <iframe 
-                src="https://www.google.com/maps/embed?pb=!4v1777046874356!6m8!1m7!1s707O0sQxeyIb9qlpRELNKw!2m2!1d-31.54564673447597!2d-68.54388193538013!3f256.82821440984463!4f0.21784486057713082!5f0.7820865974627469" 
-                width="100%" 
-                height="450" 
-                style="border:0;" 
-                allowfullscreen="" 
-                loading="lazy" 
-                referrerpolicy="no-referrer-when-downgrade">
-            </iframe>
+
+    <!-- CONTACTO / MAPA -->
+    <section class="section contacto" id="contacto">
+        <div class="contacto-header reveal">
+            <span class="section-label">Contacto</span>
+            <h2 class="section-title">Encuéntranos</h2>
         </div>
-        <div class="contact-links" style="text-align: center; margin-top: 2rem;">
-            <p>Dirección: <strong>Urquiza 991 Sur, Capital, San Juan</strong></p>
-            <a href="{{ data.whatsapp_link }}" target="_blank" class="whatsapp-btn">
-                <i class="fab fa-whatsapp"></i> Reservar por WhatsApp
-            </a>
-            <p>Email:</p>
-            <a href="https://mail.google.com/mail/?view=cm&to=clubpilatesanjuan@gmail.com" target="_blank">
-                <i class="far fa-envelope"></i> <span class="__cf_email__" data-cfemail="7a19160f180a13161b0e1f091b14100f1b143a1d171b131654191517">[email&#160;protected]</span>
-            </a>
+        <div class="contacto-grid">
+            <div class="contacto-info reveal">
+                <div class="contacto-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div>
+                        <strong>Dirección</strong>
+                        <span>Urquiza 991 Sur, Capital, San Juan</span>
+                    </div>
+                </div>
+                <div class="contacto-item">
+                    <i class="fas fa-clock"></i>
+                    <div>
+                        <strong>Horarios</strong>
+                        <span>Lun–Vie: 8:00 a 21:00 hs</span>
+                        <span>Sábados: 9:00 a 12:00 hs</span>
+                    </div>
+                </div>
+                <div class="contacto-item">
+                    <i class="fab fa-whatsapp"></i>
+                    <div>
+                        <strong>WhatsApp</strong>
+                        <a href="{{ data.whatsapp_link }}" target="_blank">+54 9 264 579-7486</a>
+                    </div>
+                </div>
+                <div class="contacto-item">
+                    <i class="far fa-envelope"></i>
+                    <div>
+                        <strong>Email</strong>
+                        <a href="mailto:clubpilatesanjuan@gmail.com">clubpilatesanjuan@gmail.com</a>
+                    </div>
+                </div>
+                <a href="{{ data.whatsapp_link }}" target="_blank" class="contacto-wsp-btn">
+                    <i class="fab fa-whatsapp"></i> Reservar por WhatsApp
+                </a>
+            </div>
+            <div class="contacto-mapa reveal">
+                <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2021.931590222818!2d-68.57068969857355!3d-31.538712156674002!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x968140ff5c13c2cf%3A0xb01908b94fc44781!2sEspacio%20San%20Juan%20Shopping!5e0!3m2!1ses!2sar!4v1765994409076!5m2!1ses!2sar"
+                    width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade" title="Ubicación Club Pilates San Juan">
+                </iframe>
+            </div>
         </div>
     </section>
 
     <!-- FAQ -->
-    <section class="faq-section section" id="preguntas">
-        <h2>Preguntas Frecuentes</h2>
-        <div class="faq-container">
-            <details>
+    <section class="section faq" id="preguntas">
+        <div class="faq-header reveal">
+            <span class="section-label">Preguntas</span>
+            <h2 class="section-title">Frecuentes</h2>
+        </div>
+        <div class="faq-list">
+            <details class="faq-item reveal">
                 <summary>¿Necesito experiencia previa?</summary>
-                <div class="faq-content">
-                    <p>No es necesario. Nuestras clases son personalizadas y se adaptan a tu nivel actual, guiándote paso a paso en el uso de los equipos.</p>
-                </div>
+                <div class="faq-body">No es necesario. Nuestras clases son personalizadas y se adaptan a tu nivel actual, guiándote paso a paso en el uso de los equipos.</div>
             </details>
-            <details>
+            <details class="faq-item reveal">
                 <summary>¿Qué debo llevar a mi primera clase?</summary>
-                <div class="faq-content">
-                    <p>Te recomendamos traer ropa cómoda (deportiva), una botella de agua y, por higiene, el uso de medias es obligatorio.</p>
-                </div>
+                <div class="faq-body">Te recomendamos traer ropa cómoda (deportiva), una botella de agua y, por higiene, el uso de medias es obligatorio.</div>
             </details>
-            <details>
+            <details class="faq-item reveal">
                 <summary>¿Cuántas veces por semana se recomienda practicar?</summary>
-                <div class="faq-content">
-                    <p>Para ver resultados consistentes en flexibilidad y fuerza, recomendamos asistir al menos 2 veces por semana.</p>
-                </div>
+                <div class="faq-body">Para ver resultados consistentes en flexibilidad y fuerza, recomendamos asistir al menos 2 veces por semana.</div>
+            </details>
+            <details class="faq-item reveal">
+                <summary>¿Cuáles son los planes disponibles?</summary>
+                <div class="faq-body">Ofrecemos Plan 4 clases (1×semana), Plan 8 clases (2×semana), Plan 12 clases (3×semana) y Clase individual. Consultanos por WhatsApp para más información.</div>
             </details>
         </div>
     </section>
 
     <!-- FOOTER -->
-    <footer class="main-footer" id="contact">
-        <div class="footer-container">
-            <h3>Reservá tu turno ahora o contactanos para más información</h3>
-            <div class="contact-info">
-                <a href="https://wa.me/5492645797486" target="_blank">
-                    <i class="fab fa-whatsapp"></i> +54 9 264 579-7486
-                </a>
-                <a href="https://mail.google.com/mail/?view=cm&to=clubpilatesanjuan@gmail.com" target="_blank">
-                    <i class="far fa-envelope"></i> <span class="__cf_email__" data-cfemail="5c3f30293e2c35303d28392f3d3236293d321c3b313d3530723f3331">[email&#160;protected]</span>
-                </a>
+    <footer class="footer">
+        <div class="footer-top">
+            <div class="footer-brand">
+                <div class="footer-logo">
+                    <span class="footer-cp">CP</span>
+                    <div>
+                        <span class="footer-name">Club Pilates</span>
+                        <span class="footer-tag">Studio &amp; Wellness · San Juan</span>
+                    </div>
+                </div>
+                <p class="footer-desc">Pilates Reformer en Capital, San Juan. Movimiento consciente para tu bienestar.</p>
+                <div class="footer-social">
+                    <a href="https://www.instagram.com/clubpilatesanjuan/" target="_blank" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="{{ data.whatsapp_link }}" target="_blank" aria-label="WhatsApp">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                    <a href="mailto:clubpilatesanjuan@gmail.com" aria-label="Email">
+                        <i class="far fa-envelope"></i>
+                    </a>
+                </div>
             </div>
-            <div class="social-links">
-                <a href="https://www.instagram.com/clubpilatesanjuan/" target="_blank"><i class="fab fa-instagram"></i></a>
+            <div class="footer-col">
+                <h4>Navegación</h4>
+                <a href="#nosotros">Nosotros</a>
+                <a href="#metodo">Método</a>
+                <a href="#servicios">Servicios</a>
+                <a href="#galeria">Galería</a>
+                <a href="#contacto">Contacto</a>
+                <a href="#preguntas">Preguntas</a>
             </div>
-            <div class="working-hours">
-                <h4>Horarios y días de atención:</h4>
-                <p>Lunes a viernes de 8 a 12 hs y 16 a 21hs.</p>
-                <p>Sábados de 8 a 12 hs.</p>
+            <div class="footer-col">
+                <h4>Contacto</h4>
+                <a href="{{ data.whatsapp_link }}" target="_blank">+54 9 264 579-7486</a>
+                <a href="mailto:clubpilatesanjuan@gmail.com">clubpilatesanjuan@gmail.com</a>
+                <span>Urquiza 991 Sur, Capital</span>
+                <span>Lun–Vie: 8:00 – 21:00 hs</span>
+                <span>Sábados: 9:00 – 12:00 hs</span>
             </div>
-            <div class="footer-bottom">
-                <p>© 2026 Club Pilates. Todos los derechos reservados.</p>
-            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© 2026 Club Pilates San Juan. Todos los derechos reservados.</span>
+            <a href="/agenda" class="footer-agenda-link">Acceso agenda</a>
         </div>
     </footer>
 
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <!-- WhatsApp float button -->
+    <a href="{{ data.whatsapp_link }}" target="_blank" class="wsp-float" aria-label="WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+    </a>
 
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script>
-    var swiper = new Swiper(".mySwiper", {
-        effect: "coverflow",
-        grabCursor: true,
-        centeredSlides: true,
-        slidesPerView: 1,
-        coverflowEffect: {
-            rotate: 0,
-            stretch: 0,
-            depth: 100,
-            modifier: 2,
-            slideShadows: true,
-        },
-        loop: true,
-        pagination: { el: ".swiper-pagination", clickable: true },
-        navigation: {
-            nextEl: ".swiper-button-next",
-            prevEl: ".swiper-button-prev",
-        },
-    });
+        new Swiper('.mySwiper', {
+            slidesPerView: 1,
+            loop: true,
+            grabCursor: true,
+            pagination: { el: '.swiper-pagination', clickable: true },
+            navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+            breakpoints: {
+                768: { slidesPerView: 1.2, spaceBetween: 16 },
+                1024: { slidesPerView: 1.4, spaceBetween: 24 }
+            }
+        });
     </script>
+</body>
+</html>
