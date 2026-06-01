@@ -360,22 +360,21 @@ button { cursor: pointer; background: none; border: none; font-family: inherit; 
 .about-text strong { color: var(--dark); font-weight: 500; }
 
 .about-visual-card {
-    background: var(--green);
     border-radius: 4px;
     height: 220px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     position: relative;
     overflow: hidden;
 }
-.about-visual-cp {
-    font-family: var(--font-serif);
-    font-size: 90px;
-    color: rgba(255,255,255,0.1);
-    font-style: italic;
-    user-select: none;
+.about-visual-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    transition: transform 0.6s ease;
 }
+.about-visual-card:hover img { transform: scale(1.04); }
+.about-visual-cp { display: none; }
 .about-visual-tag {
     position: absolute;
     bottom: 16px;
@@ -785,7 +784,7 @@ button { cursor: pointer; background: none; border: none; font-family: inherit; 
     .about { flex-direction: row; gap: 56px; align-items: center; }
     .about-text { flex: 1; }
     .about-visual { flex: 0 0 280px; }
-    .about-visual-card { height: 300px; }
+    .about-visual-card { height: 320px; }
 
     .metodo-grid {
         flex-direction: row;
@@ -900,7 +899,7 @@ button { cursor: pointer; background: none; border: none; font-family: inherit; 
 
     .about { gap: 80px; }
     .about-visual { flex: 0 0 340px; }
-    .about-visual-card { height: 340px; }
+    .about-visual-card { height: 380px; }
 
     .galeria .swiper-slide img { height: 460px; }
 
