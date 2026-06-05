@@ -183,23 +183,22 @@ def _build_reminder_html(nombre, fecha_str, hora):
 
 
 def send_reminder_email(nombre, email_dest, fecha_str, hora):
+    """Envío sincrónico — llamado desde el scheduler (hilo no-daemon)."""
     if not EMAIL_ENABLED or not email_dest:
         return
-    def _send():
-        try:
-            msg = MIMEMultipart('alternative')
-            msg['Subject'] = f'🌿 Recordatorio: tenés clase hoy a las {hora:02d}:00 hs — Club Pilates'
-            msg['From']    = f'Club Pilates San Juan <{EMAIL_FROM}>'
-            msg['To']      = email_dest
-            msg.attach(MIMEText(_build_reminder_html(nombre, fecha_str, hora), 'html', 'utf-8'))
-            with smtplib.SMTP('smtp.gmail.com', 587) as server:
-                server.starttls()
-                server.login(EMAIL_FROM, EMAIL_PASSWORD)
-                server.sendmail(EMAIL_FROM, email_dest, msg.as_string())
-            print(f'[recordatorio] Enviado a {email_dest} para {fecha_str} {hora:02d}h')
-        except Exception as e:
-            print(f'[recordatorio] Error: {e}')
-    threading.Thread(target=_send, daemon=True).start()
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = f'🌿 Recordatorio: tenés clase hoy a las {hora:02d}:00 hs — Club Pilates'
+        msg['From']    = f'Club Pilates San Juan <{EMAIL_FROM}>'
+        msg['To']      = email_dest
+        msg.attach(MIMEText(_build_reminder_html(nombre, fecha_str, hora), 'html', 'utf-8'))
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(EMAIL_FROM, EMAIL_PASSWORD)
+            server.sendmail(EMAIL_FROM, email_dest, msg.as_string())
+        print(f'[recordatorio] Enviado a {email_dest} para {fecha_str} {hora:02d}h')
+    except Exception as e:
+        print(f'[recordatorio] Error al enviar a {email_dest}: {e}')
 
 
 def check_and_send_reminders():
