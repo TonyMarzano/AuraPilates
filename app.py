@@ -84,7 +84,7 @@ def _build_welcome_html(nombre, apellido, plan):
     <!-- Header -->
     <div style="background:#8aab85;padding:36px 40px 28px;text-align:center;">
         <div style="font-size:11px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:8px;">Club Pilates San Juan</div>
-        <div style="font-size:28px;color:white;font-weight:300;letter-spacing:0.05em;">Bienvenida,<br><strong style="font-weight:500">{nombre}</strong></div>
+        <div style="font-size:28px;color:white;font-weight:300;letter-spacing:0.05em;">Bienvenida/o,<br><strong style="font-weight:500">{nombre}</strong></div>
     </div>
 
     <!-- Cuerpo -->
@@ -174,7 +174,7 @@ def send_welcome_email(nombre, apellido, email_dest, plan):
                 server.login(EMAIL_FROM, EMAIL_PASSWORD)
                 server.sendmail(EMAIL_FROM, email_dest, msg.as_string())
 
-            print(f'[email] Bienvenida enviada a {email_dest}')
+            print(f'[email] Bienvenida/o enviada a {email_dest}')
         except Exception as e:
             print(f'[email] Error al enviar a {email_dest}: {e}')
 
