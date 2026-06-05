@@ -321,22 +321,22 @@ def init_db():
             conn.execute("ALTER TABLE instructores ADD COLUMN pin TEXT DEFAULT '0000'")
 
         conn.commit()
+
+def limpiar_datos_viejos():
     """
     Limpieza automática al arrancar:
-      - Reservas con más de 2 meses → se eliminan (turnos pasados sin utilidad)
+      - Reservas con más de 2 meses → se eliminan
       - Conversaciones del bot sin actividad hace más de 7 días → se eliminan
     Nunca toca alumnas ni movimientos.
     """
     try:
         with get_db() as conn:
-            # Reservas pasadas con más de 2 meses
             res = conn.execute('''
                 DELETE FROM reservas
                 WHERE slot_key < strftime('%Y-%m-%d', datetime('now', '-2 months', '-3 hours'))
             ''')
             borradas_res = res.rowcount
 
-            # Conversaciones del bot inactivas hace más de 7 días
             res2 = conn.execute('''
                 DELETE FROM conversaciones
                 WHERE updated_at < datetime('now', '-7 days', '-3 hours')
