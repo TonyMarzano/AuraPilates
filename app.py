@@ -131,7 +131,7 @@ def _build_welcome_html(nombre, apellido, plan):
                     </td>
                     <td valign="top">
                         <div style="font-size:14px;font-weight:500;color:#3d4f3c;padding-top:2px;">Dónde estamos</div>
-                        <div style="font-size:13px;color:#7a8f79;margin-top:3px;">San Roque Sur 1044, Rawson, San Juan</div>
+                        <div style="font-size:13px;color:#7a8f79;margin-top:3px;">Urquiza 991 Sur, Capital, San Juan</div>
                     </td>
                 </tr>
             </table>
