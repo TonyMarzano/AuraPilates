@@ -5,7 +5,7 @@ import os
 import smtplib
 import threading
 import json
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta, datetime, timezone
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -205,22 +205,26 @@ def send_reminder_email(nombre, email_dest, fecha_str, hora):
 def check_and_send_reminders():
     """
     Corre cada 15 min. Detecta reservas que empiezan entre 1h50m y 2h10m
-    desde ahora y envía el recordatorio una sola vez.
+    desde ahora (en hora Argentina) y envía el recordatorio una sola vez.
     """
     if not EMAIL_ENABLED:
         return
     try:
-        now      = datetime.now()
+        # Usar hora de Argentina (UTC-3) — los slot_key usan hora local
+        ARG_TZ    = timezone(timedelta(hours=-3))
+        now       = datetime.now(ARG_TZ)
+
         # Ventana: entre 110 y 130 minutos en el futuro
         target_lo = now + timedelta(minutes=110)
         target_hi = now + timedelta(minutes=130)
 
-        hoy       = now.strftime('%Y-%m-%d')
-        hora_lo   = target_lo.hour
-        hora_hi   = target_hi.hour
+        hoy     = now.strftime('%Y-%m-%d')
+        hora_lo = target_lo.hour
+        hora_hi = target_hi.hour
+
+        print(f'[recordatorio] Check — hora ARG: {now.strftime("%H:%M")} | buscando clases entre {hora_lo:02d}h y {hora_hi:02d}h del {hoy}')
 
         with get_db() as conn:
-            # Traer reservas del día con alumna vinculada que tenga email
             rows = conn.execute('''
                 SELECT r.id, r.slot_key, r.alumna_id,
                        a.nombre, a.email
@@ -231,13 +235,15 @@ def check_and_send_reminders():
                   AND CAST(substr(r.slot_key, 12, 2) AS INTEGER) BETWEEN ? AND ?
             ''', (f'{hoy}%', hora_lo, hora_hi)).fetchall()
 
+            print(f'[recordatorio] Encontradas: {len(rows)} reserva(s) con email en esa ventana')
+
             for row in rows:
-                # Verificar que no se haya enviado ya
                 ya = conn.execute(
                     'SELECT id FROM recordatorios_enviados WHERE reserva_id=?',
                     (row['id'],)
                 ).fetchone()
                 if ya:
+                    print(f'[recordatorio] Ya enviado para reserva {row["id"]}, salteando')
                     continue
 
                 hora_clase = int(row['slot_key'][11:13])
