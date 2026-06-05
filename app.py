@@ -162,7 +162,7 @@ def send_welcome_email(nombre, apellido, email_dest, plan):
     def _send():
         try:
             msg = MIMEMultipart('alternative')
-            msg['Subject'] = f'¡Bienvenida a Club Pilates San Juan, {nombre}! 🌿'
+            msg['Subject'] = f'¡Bienvenida/o a Club Pilates San Juan, {nombre}! 🌿'
             msg['From']    = f'Club Pilates San Juan <{EMAIL_FROM}>'
             msg['To']      = email_dest
 
