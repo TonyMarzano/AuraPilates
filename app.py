@@ -29,11 +29,11 @@ RECOVERY_CODE   = 'sanjuan2025'
 # ── Configuración de email ────────────────────────────
 # Obtené tu App Password en: myaccount.google.com → Seguridad → Contraseñas de aplicaciones
 EMAIL_FROM     = 'clubpilatesanjuan@gmail.com'
-EMAIL_PASSWORD = 'xxxx xxxx xxxx xxxx'   # ← pegá acá tu App Password de 16 caracteres
+EMAIL_PASSWORD = 'uifs wyqf zrna zana'   # ← pegá acá tu App Password de 16 caracteres
 EMAIL_ENABLED  = True
 
 # PIN exclusivo para la sección Finanzas (solo vos y tu socio)
-FINANZAS_PIN = '1234'   # ← cambiá esto por el PIN que quieran usar
+FINANZAS_PIN = '9119'   # ← cambiá esto por el PIN que quieran usar
 
 # ── Configuración del Bot de WhatsApp (Twilio) ────────
 # Credenciales desde twilio.com/console
@@ -57,10 +57,10 @@ def login_required(f):
 # ── Email de bienvenida ───────────────────────────────
 
 PLAN_INFO = {
+    'plan12':     ('Plan 12 clases',     '3 clases por semana', '$60.000'),
     'plan8':      ('Plan 8 clases',      '2 clases por semana', '$45.000'),
-    'plan12':     ('Plan 12 clases',     '3 clases por semana', '$55.000'),
-    'plan4':      ('Plan 4 clases',      '1 clase por semana',  '$25.000'),
-    'individual': ('Clase individual',   '1 clase',             '$6.000'),
+    'plan4':      ('Plan 4 clases',      '1 clase por semana',  '$35.000'),
+    'individual': ('Clase individual',   '1 clase',             '$10.000')
 }
 
 def _build_welcome_html(nombre, apellido, plan):
