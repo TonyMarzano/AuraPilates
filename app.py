@@ -30,7 +30,10 @@ RECOVERY_CODE   = 'sanjuan2025'
 # Obtené tu App Password en: myaccount.google.com → Seguridad → Contraseñas de aplicaciones
 EMAIL_FROM     = 'clubpilatesanjuan@gmail.com'
 EMAIL_PASSWORD = 'xxxx xxxx xxxx xxxx'   # ← pegá acá tu App Password de 16 caracteres
-EMAIL_ENABLED  = True                     # ← poné False para desactivar sin borrar la config
+EMAIL_ENABLED  = True
+
+# PIN exclusivo para la sección Finanzas (solo vos y tu socio)
+FINANZAS_PIN = '1234'   # ← cambiá esto por el PIN que quieran usar
 
 # ── Configuración del Bot de WhatsApp (Twilio) ────────
 # Credenciales desde twilio.com/console
@@ -358,6 +361,16 @@ limpiar_datos_viejos()
 @app.route('/favicon.ico')
 def favicon():
     return redirect(url_for('static', filename='img/favicon.svg'))
+
+@app.route('/api/finanzas/verificar', methods=['POST'])
+@login_required
+def verificar_finanzas():
+    data = request.get_json()
+    pin  = data.get('pin', '')
+    if pin == FINANZAS_PIN:
+        session['finanzas_ok'] = True
+        return jsonify({'ok': True})
+    return jsonify({'error': 'PIN incorrecto'}), 403
 
 @app.route('/')
 def index():
@@ -1113,13 +1126,13 @@ def create_hora():
 
     try:
         with get_db() as conn:
-            # Verificar PIN (si no viene de sesión admin)
+            # Si no hay sesión admin, verificar que el instructor existe y está activo
             if not session.get('logged_in'):
-                inst = conn.execute(
-                    'SELECT pin FROM instructores WHERE id=? AND activo=1', (instructor_id,)
+                inst_check = conn.execute(
+                    'SELECT id FROM instructores WHERE id=? AND activo=1', (instructor_id,)
                 ).fetchone()
-                if not inst or inst['pin'] != pin:
-                    return jsonify({'error': 'PIN incorrecto'}), 403
+                if not inst_check:
+                    return jsonify({'error': 'Instructor no encontrado'}), 403
 
             # Calcular horas
             from datetime import datetime as dt
@@ -1408,16 +1421,10 @@ def instructor_login():
 
 @app.route('/api/instructor/horas/<int:instructor_id>', methods=['GET'])
 def get_horas_instructor(instructor_id):
-    """Historial del instructor (sin login admin, verifica pin en header)."""
+    """Historial del instructor — sin PIN, acceso libre para instructores."""
     mes = request.args.get('mes', '')
-    pin = request.args.get('pin', '')
     try:
         with get_db() as conn:
-            inst = conn.execute(
-                'SELECT pin FROM instructores WHERE id=? AND activo=1', (instructor_id,)
-            ).fetchone()
-            if not inst or inst['pin'] != pin:
-                return jsonify({'error': 'No autorizado'}), 403
             rows = conn.execute('''
                 SELECT * FROM horas_trabajadas
                 WHERE instructor_id=? AND fecha LIKE ?

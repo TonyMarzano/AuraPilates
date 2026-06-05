@@ -1806,6 +1806,32 @@
     </div>
 </div>
 
+<!-- MODAL: PIN Finanzas -->
+<div class="modal-overlay" id="modalFinanzasPin">
+    <div class="modal" style="max-width:340px;width:100%">
+        <div class="modal-header">
+            <div class="modal-title">🔒 Sección Finanzas</div>
+        </div>
+        <div class="modal-body" style="text-align:center">
+            <p style="font-size:0.82rem;color:var(--text-light);margin-bottom:1.2rem">
+                Esta sección es privada. Ingresá el PIN para acceder.
+            </p>
+            <div class="form-group">
+                <input class="form-input" type="password" id="finanzasPinInput"
+                       placeholder="••••" maxlength="8" inputmode="numeric"
+                       style="text-align:center;font-size:1.5rem;letter-spacing:0.3em">
+            </div>
+            <div id="finanzasPinError" style="color:#c0756d;font-size:0.78rem;margin-top:0.5rem;display:none">
+                PIN incorrecto
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-cancel" onclick="cerrarPinFinanzas()">Cancelar</button>
+            <button class="btn btn-confirm" onclick="verificarPinFinanzas()">Ingresar</button>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL: Instructor -->
 <div class="modal-overlay" id="modalInstructor">
     <div class="modal" style="max-width:460px;width:100%">
@@ -2764,8 +2790,9 @@ document.getElementById('modalMovimiento').addEventListener('click', e => { if (
 document.getElementById('modalAlumna').addEventListener('click',   e => { if (e.target === e.currentTarget) closeAlumnaModal(); });
 document.getElementById('modalBulk').addEventListener('click',     e => { if (e.target === e.currentTarget) closeBulkModal(); });
 document.getElementById('modalInstructor').addEventListener('click',e => { if (e.target === e.currentTarget) closeInstModal(); });
+document.getElementById('modalFinanzasPin').addEventListener('click',e => { if (e.target === e.currentTarget) cerrarPinFinanzas(); });
 document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeModal(); closeMovModal(); closeAlumnaModal(); closeBulkModal(); closeInstModal(); }
+    if (e.key === 'Escape') { closeModal(); closeMovModal(); closeAlumnaModal(); closeBulkModal(); closeInstModal(); cerrarPinFinanzas(); }
 });
 
 // Mes inicial para instructores
@@ -2780,7 +2807,53 @@ document.addEventListener('keydown', e => {
 loadAndRender();
 
 // ── Tabs ──
+// ── Finanzas: PIN de acceso ───────────────────────────
+let finanzasDesbloqueado = false;
+
 function switchTab(tab) {
+    // Si intenta ir a finanzas y no está desbloqueado, pedir PIN
+    if (tab === 'finanzas' && !finanzasDesbloqueado) {
+        abrirPinFinanzas();
+        return;
+    }
+    _doSwitchTab(tab);
+}
+
+function abrirPinFinanzas() {
+    document.getElementById('finanzasPinInput').value = '';
+    document.getElementById('finanzasPinError').style.display = 'none';
+    document.getElementById('modalFinanzasPin').classList.add('open');
+    setTimeout(() => document.getElementById('finanzasPinInput').focus(), 100);
+}
+
+function cerrarPinFinanzas() {
+    document.getElementById('modalFinanzasPin').classList.remove('open');
+}
+
+async function verificarPinFinanzas() {
+    const pin = document.getElementById('finanzasPinInput').value;
+    const res = await fetch('/api/finanzas/verificar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin })
+    });
+    if (res.ok) {
+        finanzasDesbloqueado = true;
+        cerrarPinFinanzas();
+        _doSwitchTab('finanzas');
+    } else {
+        document.getElementById('finanzasPinError').style.display = 'block';
+        document.getElementById('finanzasPinInput').value = '';
+        document.getElementById('finanzasPinInput').focus();
+    }
+}
+
+// Enter en el input del PIN
+document.getElementById('finanzasPinInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') verificarPinFinanzas();
+});
+
+function _doSwitchTab(tab) {
     document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
     document.querySelectorAll('.tab-btn').forEach((b,i) => {
         b.classList.toggle('active',
