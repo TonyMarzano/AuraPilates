@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Club Pilates · Registro de horas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green: #7d9979; --dark: #041620; --cream: #f7f5f1;
+            --border: rgba(125,153,121,0.25); --text: #041620;
+            --text-light: rgba(4,22,32,0.55);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Jost', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; }
+
+        .header { background: var(--green); padding: 20px; text-align: center; }
+        .header-cp { font-size: 1.4rem; color: #fff; font-weight: 300; letter-spacing: 0.1em; }
+        .header-sub { font-size: 0.65rem; color: rgba(255,255,255,0.65); letter-spacing: 0.3em; text-transform: uppercase; margin-top: 4px; }
+
+        .container { max-width: 480px; margin: 0 auto; padding: 24px 20px; }
+
+        /* Login */
+        #screenLogin { display: block; }
+        #screenMain  { display: none; }
+
+        .card { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin-bottom: 20px; }
+        .card-title { font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--green); margin-bottom: 16px; }
+
+        .form-group { margin-bottom: 14px; }
+        .form-label { display: block; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-light); margin-bottom: 6px; }
+        .form-input { width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Jost', sans-serif; font-size: 0.95rem; color: var(--text); background: var(--cream); transition: border-color 0.2s; }
+        .form-input:focus { outline: none; border-color: var(--green); }
+        select.form-input { cursor: pointer; }
+
+        .btn { width: 100%; padding: 13px; border-radius: 6px; font-family: 'Jost', sans-serif; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; }
+        .btn-primary { background: var(--green); color: #fff; }
+        .btn-primary:hover { background: #6a8566; }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-secondary { background: none; border: 1px solid var(--border); color: var(--text-light); margin-top: 8px; }
+
+        .instructor-badge { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--green); border-radius: 8px; margin-bottom: 20px; }
+        .instructor-badge-av { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #fff; font-weight: 500; flex-shrink: 0; }
+        .instructor-badge-name { font-size: 1rem; color: #fff; font-weight: 400; }
+        .instructor-badge-sub { font-size: 0.65rem; color: rgba(255,255,255,0.65); letter-spacing: 0.1em; }
+
+        .horas-list { display: flex; flex-direction: column; gap: 10px; }
+        .hora-item { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+        .hora-item-fecha { font-size: 0.72rem; font-weight: 500; color: var(--green); min-width: 60px; }
+        .hora-item-info { flex: 1; }
+        .hora-item-time { font-size: 0.9rem; color: var(--text); font-weight: 400; }
+        .hora-item-tipo { font-size: 0.68rem; color: var(--text-light); margin-top: 2px; }
+        .hora-item-h { font-size: 1.1rem; font-weight: 500; color: var(--dark); text-align: right; }
+        .hora-item-hlab { font-size: 0.6rem; color: var(--text-light); text-align: right; }
+
+        .tabs { display: flex; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 4px; margin-bottom: 20px; gap: 4px; }
+        .tab-btn { flex: 1; padding: 10px; border-radius: 6px; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 500; cursor: pointer; border: none; background: none; color: var(--text-light); font-family: 'Jost', sans-serif; transition: all 0.2s; }
+        .tab-btn.active { background: var(--green); color: #fff; }
+
+        .empty { text-align: center; padding: 32px 16px; color: var(--text-light); font-size: 0.85rem; }
+
+        .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--dark); color: #fff; padding: 10px 20px; border-radius: 50px; font-size: 0.8rem; transition: transform 0.3s; z-index: 999; white-space: nowrap; }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        .error-msg { font-size: 0.78rem; color: #c0756d; margin-top: 8px; text-align: center; }
+        .mes-selector { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+        .mes-selector label { font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-light); }
+        .mes-selector input { flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Jost', sans-serif; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-cp">Club Pilates</div>
+    <div class="header-sub">Portal de instructores</div>
+</div>
+
+<!-- PANTALLA LOGIN -->
+<div id="screenLogin" class="container">
+    <div class="card" style="margin-top:24px">
+        <div class="card-title">Identificate</div>
+        <div class="form-group">
+            <label class="form-label">Instructor</label>
+            <select class="form-input" id="selectInstructor">
+                <option value="">Cargando...</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">PIN</label>
+            <input class="form-input" type="password" id="inputPin" placeholder="••••" maxlength="8" inputmode="numeric">
+        </div>
+        <div class="error-msg" id="loginError"></div>
+        <button class="btn btn-primary" onclick="doLogin()" style="margin-top:8px">Ingresar</button>
+    </div>
+</div>
+
+<!-- PANTALLA PRINCIPAL -->
+<div id="screenMain" class="container">
+    <div id="instructorBadge" class="instructor-badge">
+        <div class="instructor-badge-av" id="badgeAv"></div>
+        <div>
+            <div class="instructor-badge-name" id="badgeName"></div>
+            <div class="instructor-badge-sub">Instructor · Club Pilates San Juan</div>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" id="tabRegistrar" onclick="switchTab('registrar')">Registrar</button>
+        <button class="tab-btn" id="tabHistorial" onclick="switchTab('historial')">Mis horas</button>
+    </div>
+
+    <!-- Tab Registrar -->
+    <div id="panelRegistrar">
+        <div class="card">
+            <div class="card-title">Nueva entrada</div>
+            <div class="form-group">
+                <label class="form-label">Fecha</label>
+                <input class="form-input" type="date" id="hFecha">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="form-group">
+                    <label class="form-label">Inicio</label>
+                    <input class="form-input" type="time" id="hInicio">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Fin</label>
+                    <input class="form-input" type="time" id="hFin">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Tipo de clase</label>
+                <select class="form-input" id="hTipo">
+                    <option value="clase">Clase Reformer</option>
+                    <option value="grupal">Clase grupal</option>
+                    <option value="individual">Clase individual</option>
+                    <option value="evaluacion">Evaluación</option>
+                    <option value="otro">Otro</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Notas (opcional)</label>
+                <input class="form-input" type="text" id="hNotas" placeholder="Ej: Clase con Ana García">
+            </div>
+            <button class="btn btn-primary" id="btnGuardar" onclick="guardarHora()">Guardar horas</button>
+        </div>
+    </div>
+
+    <!-- Tab Historial -->
+    <div id="panelHistorial" style="display:none">
+        <div class="mes-selector">
+            <label>Mes</label>
+            <input type="month" id="mesFiltro" onchange="loadHistorial()">
+        </div>
+        <div id="horasList" class="horas-list">
+            <div class="empty">Cargando...</div>
+        </div>
+    </div>
+
+    <button class="btn btn-secondary" onclick="cerrarSesion()">Cerrar sesión</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let currentInstructor = null;
+
+// ── Init ──
+(async function() {
+    const now = new Date();
+    document.getElementById('hFecha').value =
+        `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+
+    const lista = await fetch('/api/instructores').then(r => r.json()).catch(() => []);
+    const sel = document.getElementById('selectInstructor');
+    const activos = Array.isArray(lista) ? lista.filter(i => i.activo) : [];
+    sel.innerHTML = '<option value="">— Seleccioná tu nombre —</option>' +
+        activos.map(i => `<option value="${i.id}">${i.apellido}, ${i.nombre}</option>`).join('');
+})();
+
+async function doLogin() {
+    const id  = document.getElementById('selectInstructor').value;
+    const pin = document.getElementById('inputPin').value;
+    document.getElementById('loginError').textContent = '';
+    if (!id) { document.getElementById('loginError').textContent = 'Seleccioná tu nombre'; return; }
+    if (!pin) { document.getElementById('loginError').textContent = 'Ingresá tu PIN'; return; }
+
+    const res  = await fetch('/api/instructor/login', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ instructor_id: parseInt(id), pin })
+    });
+    const data = await res.json();
+    if (res.ok) {
+        currentInstructor = { ...data.instructor, pin };
+        showMain();
+    } else {
+        document.getElementById('loginError').textContent = data.error || 'PIN incorrecto';
+    }
+}
+
+function showMain() {
+    document.getElementById('screenLogin').style.display = 'none';
+    document.getElementById('screenMain').style.display  = 'block';
+    const n = currentInstructor.nombre;
+    document.getElementById('badgeAv').textContent   = n.charAt(0).toUpperCase();
+    document.getElementById('badgeName').textContent = `${currentInstructor.nombre} ${currentInstructor.apellido}`;
+    const now = new Date();
+    document.getElementById('mesFiltro').value =
+        `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+}
+
+function cerrarSesion() {
+    currentInstructor = null;
+    document.getElementById('screenLogin').style.display = 'block';
+    document.getElementById('screenMain').style.display  = 'none';
+    document.getElementById('inputPin').value = '';
+    document.getElementById('loginError').textContent = '';
+    switchTab('registrar');
+}
+
+function switchTab(tab) {
+    document.getElementById('tabRegistrar').classList.toggle('active', tab==='registrar');
+    document.getElementById('tabHistorial').classList.toggle('active', tab==='historial');
+    document.getElementById('panelRegistrar').style.display = tab==='registrar' ? '' : 'none';
+    document.getElementById('panelHistorial').style.display = tab==='historial' ? '' : 'none';
+    if (tab === 'historial') loadHistorial();
+}
+
+async function guardarHora() {
+    const fecha   = document.getElementById('hFecha').value;
+    const inicio  = document.getElementById('hInicio').value;
+    const fin     = document.getElementById('hFin').value;
+    const tipo    = document.getElementById('hTipo').value;
+    const notas   = document.getElementById('hNotas').value.trim();
+
+    if (!fecha || !inicio || !fin) { showToast('Completá fecha y horarios'); return; }
+    if (fin <= inicio) { showToast('La hora de fin debe ser mayor al inicio'); return; }
+
+    const btn = document.getElementById('btnGuardar');
+    btn.textContent = 'Guardando...'; btn.disabled = true;
+
+    const res = await fetch('/api/horas', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+            instructor_id: currentInstructor.id,
+            pin: currentInstructor.pin,
+            fecha, hora_inicio: inicio, hora_fin: fin, tipo, notas
+        })
+    });
+    const data = await res.json();
+
+    btn.textContent = 'Guardar horas'; btn.disabled = false;
+
+    if (res.ok) {
+        const mins = (parseInt(fin.split(':')[0])*60 + parseInt(fin.split(':')[1])) -
+                     (parseInt(inicio.split(':')[0])*60 + parseInt(inicio.split(':')[1]));
+        showToast(`✓ ${(mins/60).toFixed(2)} hs registradas`);
+        document.getElementById('hInicio').value = '';
+        document.getElementById('hFin').value    = '';
+        document.getElementById('hNotas').value  = '';
+    } else {
+        showToast(data.error || 'Error al guardar');
+    }
+}
+
+async function loadHistorial() {
+    const mes  = document.getElementById('mesFiltro').value;
+    const cont = document.getElementById('horasList');
+    cont.innerHTML = '<div class="empty">Cargando...</div>';
+
+    const rows = await fetch(
+        `/api/instructor/horas/${currentInstructor.id}?mes=${mes}&pin=${currentInstructor.pin}`
+    ).then(r => r.json()).catch(() => []);
+
+    if (!rows.length) {
+        cont.innerHTML = '<div class="empty">Sin registros para este mes.</div>';
+        return;
+    }
+
+    const DIAS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+    let totalMin = 0;
+    cont.innerHTML = rows.map(h => {
+        const d = new Date(h.fecha + 'T12:00:00');
+        const min = (parseInt(h.hora_fin.split(':')[0])*60 + parseInt(h.hora_fin.split(':')[1])) -
+                    (parseInt(h.hora_inicio.split(':')[0])*60 + parseInt(h.hora_inicio.split(':')[1]));
+        totalMin += min;
+        return `
+        <div class="hora-item">
+            <div>
+                <div class="hora-item-fecha">${DIAS[d.getDay()]} ${h.fecha.slice(8)}</div>
+                <div class="hora-item-tipo">${h.tipo}</div>
+            </div>
+            <div class="hora-item-info">
+                <div class="hora-item-time">${h.hora_inicio} — ${h.hora_fin}</div>
+                ${h.notas ? `<div class="hora-item-tipo">${h.notas}</div>` : ''}
+            </div>
+            <div>
+                <div class="hora-item-h">${(min/60).toFixed(2)}</div>
+                <div class="hora-item-hlab">hs</div>
+            </div>
+        </div>`;
+    }).join('');
+
+    cont.innerHTML += `
+        <div style="background:var(--green);color:#fff;border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+            <span style="font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase">Total del mes</span>
+            <span style="font-size:1.2rem;font-weight:500">${(totalMin/60).toFixed(2)} hs</span>
+        </div>`;
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+document.getElementById('inputPin').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+});
+</script>
+</body>
+</html>

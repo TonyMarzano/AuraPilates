@@ -652,6 +652,29 @@
         }
         .btn-horario-del:hover { background: #fdf0f0; }
 
+        /* Instructores */
+        .inst-card { background:white;border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem; }
+        .inst-av { width:42px;height:42px;border-radius:50%;background:var(--sage-pale);border:1px solid var(--sage-light);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:500;color:var(--sage);flex-shrink:0; }
+        .inst-info { flex:1; }
+        .inst-name { font-size:0.92rem;font-weight:500;color:var(--text); }
+        .inst-detail { font-size:0.72rem;color:var(--text-light);margin-top:2px; }
+        .inst-tarifa { font-size:0.75rem;font-weight:500;color:var(--sage);background:var(--sage-pale);padding:4px 10px;border-radius:4px;white-space:nowrap; }
+
+        .resumen-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.75rem;margin-bottom:1rem; }
+        .resumen-card { background:white;border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem; }
+        .resumen-card-name { font-size:0.78rem;font-weight:500;color:var(--text);margin-bottom:6px; }
+        .resumen-card-horas { font-size:1.5rem;font-weight:300;color:var(--sage);line-height:1; }
+        .resumen-card-pago { font-size:0.75rem;color:var(--text-light);margin-top:4px; }
+        .resumen-card-total { font-size:0.88rem;font-weight:500;color:var(--text); }
+
+        .hora-row { background:white;border:1px solid var(--border);border-radius:6px;padding:0.6rem 1rem;display:flex;align-items:center;gap:0.75rem;font-size:0.82rem; }
+        .hora-row-fecha { font-size:0.7rem;font-weight:500;color:var(--sage);min-width:80px; }
+        .hora-row-inst { flex:1;color:var(--text); }
+        .hora-row-time { font-size:0.75rem;color:var(--text-light); }
+        .hora-row-h { font-weight:500;color:var(--text);margin-left:auto; }
+        .btn-del-hora { background:none;border:none;color:rgba(192,117,109,0.5);cursor:pointer;font-size:0.8rem;padding:4px;transition:color 0.15s; }
+        .btn-del-hora:hover { color:#c0756d; }
+
         /* Días bulk */
         .bulk-day-label {
             display: flex;
@@ -1401,6 +1424,7 @@
     <button class="tab-btn" onclick="switchTab('finanzas')">💰 Finanzas</button>
     <button class="tab-btn" onclick="switchTab('alumnas')">👩 Alumnas</button>
     <button class="tab-btn" onclick="switchTab('horarios')">🔁 Horarios</button>
+    <button class="tab-btn" onclick="switchTab('instructores')">👤 Instructores</button>
 </div>
 
 <!-- TAB: AGENDA -->
@@ -1425,7 +1449,7 @@
         </div>
         <button class="btn-nuevo-mov" onclick="event.stopPropagation();openBulkModal()"
                 style="margin-left:auto;align-self:center">
-            📅 Fijar horario
+            📅 Fijar horario mensual
         </button>
     </div>
 
@@ -1480,7 +1504,7 @@
 
     <!-- Proyección de ingresos -->
     <div class="proyeccion-wrap">
-        <div class="proyeccion-title">Proyección de ingresos — basado en $45.000 por mes</div>
+        <div class="proyeccion-title">Proyección de ingresos — basado en $45.000 por clase</div>
         <div class="proyeccion-grid">
             <div class="proy-card">
                 <div class="proy-label">🔴 70% — Arranque</div>
@@ -1580,6 +1604,44 @@
 </div>
 </div><!-- /tab-horarios -->
 
+<!-- TAB: INSTRUCTORES -->
+<div class="tab-panel" id="tab-instructores">
+<div class="fin-body">
+
+    <!-- Header -->
+    <div class="fin-header-row">
+        <div style="display:flex;align-items:center;gap:0.75rem">
+            <input type="month" id="instMes" class="form-input" style="max-width:160px" onchange="loadResumenHoras()">
+        </div>
+        <div style="display:flex;gap:0.5rem;margin-left:auto">
+            <button class="btn-nuevo-mov" style="background:var(--sage-pale);color:var(--sage);border:1px solid var(--sage-light)"
+                    onclick="exportarExcel()">
+                ↓ Exportar Excel
+            </button>
+            <button class="btn-nuevo-mov" onclick="event.stopPropagation();openInstModal()">
+                + Nuevo instructor
+            </button>
+        </div>
+    </div>
+
+    <!-- Resumen del mes -->
+    <div id="instResumen" style="margin-bottom:1.5rem"></div>
+
+    <!-- Perfil de instructores -->
+    <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-light);margin-bottom:0.75rem">
+        Instructores
+    </div>
+    <div id="instListado" style="display:flex;flex-direction:column;gap:0.6rem"></div>
+
+    <!-- Detalle de horas del mes -->
+    <div style="margin-top:1.5rem;font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-light);margin-bottom:0.75rem">
+        Horas registradas
+    </div>
+    <div id="instHorasListado" style="display:flex;flex-direction:column;gap:0.4rem"></div>
+
+</div>
+</div><!-- /tab-instructores -->
+
 <!-- MODAL: Slot (ver + agregar) -->
 <div class="modal-overlay" id="modalSlot">
     <div class="modal" style="max-width:480px;width:100%">
@@ -1637,8 +1699,8 @@
                                 <label class="form-label">Plan</label>
                                 <select class="form-input" id="inputPlan">
                                     <option value="">— Sin plan —</option>
-                                    <option value="plan12">Plan 12 clases</option>
                                     <option value="plan8">Plan 8 clases</option>
+                                    <option value="plan12">Plan 12 clases</option>
                                     <option value="plan4">Plan 4 clases</option>
                                     <option value="individual">Clase individual</option>
                                 </select>
@@ -1739,6 +1801,61 @@
     </div>
 </div>
 
+<!-- MODAL: Instructor -->
+<div class="modal-overlay" id="modalInstructor">
+    <div class="modal" style="max-width:460px;width:100%">
+        <div class="modal-header">
+            <div class="modal-title" id="instModalTitle">Nuevo instructor</div>
+        </div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Nombre *</label>
+                    <input class="form-input" id="instNombre" type="text" placeholder="Ej: María">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Apellido *</label>
+                    <input class="form-input" id="instApellido" type="text" placeholder="Ej: González">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Teléfono</label>
+                    <input class="form-input" id="instTel" type="tel" placeholder="264 555-1234">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input class="form-input" id="instEmail" type="email" placeholder="mail@email.com">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Tarifa por hora ($)</label>
+                    <input class="form-input" id="instTarifa" type="number" min="0" step="100" placeholder="Ej: 5000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">PIN de acceso</label>
+                    <input class="form-input" id="instPin" type="text" maxlength="8" placeholder="Ej: 1234" inputmode="numeric">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Notas</label>
+                <textarea class="form-input" id="instNotas" rows="2" placeholder="Especialidades, observaciones..."></textarea>
+            </div>
+            <div style="font-size:0.72rem;color:var(--text-light);background:var(--sage-pale);border-radius:5px;padding:0.45rem 0.6rem">
+                El instructor usará su PIN en <strong>clubpilates.com.ar/instructor</strong> para cargar sus horas.
+            </div>
+        </div>
+        <div class="modal-footer" style="justify-content:space-between">
+            <button class="btn btn-delete" id="btnDeleteInst" onclick="deleteInstructor()" style="display:none">Eliminar</button>
+            <div style="display:flex;gap:0.5rem;margin-left:auto">
+                <button class="btn btn-cancel" onclick="closeInstModal()">Cancelar</button>
+                <button class="btn btn-confirm" onclick="saveInstructor()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -1778,8 +1895,8 @@
                     <label class="form-label">Plan</label>
                     <select class="form-input" id="alumPlan" style="flex:1">
                         <option value="">— Sin plan asignado —</option>
-                        <option value="plan12">Plan 12 clases (3×semana)</option>
                         <option value="plan8">Plan 8 clases (2×semana)</option>
+                        <option value="plan12">Plan 12 clases (3×semana)</option>
                         <option value="plan4">Plan 4 clases (1×semana)</option>
                         <option value="individual">Clase individual</option>
                     </select>
@@ -2154,7 +2271,7 @@ function onAlumnaSelect() {
     const opt     = sel.options[sel.selectedIndex];
     const preview = document.getElementById('alumnaPreview');
     if (!sel.value) { preview.style.display = 'none'; return; }
-    const planLabels = { plan12: 'Plan 12 clases', plan8: 'Plan 8 clases', plan4: 'Plan 4 clases', individual: 'Clase individual', '': 'Sin plan' };
+    const planLabels = { plan8: 'Plan 8 clases', plan12: 'Plan 12 clases', plan4: 'Plan 4 clases', individual: 'Clase individual', '': 'Sin plan' };
     const plan = planLabels[opt.dataset.plan] || 'Sin plan';
     preview.style.display = '';
     preview.innerHTML = `<strong>${opt.dataset.nombre} ${opt.dataset.apellido}</strong> &nbsp;·&nbsp; ${opt.dataset.tel || 'sin tel'} &nbsp;·&nbsp; ${plan}`;
@@ -2210,7 +2327,7 @@ async function confirmReserva() {
             addFormOpen = false;
             renderSlotModal(pendingKey);
             render();
-            const planLabel = { plan12: 'Plan 12', plan8: 'Plan 8', plan4: 'Plan 4', individual: 'Individual' };
+            const planLabel = { plan8: 'Plan 8', plan12: 'Plan 12', plan4: 'Plan 4', individual: 'Individual' };
             const plan = document.getElementById('inputPlan')?.value;
             const extra = (reservaMode === 'libre' && alumnaId) ? ' · registrada como alumna' + (plan ? ` (${planLabel[plan]||plan})` : '') : '';
             showToast(`✓ Reservado para ${nombre} ${apellido}${extra}`);
@@ -2437,7 +2554,7 @@ async function loadHorarios() {
         return;
     }
 
-    const PLAN_LABEL = {plan12:'Plan 12', plan8:'Plan 8', plan4:'Plan 4', individual:'Individual'};
+    const PLAN_LABEL = {plan8:'Plan 8', plan12:'Plan 12', plan4:'Plan 4', individual:'Individual'};
 
     cont.innerHTML = lista.map(h => {
         const dias  = JSON.parse(h.dias_semana).map(d => DIAS_ES_SHORT[d]).join(' · ');
@@ -2492,14 +2609,167 @@ async function deleteHorario(id) {
     }
 }
 
+// ── Tab Instructores ──────────────────────────────────
+
+let editingInstId = null;
+
+function openInstModal(inst = null) {
+    editingInstId = inst ? inst.id : null;
+    document.getElementById('instModalTitle').textContent = inst ? 'Editar instructor' : 'Nuevo instructor';
+    document.getElementById('instNombre').value  = inst?.nombre   || '';
+    document.getElementById('instApellido').value= inst?.apellido || '';
+    document.getElementById('instTel').value     = inst?.tel      || '';
+    document.getElementById('instEmail').value   = inst?.email    || '';
+    document.getElementById('instTarifa').value  = inst?.tarifa_hora || '';
+    document.getElementById('instPin').value     = inst?.pin      || '';
+    document.getElementById('instNotas').value   = inst?.notas    || '';
+    document.getElementById('btnDeleteInst').style.display = inst ? '' : 'none';
+    document.getElementById('modalInstructor').classList.add('open');
+}
+
+function closeInstModal() {
+    document.getElementById('modalInstructor').classList.remove('open');
+    editingInstId = null;
+}
+
+async function saveInstructor() {
+    const nombre   = document.getElementById('instNombre').value.trim();
+    const apellido = document.getElementById('instApellido').value.trim();
+    if (!nombre || !apellido) { showToast('Nombre y apellido son obligatorios'); return; }
+
+    const payload = {
+        nombre, apellido,
+        tel:         document.getElementById('instTel').value.trim(),
+        email:       document.getElementById('instEmail').value.trim(),
+        tarifa_hora: parseFloat(document.getElementById('instTarifa').value) || 0,
+        pin:         document.getElementById('instPin').value.trim() || '0000',
+        notas:       document.getElementById('instNotas').value.trim(),
+        activo: 1
+    };
+
+    const url    = editingInstId ? `/api/instructores/${editingInstId}` : '/api/instructores';
+    const method = editingInstId ? 'PUT' : 'POST';
+
+    const res  = await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (res.ok) {
+        closeInstModal();
+        await loadInstructores();
+        showToast(editingInstId ? 'Instructor actualizado' : 'Instructor creado');
+    } else {
+        showToast(data.error || 'Error al guardar');
+    }
+}
+
+async function deleteInstructor() {
+    if (!editingInstId || !confirm('¿Eliminar este instructor?')) return;
+    const res = await fetch(`/api/instructores/${editingInstId}`, { method: 'DELETE' });
+    if (res.ok) { closeInstModal(); await loadInstructores(); showToast('Instructor eliminado'); }
+    else showToast('Error al eliminar');
+}
+
+async function loadInstructores() {
+    const lista = await fetch('/api/instructores').then(r=>r.json()).catch(()=>[]);
+    const cont  = document.getElementById('instListado');
+    if (!lista.length) {
+        cont.innerHTML = '<div style="text-align:center;color:var(--text-light);padding:1.5rem;font-size:0.85rem">No hay instructores registrados.</div>';
+        return;
+    }
+    cont.innerHTML = lista.filter(i=>i.activo).map(i => `
+        <div class="inst-card">
+            <div class="inst-av">${i.nombre.charAt(0)}</div>
+            <div class="inst-info">
+                <div class="inst-name">${i.nombre} ${i.apellido}</div>
+                <div class="inst-detail">${[i.tel,i.email].filter(Boolean).join(' · ') || 'Sin datos de contacto'}</div>
+            </div>
+            <div class="inst-tarifa">$${(i.tarifa_hora||0).toLocaleString()}/h</div>
+            <button class="btn-horario-edit" onclick='editInstructor(${JSON.stringify(i)})'>✏</button>
+        </div>`).join('');
+}
+
+function editInstructor(inst) { openInstModal(inst); }
+
+async function loadResumenHoras() {
+    const mes   = document.getElementById('instMes').value;
+    const [resumen, horas] = await Promise.all([
+        fetch(`/api/horas/resumen?mes=${mes}`).then(r=>r.json()).catch(()=>[]),
+        fetch(`/api/horas?mes=${mes}`).then(r=>r.json()).catch(()=>[])
+    ]);
+
+    // Resumen cards
+    const rCont = document.getElementById('instResumen');
+    if (!resumen.length || resumen.every(r=>!r.total_horas)) {
+        rCont.innerHTML = '<div style="font-size:0.82rem;color:var(--text-light);margin-bottom:1rem">Sin horas registradas para este mes.</div>';
+    } else {
+        const totalPagar = resumen.reduce((s,r)=>s+r.total_pagar,0);
+        rCont.innerHTML = `
+            <div class="resumen-grid">
+                ${resumen.filter(r=>r.total_horas>0).map(r=>`
+                <div class="resumen-card">
+                    <div class="resumen-card-name">${r.nombre}</div>
+                    <div class="resumen-card-horas">${r.total_horas.toFixed(1)}<span style="font-size:0.75rem;color:var(--text-light)"> hs</span></div>
+                    <div class="resumen-card-pago">a pagar: <strong>$${r.total_pagar.toLocaleString()}</strong></div>
+                </div>`).join('')}
+                <div class="resumen-card" style="background:var(--sage);border-color:var(--sage)">
+                    <div class="resumen-card-name" style="color:rgba(255,255,255,0.75)">Total mes</div>
+                    <div class="resumen-card-horas" style="color:#fff">${resumen.reduce((s,r)=>s+r.total_horas,0).toFixed(1)}<span style="font-size:0.75rem;color:rgba(255,255,255,0.65)"> hs</span></div>
+                    <div class="resumen-card-pago" style="color:rgba(255,255,255,0.75)">total: <strong style="color:#fff">$${totalPagar.toLocaleString()}</strong></div>
+                </div>
+            </div>`;
+    }
+
+    // Lista de horas
+    const hCont = document.getElementById('instHorasListado');
+    if (!horas.length) {
+        hCont.innerHTML = '<div style="text-align:center;color:var(--text-light);padding:1.5rem;font-size:0.85rem">Sin registros este mes.</div>';
+        return;
+    }
+    const DIAS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+    hCont.innerHTML = horas.map(h => {
+        const d    = new Date(h.fecha + 'T12:00:00');
+        const mins = (parseInt(h.hora_fin.split(':')[0])*60 + parseInt(h.hora_fin.split(':')[1])) -
+                     (parseInt(h.hora_inicio.split(':')[0])*60 + parseInt(h.hora_inicio.split(':')[1]));
+        return `
+        <div class="hora-row">
+            <span class="hora-row-fecha">${DIAS[d.getDay()]} ${h.fecha.slice(5)}</span>
+            <span class="hora-row-inst">${h.instructor_nombre}</span>
+            <span class="hora-row-time">${h.hora_inicio}–${h.hora_fin} · ${h.tipo}</span>
+            <span class="hora-row-h">${(mins/60).toFixed(2)}h</span>
+            <button class="btn-del-hora" onclick="deleteHora(${h.id})" title="Eliminar">✕</button>
+        </div>`;
+    }).join('');
+}
+
+async function deleteHora(id) {
+    if (!confirm('¿Eliminar este registro de horas?')) return;
+    const res = await fetch(`/api/horas/${id}`, { method: 'DELETE' });
+    if (res.ok) { await loadResumenHoras(); showToast('Registro eliminado'); }
+    else showToast('Error al eliminar');
+}
+
+function exportarExcel() {
+    const mes = document.getElementById('instMes').value;
+    if (!mes) { showToast('Seleccioná un mes para exportar'); return; }
+    window.location.href = `/api/horas/export?mes=${mes}`;
+}
+
 // ── Cerrar modales ──
 document.getElementById('modalSlot').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 document.getElementById('modalMovimiento').addEventListener('click', e => { if (e.target === e.currentTarget) closeMovModal(); });
 document.getElementById('modalAlumna').addEventListener('click',   e => { if (e.target === e.currentTarget) closeAlumnaModal(); });
 document.getElementById('modalBulk').addEventListener('click',     e => { if (e.target === e.currentTarget) closeBulkModal(); });
+document.getElementById('modalInstructor').addEventListener('click',e => { if (e.target === e.currentTarget) closeInstModal(); });
 document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeModal(); closeMovModal(); closeAlumnaModal(); closeBulkModal(); }
+    if (e.key === 'Escape') { closeModal(); closeMovModal(); closeAlumnaModal(); closeBulkModal(); closeInstModal(); }
 });
+
+// Mes inicial para instructores
+(function() {
+    const now = new Date();
+    const mes = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const el  = document.getElementById('instMes');
+    if (el) el.value = mes;
+})();
 
 // ── Init ──
 loadAndRender();
@@ -2507,22 +2777,21 @@ loadAndRender();
 // ── Tabs ──
 function switchTab(tab) {
     document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
-
     document.querySelectorAll('.tab-btn').forEach((b,i) => {
         b.classList.toggle('active',
-            (i===0 && tab==='agenda') ||
-            (i===1 && tab==='finanzas') ||
-            (i===2 && tab==='alumnas') ||
-            (i===3 && tab==='horarios')
+            (i===0&&tab==='agenda')||(i===1&&tab==='finanzas')||
+            (i===2&&tab==='alumnas')||(i===3&&tab==='horarios')||(i===4&&tab==='instructores')
         );
     });
-    document.getElementById('tab-agenda').classList.toggle('active',    tab==='agenda');
-    document.getElementById('tab-finanzas').classList.toggle('active',  tab==='finanzas');
-    document.getElementById('tab-alumnas').classList.toggle('active',   tab==='alumnas');
-    document.getElementById('tab-horarios').classList.toggle('active',  tab==='horarios');
-    if (tab === 'finanzas') loadFinanzas();
-    if (tab === 'alumnas')  loadAlumnas();
-    if (tab === 'horarios') loadHorarios();
+    document.getElementById('tab-agenda').classList.toggle('active',      tab==='agenda');
+    document.getElementById('tab-finanzas').classList.toggle('active',    tab==='finanzas');
+    document.getElementById('tab-alumnas').classList.toggle('active',     tab==='alumnas');
+    document.getElementById('tab-horarios').classList.toggle('active',    tab==='horarios');
+    document.getElementById('tab-instructores').classList.toggle('active',tab==='instructores');
+    if (tab === 'finanzas')     loadFinanzas();
+    if (tab === 'alumnas')      loadAlumnas();
+    if (tab === 'horarios')     loadHorarios();
+    if (tab === 'instructores') { loadInstructores(); loadResumenHoras(); }
 }
 
 // ── Finanzas config ──
@@ -2666,8 +2935,8 @@ let alumnaFiltroPago = 'todas';
 let editingAlumnaId = null;
 
 const PLAN_INFO = {
-    plan12:     { label: 'Plan 12 clases',  total: 12, css: 'plan12' },
     plan8:      { label: 'Plan 8 clases',   total: 8,  css: 'plan8' },
+    plan12:     { label: 'Plan 12 clases',  total: 12, css: 'plan12' },
     plan4:      { label: 'Plan 4 clases',   total: 4,  css: 'plan4' },
     individual: { label: 'Clase individual', total: 1, css: 'individual' },
     '':         { label: 'Sin plan',  total: null, css: 'sin-plan' },

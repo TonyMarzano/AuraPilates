@@ -29,14 +29,18 @@ RECOVERY_CODE   = 'sanjuan2025'
 # ── Configuración de email ────────────────────────────
 # Obtené tu App Password en: myaccount.google.com → Seguridad → Contraseñas de aplicaciones
 EMAIL_FROM     = 'clubpilatesanjuan@gmail.com'
-EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD', '')
-EMAIL_ENABLED  = True
+EMAIL_PASSWORD = 'xxxx xxxx xxxx xxxx'   # ← pegá acá tu App Password de 16 caracteres
+EMAIL_ENABLED  = True                     # ← poné False para desactivar sin borrar la config
 
 # ── Configuración del Bot de WhatsApp (Twilio) ────────
-TWILIO_ACCOUNT_SID  = os.environ.get('TWILIO_ACCOUNT_SID', '')
-TWILIO_AUTH_TOKEN   = os.environ.get('TWILIO_AUTH_TOKEN', '')
-TWILIO_WA_NUMBER    = os.environ.get('TWILIO_WA_NUMBER', 'whatsapp:+14155238886')
-ANTHROPIC_API_KEY   = os.environ.get('ANTHROPIC_API_KEY', '')
+# Credenciales desde twilio.com/console
+TWILIO_ACCOUNT_SID  = 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'  # ← tu Account SID
+TWILIO_AUTH_TOKEN   = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'    # ← tu Auth Token
+TWILIO_WA_NUMBER    = 'whatsapp:+14155238886'               # ← número sandbox de Twilio
+
+# API Key de Anthropic para respuestas con IA
+# Obtené una en: console.anthropic.com
+ANTHROPIC_API_KEY   = 'sk-ant-xxxxxxxxxxxx'                 # ← tu API key
 
 # ── Decorador: requiere login ─────────────────────────
 def login_required(f):
@@ -50,8 +54,8 @@ def login_required(f):
 # ── Email de bienvenida ───────────────────────────────
 
 PLAN_INFO = {
-    'plan12':     ('Plan 12 clases',     '3 clases por semana', '$55.000'),
     'plan8':      ('Plan 8 clases',      '2 clases por semana', '$45.000'),
+    'plan12':     ('Plan 12 clases',     '3 clases por semana', '$55.000'),
     'plan4':      ('Plan 4 clases',      '1 clase por semana',  '$25.000'),
     'individual': ('Clase individual',   '1 clase',             '$6.000'),
 }
@@ -282,9 +286,41 @@ def init_db():
         if 'horario_id' not in cols_res2:
             conn.execute("ALTER TABLE reservas ADD COLUMN horario_id INTEGER REFERENCES horarios_fijos(id) ON DELETE SET NULL")
 
-        conn.commit()
+        # Tabla de instructores
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS instructores (
+                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                nombre       TEXT    NOT NULL,
+                apellido     TEXT    NOT NULL,
+                tel          TEXT,
+                email        TEXT,
+                tarifa_hora  REAL    DEFAULT 0,
+                notas        TEXT,
+                activo       INTEGER DEFAULT 1,
+                created_at   DATETIME DEFAULT (datetime('now','-3 hours'))
+            )
+        ''')
 
-def limpiar_datos_viejos():
+        # Tabla de horas trabajadas
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS horas_trabajadas (
+                id             INTEGER PRIMARY KEY AUTOINCREMENT,
+                instructor_id  INTEGER NOT NULL REFERENCES instructores(id) ON DELETE CASCADE,
+                fecha          TEXT    NOT NULL,
+                hora_inicio    TEXT    NOT NULL,
+                hora_fin       TEXT    NOT NULL,
+                tipo           TEXT    NOT NULL DEFAULT 'clase',
+                notas          TEXT,
+                created_at     DATETIME DEFAULT (datetime('now','-3 hours'))
+            )
+        ''')
+
+        # Migración: agregar pin a instructores si no existe
+        cols_inst = [r[1] for r in conn.execute("PRAGMA table_info(instructores)").fetchall()]
+        if 'pin' not in cols_inst:
+            conn.execute("ALTER TABLE instructores ADD COLUMN pin TEXT DEFAULT '0000'")
+
+        conn.commit()
     """
     Limpieza automática al arrancar:
       - Reservas con más de 2 meses → se eliminan (turnos pasados sin utilidad)
@@ -326,7 +362,7 @@ def favicon():
 @app.route('/')
 def index():
     contact_data = {
-        "whatsapp_link": "https://wa.me/5492645797486",
+        "whatsapp_link": "https://wa.me/5492645551234",
         "email": "clubpilatesanjuan@gmail.com",
         "address": "San Roque Sur 1044, Rawson, San Juan",
         "google_maps_api_key": "TU_API_KEY_AQUI"
@@ -957,6 +993,441 @@ def delete_horario_fijo(hid):
         return jsonify({'error': str(e)}), 500
 
 
+# ── API de Instructores ───────────────────────────────
+
+@app.route('/api/instructores', methods=['GET'])
+@login_required
+def get_instructores():
+    try:
+        with get_db() as conn:
+            rows = conn.execute(
+                'SELECT * FROM instructores ORDER BY apellido, nombre'
+            ).fetchall()
+        return jsonify([dict(r) for r in rows])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/instructores', methods=['POST'])
+@login_required
+def create_instructor():
+    data = request.get_json()
+    nombre   = data.get('nombre', '').strip()
+    apellido = data.get('apellido', '').strip()
+    if not nombre or not apellido:
+        return jsonify({'error': 'Nombre y apellido son obligatorios'}), 400
+    try:
+        with get_db() as conn:
+            cur = conn.execute(
+                '''INSERT INTO instructores (nombre, apellido, tel, email, tarifa_hora, notas, pin)
+                   VALUES (?,?,?,?,?,?,?)''',
+                (nombre, apellido,
+                 data.get('tel','').strip(),
+                 data.get('email','').strip(),
+                 float(data.get('tarifa_hora', 0)),
+                 data.get('notas','').strip(),
+                 data.get('pin', '0000').strip())
+            )
+            conn.commit()
+            row = conn.execute('SELECT * FROM instructores WHERE id=?', (cur.lastrowid,)).fetchone()
+        return jsonify(dict(row)), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/instructores/<int:iid>', methods=['PUT'])
+@login_required
+def update_instructor(iid):
+    data = request.get_json()
+    try:
+        with get_db() as conn:
+            conn.execute(
+                '''UPDATE instructores SET nombre=?, apellido=?, tel=?, email=?,
+                   tarifa_hora=?, notas=?, pin=?, activo=? WHERE id=?''',
+                (data.get('nombre','').strip(),
+                 data.get('apellido','').strip(),
+                 data.get('tel','').strip(),
+                 data.get('email','').strip(),
+                 float(data.get('tarifa_hora', 0)),
+                 data.get('notas','').strip(),
+                 data.get('pin','0000').strip(),
+                 int(data.get('activo', 1)),
+                 iid)
+            )
+            conn.commit()
+            row = conn.execute('SELECT * FROM instructores WHERE id=?', (iid,)).fetchone()
+        return jsonify(dict(row))
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/instructores/<int:iid>', methods=['DELETE'])
+@login_required
+def delete_instructor(iid):
+    try:
+        with get_db() as conn:
+            conn.execute('UPDATE instructores SET activo=0 WHERE id=?', (iid,))
+            conn.commit()
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/horas', methods=['GET'])
+@login_required
+def get_horas():
+    mes          = request.args.get('mes', '')
+    instructor_id = request.args.get('instructor_id', '')
+    try:
+        with get_db() as conn:
+            q = '''SELECT h.*, i.nombre||' '||i.apellido AS instructor_nombre, i.tarifa_hora
+                   FROM horas_trabajadas h
+                   JOIN instructores i ON h.instructor_id = i.id
+                   WHERE 1=1'''
+            params = []
+            if mes:
+                q += ' AND h.fecha LIKE ?'; params.append(f'{mes}%')
+            if instructor_id:
+                q += ' AND h.instructor_id = ?'; params.append(int(instructor_id))
+            q += ' ORDER BY h.fecha DESC, h.hora_inicio DESC'
+            rows = conn.execute(q, params).fetchall()
+        return jsonify([dict(r) for r in rows])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/horas', methods=['POST'])
+def create_hora():
+    """Pueden llamarlo el admin (login_required omitido) o el instructor con PIN."""
+    data          = request.get_json()
+    instructor_id = data.get('instructor_id')
+    pin           = data.get('pin', '')
+    fecha         = data.get('fecha', '').strip()
+    hora_inicio   = data.get('hora_inicio', '').strip()
+    hora_fin      = data.get('hora_fin', '').strip()
+    tipo          = data.get('tipo', 'clase').strip()
+    notas         = data.get('notas', '').strip()
+
+    if not all([instructor_id, fecha, hora_inicio, hora_fin]):
+        return jsonify({'error': 'Faltan campos obligatorios'}), 400
+
+    try:
+        with get_db() as conn:
+            # Verificar PIN (si no viene de sesión admin)
+            if not session.get('logged_in'):
+                inst = conn.execute(
+                    'SELECT pin FROM instructores WHERE id=? AND activo=1', (instructor_id,)
+                ).fetchone()
+                if not inst or inst['pin'] != pin:
+                    return jsonify({'error': 'PIN incorrecto'}), 403
+
+            # Calcular horas
+            from datetime import datetime as dt
+            ini = dt.strptime(hora_inicio, '%H:%M')
+            fin = dt.strptime(hora_fin,   '%H:%M')
+            if fin <= ini:
+                return jsonify({'error': 'La hora de fin debe ser mayor a la de inicio'}), 400
+            horas = round((fin - ini).seconds / 3600, 2)
+
+            cur = conn.execute(
+                '''INSERT INTO horas_trabajadas
+                   (instructor_id, fecha, hora_inicio, hora_fin, tipo, notas)
+                   VALUES (?,?,?,?,?,?)''',
+                (instructor_id, fecha, hora_inicio, hora_fin, tipo, notas)
+            )
+            conn.commit()
+            row = conn.execute(
+                '''SELECT h.*, i.nombre||' '||i.apellido AS instructor_nombre, i.tarifa_hora
+                   FROM horas_trabajadas h JOIN instructores i ON h.instructor_id=i.id
+                   WHERE h.id=?''', (cur.lastrowid,)
+            ).fetchone()
+        return jsonify(dict(row)), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/horas/<int:hid>', methods=['DELETE'])
+@login_required
+def delete_hora(hid):
+    try:
+        with get_db() as conn:
+            conn.execute('DELETE FROM horas_trabajadas WHERE id=?', (hid,))
+            conn.commit()
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/horas/resumen', methods=['GET'])
+@login_required
+def resumen_horas():
+    mes = request.args.get('mes', '')
+    try:
+        with get_db() as conn:
+            rows = conn.execute('''
+                SELECT i.id, i.nombre||' '||i.apellido AS nombre,
+                       i.tarifa_hora,
+                       COUNT(h.id) AS registros,
+                       SUM(
+                           (strftime('%H', h.hora_fin)*60 + strftime('%M', h.hora_fin)) -
+                           (strftime('%H', h.hora_inicio)*60 + strftime('%M', h.hora_inicio))
+                       ) / 60.0 AS total_horas
+                FROM instructores i
+                LEFT JOIN horas_trabajadas h
+                    ON h.instructor_id = i.id AND h.fecha LIKE ?
+                WHERE i.activo = 1
+                GROUP BY i.id
+                ORDER BY i.apellido
+            ''', (f'{mes}%',)).fetchall()
+        resultado = []
+        for r in rows:
+            d = dict(r)
+            d['total_horas'] = round(d['total_horas'] or 0, 2)
+            d['total_pagar'] = round((d['total_horas'] or 0) * (d['tarifa_hora'] or 0), 2)
+            resultado.append(d)
+        return jsonify(resultado)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/horas/export')
+@login_required
+def export_horas_excel():
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+    from io import BytesIO
+
+    mes = request.args.get('mes', '')
+
+    try:
+        with get_db() as conn:
+            instructores = conn.execute(
+                'SELECT * FROM instructores WHERE activo=1 ORDER BY apellido'
+            ).fetchall()
+            horas = conn.execute('''
+                SELECT h.*, i.nombre||' '||i.apellido AS instructor_nombre, i.tarifa_hora
+                FROM horas_trabajadas h
+                JOIN instructores i ON h.instructor_id = i.id
+                WHERE h.fecha LIKE ?
+                ORDER BY h.instructor_id, h.fecha, h.hora_inicio
+            ''', (f'{mes}%',)).fetchall()
+
+        wb = openpyxl.Workbook()
+
+        # ── Colores ──
+        verde      = '7D9979'
+        verde_pale = 'EEF3ED'
+        oscuro     = '041620'
+        blanco     = 'FFFFFF'
+        gris       = 'F5F5F5'
+
+        def header_font(bold=True, color=blanco):
+            return Font(name='Calibri', bold=bold, color=color, size=11)
+
+        def cell_font(bold=False, color='000000'):
+            return Font(name='Calibri', bold=bold, color=color, size=10)
+
+        def fill(hex_color):
+            return PatternFill('solid', fgColor=hex_color)
+
+        def thin_border():
+            s = Side(style='thin', color='CCCCCC')
+            return Border(left=s, right=s, top=s, bottom=s)
+
+        # ── Hoja 1: Resumen ──────────────────────────────
+        ws = wb.active
+        ws.title = 'Resumen'
+
+        ws.merge_cells('A1:F1')
+        ws['A1'] = f'Club Pilates San Juan — Resumen de Horas · {mes}'
+        ws['A1'].font = Font(name='Calibri', bold=True, color=blanco, size=13)
+        ws['A1'].fill = fill(verde)
+        ws['A1'].alignment = Alignment(horizontal='center', vertical='center')
+        ws.row_dimensions[1].height = 32
+
+        headers = ['Instructor', 'Registros', 'Horas totales', 'Tarifa/hora', 'Total a pagar']
+        for col, h in enumerate(headers, 1):
+            c = ws.cell(row=2, column=col, value=h)
+            c.font   = header_font(color=blanco)
+            c.fill   = fill(oscuro)
+            c.alignment = Alignment(horizontal='center', vertical='center')
+            c.border = thin_border()
+        ws.row_dimensions[2].height = 22
+
+        total_pagar_global = 0
+        row_n = 3
+        for i, inst in enumerate(instructores):
+            horas_inst = [h for h in horas if h['instructor_id'] == inst['id']]
+            total_min  = sum(
+                (int(h['hora_fin'][:2])*60 + int(h['hora_fin'][3:])) -
+                (int(h['hora_inicio'][:2])*60 + int(h['hora_inicio'][3:]))
+                for h in horas_inst
+            )
+            total_h   = round(total_min / 60, 2)
+            total_pay = round(total_h * (inst['tarifa_hora'] or 0), 2)
+            total_pagar_global += total_pay
+
+            bg = gris if i % 2 == 0 else blanco
+            vals = [f"{inst['nombre']} {inst['apellido']}", len(horas_inst),
+                    total_h, inst['tarifa_hora'], total_pay]
+            for col, val in enumerate(vals, 1):
+                c = ws.cell(row=row_n, column=col, value=val)
+                c.font   = cell_font()
+                c.fill   = fill(bg)
+                c.border = thin_border()
+                if col >= 3:
+                    c.alignment = Alignment(horizontal='right')
+                    if col in (4, 5):
+                        c.number_format = '"$"#,##0.00'
+            row_n += 1
+
+        # Fila total
+        ws.cell(row=row_n, column=1, value='TOTAL').font = header_font(color=blanco)
+        ws.cell(row=row_n, column=5, value=total_pagar_global).font = header_font(color=blanco)
+        ws.cell(row=row_n, column=5).number_format = '"$"#,##0.00'
+        for col in range(1, 6):
+            ws.cell(row=row_n, column=col).fill   = fill(verde)
+            ws.cell(row=row_n, column=col).border = thin_border()
+        ws.row_dimensions[row_n].height = 22
+
+        ws.column_dimensions['A'].width = 28
+        ws.column_dimensions['B'].width = 12
+        ws.column_dimensions['C'].width = 15
+        ws.column_dimensions['D'].width = 15
+        ws.column_dimensions['E'].width = 18
+
+        # ── Hoja por instructor ──────────────────────────
+        for inst in instructores:
+            horas_inst = [h for h in horas if h['instructor_id'] == inst['id']]
+            ws2 = wb.create_sheet(title=f"{inst['apellido']} {inst['nombre']}"[:31])
+
+            ws2.merge_cells('A1:G1')
+            ws2['A1'] = f"{inst['nombre']} {inst['apellido']} — {mes}"
+            ws2['A1'].font = Font(name='Calibri', bold=True, color=blanco, size=12)
+            ws2['A1'].fill = fill(verde)
+            ws2['A1'].alignment = Alignment(horizontal='center', vertical='center')
+            ws2.row_dimensions[1].height = 28
+
+            # Info tarifa
+            ws2.merge_cells('A2:G2')
+            ws2['A2'] = f"Tarifa por hora: ${inst['tarifa_hora']:,.2f}"
+            ws2['A2'].font = Font(name='Calibri', size=10, color=oscuro)
+            ws2['A2'].fill = fill(verde_pale)
+            ws2['A2'].alignment = Alignment(horizontal='left', vertical='center', indent=1)
+            ws2.row_dimensions[2].height = 18
+
+            hdrs = ['Fecha', 'Día', 'Inicio', 'Fin', 'Horas', 'Tipo', 'Notas']
+            for col, h in enumerate(hdrs, 1):
+                c = ws2.cell(row=3, column=col, value=h)
+                c.font   = header_font(color=blanco)
+                c.fill   = fill(oscuro)
+                c.alignment = Alignment(horizontal='center')
+                c.border = thin_border()
+            ws2.row_dimensions[3].height = 22
+
+            dias_es = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
+            from datetime import date as ddate
+            total_min2 = 0
+            for i, h in enumerate(horas_inst):
+                try:
+                    d_obj = ddate.fromisoformat(h['fecha'])
+                    dia   = dias_es[d_obj.weekday()]
+                except Exception:
+                    dia = ''
+                mins = (int(h['hora_fin'][:2])*60 + int(h['hora_fin'][3:])) - \
+                       (int(h['hora_inicio'][:2])*60 + int(h['hora_inicio'][3:]))
+                total_min2 += mins
+                bg = gris if i % 2 == 0 else blanco
+                vals = [h['fecha'], dia, h['hora_inicio'], h['hora_fin'],
+                        round(mins/60, 2), h['tipo'], h['notas'] or '']
+                for col, val in enumerate(vals, 1):
+                    c = ws2.cell(row=4+i, column=col, value=val)
+                    c.font   = cell_font()
+                    c.fill   = fill(bg)
+                    c.border = thin_border()
+
+            # Fila totales instructor
+            tr = 4 + len(horas_inst)
+            total_h2   = round(total_min2/60, 2)
+            total_pay2 = round(total_h2 * (inst['tarifa_hora'] or 0), 2)
+            ws2.cell(row=tr, column=1, value='TOTAL').font = header_font(color=blanco)
+            ws2.cell(row=tr, column=5, value=total_h2).font = header_font(color=blanco)
+            ws2.cell(row=tr, column=7, value=total_pay2).font = header_font(color=blanco)
+            ws2.cell(row=tr, column=7).number_format = '"$"#,##0.00'
+            for col in range(1, 8):
+                ws2.cell(row=tr, column=col).fill   = fill(verde)
+                ws2.cell(row=tr, column=col).border = thin_border()
+
+            ws2.column_dimensions['A'].width = 12
+            ws2.column_dimensions['B'].width = 12
+            ws2.column_dimensions['C'].width = 8
+            ws2.column_dimensions['D'].width = 8
+            ws2.column_dimensions['E'].width = 8
+            ws2.column_dimensions['F'].width = 16
+            ws2.column_dimensions['G'].width = 30
+
+        buf = BytesIO()
+        wb.save(buf)
+        buf.seek(0)
+
+        from flask import send_file
+        return send_file(
+            buf,
+            download_name=f'horas_instructores_{mes}.xlsx',
+            as_attachment=True,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ── Página de auto-registro del instructor ────────────
+@app.route('/instructor')
+def instructor_portal():
+    return render_template('instructor.html')
+
+
+@app.route('/api/instructor/login', methods=['POST'])
+def instructor_login():
+    data = request.get_json()
+    instructor_id = data.get('instructor_id')
+    pin           = data.get('pin', '')
+    try:
+        with get_db() as conn:
+            inst = conn.execute(
+                'SELECT id, nombre, apellido FROM instructores WHERE id=? AND activo=1 AND pin=?',
+                (instructor_id, pin)
+            ).fetchone()
+        if inst:
+            return jsonify({'ok': True, 'instructor': dict(inst)})
+        return jsonify({'error': 'PIN incorrecto'}), 403
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/instructor/horas/<int:instructor_id>', methods=['GET'])
+def get_horas_instructor(instructor_id):
+    """Historial del instructor (sin login admin, verifica pin en header)."""
+    mes = request.args.get('mes', '')
+    pin = request.args.get('pin', '')
+    try:
+        with get_db() as conn:
+            inst = conn.execute(
+                'SELECT pin FROM instructores WHERE id=? AND activo=1', (instructor_id,)
+            ).fetchone()
+            if not inst or inst['pin'] != pin:
+                return jsonify({'error': 'No autorizado'}), 403
+            rows = conn.execute('''
+                SELECT * FROM horas_trabajadas
+                WHERE instructor_id=? AND fecha LIKE ?
+                ORDER BY fecha DESC, hora_inicio DESC
+            ''', (instructor_id, f'{mes}%')).fetchall()
+        return jsonify([dict(r) for r in rows])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 # ── Bot de WhatsApp ───────────────────────────────────
 #
 # Horario del estudio (Python weekday: Lun=0, Mar=1 … Sáb=5, Dom=6)
@@ -971,8 +1442,8 @@ HORARIO_BOT = {
 MAX_POR_TURNO = 5
 DIAS_ES_BOT   = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
 PLANES_BOT    = {
-    '1': ('plan12',     'Plan 12 clases – 3 veces por semana'),
-    '2': ('plan8',      'Plan 8 clases – 2 veces por semana'),
+    '1': ('plan8',      'Plan 8 clases – 2 veces por semana'),
+    '2': ('plan12',     'Plan 12 clases – 3 veces por semana'),
     '3': ('plan4',      'Plan 4 clases – 1 vez por semana'),
     '4': ('individual', 'Clase individual'),
     '5': (None,         'Sin plan por ahora'),
@@ -1076,7 +1547,7 @@ def _responder_ia(pregunta):
                 'Respondé de forma amable, breve y en español rioplatense. Máximo 3 oraciones. '
                 'Datos del estudio: San Roque Sur 1044, Rawson, San Juan. '
                 'Horarios: Lunes a Viernes 8-21hs, Sábados 9-12hs. '
-                'Planes: Plan 12 clases (3×semana), Plan 8 clases (2×semana),  Plan 4 clases (1×semana), Clase individual. '
+                'Planes: Plan 8 clases (2×semana), Plan 12 clases (3×semana), Plan 4 clases (1×semana), Clase individual. '
                 'WhatsApp: +54 9 264 579-7486. Email: clubpilatesanjuan@gmail.com. '
                 'Si preguntan algo que no sabés, deciles que se contacten directamente.'
             ),
@@ -1246,8 +1717,8 @@ def procesar_mensaje_bot(tel_raw, msg_in):
         datos['reg_apellido'] = msg.strip().title()
         _set_conv(tel, 'REG_PLAN', datos)
         return ('Perfecto! ¿Qué *plan* te interesa?\n\n'
-                '*1* · Plan 12 clases – 3 veces por semana\n'
-                '*2* · Plan 8 clases – 2 veces por semana\n'
+                '*1* · Plan 8 clases – 2 veces por semana\n'
+                '*2* · Plan 12 clases – 3 veces por semana\n'
                 '*3* · Plan 4 clases – 1 vez por semana\n'
                 '*4* · Clase individual\n'
                 '*5* · Sin plan por ahora\n')
