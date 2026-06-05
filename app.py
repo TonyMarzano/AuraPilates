@@ -352,7 +352,7 @@ def init_db():
 
 # Inicializar DB y limpiar al arrancar
 init_db()
-#limpiar_datos_viejos()
+limpiar_datos_viejos()
 
 # ── Rutas principales ─────────────────────────────────
 @app.route('/favicon.ico')
