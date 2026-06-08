@@ -5,7 +5,7 @@ import os
 import smtplib
 import threading
 import json
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta, datetime, timezone
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -183,44 +183,47 @@ def _build_reminder_html(nombre, fecha_str, hora):
 
 
 def send_reminder_email(nombre, email_dest, fecha_str, hora):
+    """Envío sincrónico — llamado desde el scheduler (hilo no-daemon)."""
     if not EMAIL_ENABLED or not email_dest:
         return
-    def _send():
-        try:
-            msg = MIMEMultipart('alternative')
-            msg['Subject'] = f'🌿 Recordatorio: tenés clase hoy a las {hora:02d}:00 hs — Club Pilates'
-            msg['From']    = f'Club Pilates San Juan <{EMAIL_FROM}>'
-            msg['To']      = email_dest
-            msg.attach(MIMEText(_build_reminder_html(nombre, fecha_str, hora), 'html', 'utf-8'))
-            with smtplib.SMTP('smtp.gmail.com', 587) as server:
-                server.starttls()
-                server.login(EMAIL_FROM, EMAIL_PASSWORD)
-                server.sendmail(EMAIL_FROM, email_dest, msg.as_string())
-            print(f'[recordatorio] Enviado a {email_dest} para {fecha_str} {hora:02d}h')
-        except Exception as e:
-            print(f'[recordatorio] Error: {e}')
-    threading.Thread(target=_send, daemon=True).start()
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = f'🌿 Recordatorio: tenés clase hoy a las {hora:02d}:00 hs — Club Pilates'
+        msg['From']    = f'Club Pilates San Juan <{EMAIL_FROM}>'
+        msg['To']      = email_dest
+        msg.attach(MIMEText(_build_reminder_html(nombre, fecha_str, hora), 'html', 'utf-8'))
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(EMAIL_FROM, EMAIL_PASSWORD)
+            server.sendmail(EMAIL_FROM, email_dest, msg.as_string())
+        print(f'[recordatorio] Enviado a {email_dest} para {fecha_str} {hora:02d}h')
+    except Exception as e:
+        print(f'[recordatorio] Error al enviar a {email_dest}: {e}')
 
 
 def check_and_send_reminders():
     """
     Corre cada 15 min. Detecta reservas que empiezan entre 1h50m y 2h10m
-    desde ahora y envía el recordatorio una sola vez.
+    desde ahora (en hora Argentina) y envía el recordatorio una sola vez.
     """
     if not EMAIL_ENABLED:
         return
     try:
-        now      = datetime.now()
+        # Usar hora de Argentina (UTC-3) — los slot_key usan hora local
+        ARG_TZ    = timezone(timedelta(hours=-3))
+        now       = datetime.now(ARG_TZ)
+
         # Ventana: entre 110 y 130 minutos en el futuro
         target_lo = now + timedelta(minutes=110)
         target_hi = now + timedelta(minutes=130)
 
-        hoy       = now.strftime('%Y-%m-%d')
-        hora_lo   = target_lo.hour
-        hora_hi   = target_hi.hour
+        hoy     = now.strftime('%Y-%m-%d')
+        hora_lo = target_lo.hour
+        hora_hi = target_hi.hour
+
+        print(f'[recordatorio] Check — hora ARG: {now.strftime("%H:%M")} | buscando clases entre {hora_lo:02d}h y {hora_hi:02d}h del {hoy}')
 
         with get_db() as conn:
-            # Traer reservas del día con alumna vinculada que tenga email
             rows = conn.execute('''
                 SELECT r.id, r.slot_key, r.alumna_id,
                        a.nombre, a.email
@@ -231,13 +234,15 @@ def check_and_send_reminders():
                   AND CAST(substr(r.slot_key, 12, 2) AS INTEGER) BETWEEN ? AND ?
             ''', (f'{hoy}%', hora_lo, hora_hi)).fetchall()
 
+            print(f'[recordatorio] Encontradas: {len(rows)} reserva(s) con email en esa ventana')
+
             for row in rows:
-                # Verificar que no se haya enviado ya
                 ya = conn.execute(
                     'SELECT id FROM recordatorios_enviados WHERE reserva_id=?',
                     (row['id'],)
                 ).fetchone()
                 if ya:
+                    print(f'[recordatorio] Ya enviado para reserva {row["id"]}, salteando')
                     continue
 
                 hora_clase = int(row['slot_key'][11:13])
