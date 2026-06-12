@@ -688,12 +688,14 @@ def _generar_reservas_desde_patron(conn, horario_id, alumna_id, dias_semana, hor
     import calendar as cal
     HORARIO_EST = {0:(8,21),1:(8,21),2:(8,21),3:(8,21),4:(8,21),5:(9,12)}
     creadas = saltadas = existentes = 0
+    hoy = date.today()
     y, m = int(mes_inicio[:4]), int(mes_inicio[5:7])
     yf, mf = int(mes_fin[:4]), int(mes_fin[5:7])
     while (y,m) <= (yf,mf):
         _, dim = cal.monthrange(y, m)
         for day in range(1, dim+1):
             fecha = date(y, m, day)
+            if fecha < hoy: continue  # No agendar fechas pasadas
             wd = fecha.weekday()
             if wd not in dias_semana: continue
             sc = HORARIO_EST.get(wd)
