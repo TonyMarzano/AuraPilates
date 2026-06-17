@@ -87,7 +87,7 @@ def _build_welcome_html(nombre, apellido, plan):
             <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:14px;"><tr>
                 <td width="44" valign="top" style="padding-right:12px;"><div style="background:#eaf3e8;border-radius:50%;width:36px;height:36px;text-align:center;line-height:36px;font-size:16px;">📅</div></td>
                 <td valign="top"><div style="font-size:14px;font-weight:500;color:#041620;padding-top:2px;">Horarios disponibles</div>
-                <div style="font-size:13px;color:#7a8f79;margin-top:3px;">Lunes a viernes de 8:00 a 21:00 hs · Sábados de 9:00 a 12:00 hs</div></td>
+                <div style="font-size:13px;color:#7a8f79;margin-top:3px;">Lunes a viernes de 8:00 a 22:00 hs · Sábados de 9:00 a 12:00 hs</div></td>
             </tr></table>
             <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
                 <td width="44" valign="top" style="padding-right:12px;"><div style="background:#eaf3e8;border-radius:50%;width:36px;height:36px;text-align:center;line-height:36px;font-size:16px;">📍</div></td>
@@ -507,7 +507,7 @@ def create_reservas_bulk():
         year, month = int(mes[:4]), int(mes[5:7])
     except Exception:
         return jsonify({'error': 'Mes inválido'}), 400
-    HORARIO = {0:(8,21),1:(8,21),2:(8,21),3:(8,21),4:(8,21),5:(9,12)}
+    HORARIO = {0:(8,22),1:(8,22),2:(8,22),3:(8,22),4:(8,22),5:(9,12)}
     try:
         import calendar as cal
         with get_db() as conn:
@@ -686,7 +686,7 @@ def resumen_movimientos():
 # ── Horarios Fijos ────────────────────────────────────
 def _generar_reservas_desde_patron(conn, horario_id, alumna_id, dias_semana, hora, mes_inicio, mes_fin, nombre, apellido, tel):
     import calendar as cal
-    HORARIO_EST = {0:(8,21),1:(8,21),2:(8,21),3:(8,21),4:(8,21),5:(9,12)}
+    HORARIO_EST = {0:(8,22),1:(8,22),2:(8,22),3:(8,22),4:(8,22),5:(9,12)}
     creadas = saltadas = existentes = 0
     hoy = date.today()
     y, m = int(mes_inicio[:4]), int(mes_inicio[5:7])
@@ -1006,7 +1006,7 @@ def get_horas_instructor(instructor_id):
         return jsonify({'error': str(e)}), 500
 
 # ── Bot WhatsApp ──────────────────────────────────────
-HORARIO_BOT = {0:(8,21),1:(8,21),2:(8,21),3:(8,21),4:(8,21),5:(9,12)}
+HORARIO_BOT = {0:(8,22),1:(8,22),2:(8,22),3:(8,22),4:(8,22),5:(9,12)}
 MAX_POR_TURNO = 5
 DIAS_ES_BOT = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
 PLANES_BOT = {'1':('plan8','Plan 8 – 2 veces/semana'),'2':('plan12','Plan 12 – 3 veces/semana'),'3':('plan4','Plan 4 – 1 vez/semana'),'4':('individual','Clase individual'),'5':(None,'Sin plan')}
@@ -1085,7 +1085,7 @@ def procesar_mensaje_bot(tel_raw,msg_in):
             if not alumna: return 'Tu número no está registrado.'
             return _flujo_ver_turnos_cancelar(tel,alumna,'ver')
         elif msg=='4':
-            _set_conv(tel,'MENU',{}); return '🕐 *Horarios*\n📍 Urquiza 991 Sur\n• LV: 8:00–21:00\n• Sáb: 9:00–12:00\n\nEscribí *menú* para volver.'
+            _set_conv(tel,'MENU',{}); return '🕐 *Horarios*\n📍 Urquiza 991 Sur\n• LV: 8:00–22:00\n• Sáb: 9:00–12:00\n\nEscribí *menú* para volver.'
         elif msg=='5':
             _set_conv(tel,'CONSULTA_IA',{}); return '🤖 Contame tu consulta.\n_(Escribí *menú* para volver)_'
         else: return _msg_menu(alumna)
