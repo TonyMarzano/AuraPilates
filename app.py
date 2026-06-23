@@ -318,6 +318,7 @@ def init_db():
             ('plan',       'alumnas',     'ALTER TABLE alumnas ADD COLUMN plan TEXT DEFAULT NULL'),
             ('alumna_id',  'reservas',    'ALTER TABLE reservas ADD COLUMN alumna_id INTEGER REFERENCES alumnas(id) ON DELETE SET NULL'),
             ('horario_id', 'reservas',    'ALTER TABLE reservas ADD COLUMN horario_id INTEGER REFERENCES horarios_fijos(id) ON DELETE SET NULL'),
+            ('asistio',    'reservas',    'ALTER TABLE reservas ADD COLUMN asistio INTEGER DEFAULT NULL'),
             ('pin',        'instructores','ALTER TABLE instructores ADD COLUMN pin TEXT DEFAULT \'0000\''),
         ]:
             cols = [r[1] for r in conn.execute(f'PRAGMA table_info({table})').fetchall()]
@@ -455,7 +456,7 @@ def get_reservas():
         for row in rows:
             k = row['slot_key']
             if k not in result: result[k] = []
-            result[k].append({'id':row['id'],'nombre':row['nombre'],'apellido':row['apellido'],'tel':row['tel'],'alumna_id':row['alumna_id'],'createdAt':row['created_at']})
+            result[k].append({'id':row['id'],'nombre':row['nombre'],'apellido':row['apellido'],'tel':row['tel'],'alumna_id':row['alumna_id'],'asistio':row['asistio'],'createdAt':row['created_at']})
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -479,6 +480,20 @@ def create_reserva():
                          (slot_key, nombre, apellido, tel, alumna_id or None))
             conn.commit()
         return jsonify({'ok': True}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/reservas/<int:reserva_id>/asistencia', methods=['PATCH'])
+@login_required
+def set_asistencia(reserva_id):
+    data    = request.get_json()
+    asistio = data.get('asistio')  # True, False o None
+    valor   = 1 if asistio is True else (0 if asistio is False else None)
+    try:
+        with get_db() as conn:
+            conn.execute('UPDATE reservas SET asistio=? WHERE id=?', (valor, reserva_id))
+            conn.commit()
+        return jsonify({'ok': True, 'asistio': valor})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -588,7 +603,7 @@ def get_clases():
     mes = request.args.get('mes','')
     try:
         with get_db() as conn:
-            rows = conn.execute("SELECT alumna_id, COUNT(*) as usadas FROM reservas WHERE alumna_id IS NOT NULL AND substr(slot_key,1,7)=? GROUP BY alumna_id", (mes,)).fetchall()
+            rows = conn.execute("SELECT alumna_id, COUNT(*) as usadas FROM reservas WHERE alumna_id IS NOT NULL AND asistio=1 AND substr(slot_key,1,7)=? GROUP BY alumna_id", (mes,)).fetchall()
         return jsonify({str(r['alumna_id']): r['usadas'] for r in rows})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
