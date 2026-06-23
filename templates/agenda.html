@@ -735,6 +735,24 @@
 
         .btn-cancel-reserva:hover { background: #fdf0f0; }
 
+        .btn-wsp-recordatorio {
+            background: none;
+            border: 1px solid #c8e6c9;
+            color: #2e7d32;
+            border-radius: 5px;
+            padding: 5px 9px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            font-family: 'Jost', sans-serif;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+        }
+        .btn-wsp-recordatorio:hover { background: #e8f5e9; border-color: #2e7d32; }
+        .btn-wsp-recordatorio i { font-size: 0.9rem; }
+
         .slot-add-section {
             border-top: 1px solid var(--border);
             padding-top: 0.75rem;
@@ -2299,6 +2317,11 @@ function renderSlotModal(key) {
                     <button class="btn-asistio si ${siActive}" onclick="setAsistencia(${r.id}, true)"  title="Asistió">✓ Asistió</button>
                     <button class="btn-asistio no ${noActive}" onclick="setAsistencia(${r.id}, false)" title="Falta">✕ Falta</button>
                 </div>
+                ${r.tel ? `<a class="btn-wsp-recordatorio"
+                    href="${wspRecordatorioLink(r.tel, r.nombre, pendingSlot.hour)}"
+                    target="_blank" title="Enviar recordatorio por WhatsApp">
+                    <i class="fab fa-whatsapp"></i>
+                </a>` : ''}
                 <button class="btn-cancel-reserva" onclick="cancelarReserva(${r.id})" style="margin-left:0.4rem">✕</button>
             </div>`;
           }).join('')
@@ -2311,6 +2334,22 @@ function renderSlotModal(key) {
 function toggleAddForm() {
     addFormOpen = !addFormOpen;
     document.getElementById('slotAddForm').classList.toggle('open', addFormOpen);
+}
+
+function wspRecordatorioLink(tel, nombre, hora) {
+    // Normalizar número para Argentina: quita todo excepto dígitos
+    let digits = tel.replace(/\D/g, '');
+    // Si empieza con 0, lo quitamos
+    if (digits.startsWith('0')) digits = digits.slice(1);
+    // Si no tiene código de país (549), lo agregamos
+    if (!digits.startsWith('549') && !digits.startsWith('54')) {
+        digits = '549' + digits;
+    } else if (digits.startsWith('54') && !digits.startsWith('549')) {
+        digits = '549' + digits.slice(2);
+    }
+    const horaStr = String(hora).padStart(2, '0') + ':00';
+    const msg = `Buen día, ${nombre}! 🌿 Te recordamos que tenés agendado tu turno a las ${horaStr} hs. ¡Te esperamos en Club Pilates San Juan!`;
+    return `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`;
 }
 
 async function setAsistencia(reservaId, asistio) {
