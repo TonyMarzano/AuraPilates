@@ -474,7 +474,7 @@ def create_reserva():
         return jsonify({'error': 'Faltan campos'}), 400
     try:
         with get_db() as conn:
-            if conn.execute('SELECT COUNT(*) FROM reservas WHERE slot_key=?', (slot_key,)).fetchone()[0] >= 5:
+            if conn.execute('SELECT COUNT(*) FROM reservas WHERE slot_key=?', (slot_key,)).fetchone()[0] >= 4:
                 return jsonify({'error': 'Turno completo'}), 409
             conn.execute('INSERT INTO reservas (slot_key, nombre, apellido, tel, alumna_id) VALUES (?,?,?,?,?)',
                          (slot_key, nombre, apellido, tel, alumna_id or None))
@@ -538,7 +538,7 @@ def create_reservas_bulk():
                 slot_key = f"{fecha.strftime('%Y-%m-%d')}_{hora:02d}"
                 if conn.execute('SELECT id FROM reservas WHERE slot_key=? AND alumna_id=?',(slot_key,alumna_id)).fetchone():
                     existentes.append(slot_key); continue
-                if conn.execute('SELECT COUNT(*) FROM reservas WHERE slot_key=?',(slot_key,)).fetchone()[0] >= 5:
+                if conn.execute('SELECT COUNT(*) FROM reservas WHERE slot_key=?',(slot_key,)).fetchone()[0] >= 4:
                     saltadas.append(slot_key); continue
                 conn.execute('INSERT INTO reservas (slot_key,nombre,apellido,tel,alumna_id) VALUES (?,?,?,?,?)',
                              (slot_key,alumna['nombre'],alumna['apellido'],alumna['tel'] or '',alumna_id))
@@ -718,7 +718,7 @@ def _generar_reservas_desde_patron(conn, horario_id, alumna_id, dias_semana, hor
             slot_key = f"{fecha.strftime('%Y-%m-%d')}_{hora:02d}"
             if conn.execute('SELECT id FROM reservas WHERE slot_key=? AND alumna_id=?', (slot_key,alumna_id)).fetchone():
                 existentes += 1; continue
-            if conn.execute('SELECT COUNT(*) FROM reservas WHERE slot_key=?', (slot_key,)).fetchone()[0] >= 5:
+            if conn.execute('SELECT COUNT(*) FROM reservas WHERE slot_key=?', (slot_key,)).fetchone()[0] >= 4:
                 saltadas += 1; continue
             conn.execute('INSERT INTO reservas (slot_key,nombre,apellido,tel,alumna_id,horario_id) VALUES (?,?,?,?,?,?)',
                          (slot_key,nombre,apellido,tel,alumna_id,horario_id))
@@ -1022,7 +1022,7 @@ def get_horas_instructor(instructor_id):
 
 # ── Bot WhatsApp ──────────────────────────────────────
 HORARIO_BOT = {0:(8,22),1:(8,22),2:(8,22),3:(8,22),4:(8,22),5:(9,12)}
-MAX_POR_TURNO = 5
+MAX_POR_TURNO = 4
 DIAS_ES_BOT = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
 PLANES_BOT = {'1':('plan8','Plan 8 – 2 veces/semana'),'2':('plan12','Plan 12 – 3 veces/semana'),'3':('plan4','Plan 4 – 1 vez/semana'),'4':('individual','Clase individual'),'5':(None,'Sin plan')}
 
