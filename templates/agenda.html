@@ -2159,7 +2159,7 @@ function render() {
             } else {
                 const list  = reservas[key] || [];
                 const count = list.length;
-                const MAX   = 5;
+                const MAX   = 4;
 
                 if (count === 0) {
                     slot.className = 'slot available';
@@ -2269,7 +2269,7 @@ async function openSlotModal(key, date, hour) {
 function renderSlotModal(key) {
     const list  = reservas[key] || [];
     const count = list.length;
-    const MAX   = 5;
+    const MAX   = 4;
 
     // Título
     document.getElementById('slotModalTitle').textContent =
