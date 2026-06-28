@@ -89,6 +89,93 @@
             gap: 1rem;
         }
 
+        /* Buscador de alumnas */
+        .search-alumna-wrap {
+            position: relative;
+            margin: 0 0 0.75rem 0;
+        }
+        .search-alumna-input {
+            width: 100%;
+            padding: 10px 14px 10px 36px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            font-family: 'Jost', sans-serif;
+            font-size: 0.88rem;
+            color: var(--text);
+            background: var(--cream);
+            transition: border-color 0.2s;
+            outline: none;
+        }
+        .search-alumna-input:focus { border-color: var(--sage); }
+        .search-alumna-icon {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            font-size: 0.85rem;
+            pointer-events: none;
+        }
+        .search-alumna-results {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0; right: 0;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(4,22,32,0.12);
+            z-index: 500;
+            max-height: 360px;
+            overflow-y: auto;
+        }
+        .search-alumna-results.open { display: block; }
+        .search-result-header {
+            padding: 10px 14px 6px;
+            font-size: 0.62rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--text-light);
+            border-bottom: 1px solid var(--border);
+        }
+        .search-result-item {
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(125,153,121,0.08);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-item:hover { background: var(--sage-pale); }
+        .search-result-name {
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+        .search-result-slots {
+            margin-top: 4px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .search-slot-tag {
+            font-size: 0.68rem;
+            background: var(--sage-pale);
+            color: var(--sage);
+            border: 1px solid var(--sage-light);
+            border-radius: 4px;
+            padding: 2px 8px;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-weight: 500;
+        }
+        .search-slot-tag:hover { background: var(--sage); color: white; }
+        .search-no-results {
+            padding: 16px 14px;
+            font-size: 0.84rem;
+            color: var(--text-light);
+            text-align: center;
+        }
+
         .week-nav {
             display: flex;
             align-items: center;
@@ -1493,6 +1580,16 @@
         </button>
     </div>
 
+    <!-- Buscador de alumnas -->
+    <div class="search-alumna-wrap">
+        <i class="fas fa-search search-alumna-icon"></i>
+        <input type="text" class="search-alumna-input" id="searchAlumnaInput"
+               placeholder="Buscar alumna por nombre..."
+               oninput="searchAlumna(this.value)"
+               autocomplete="off">
+        <div class="search-alumna-results" id="searchAlumnaResults"></div>
+    </div>
+
     <!-- Calendar -->
     <div class="calendar-wrap">
         <div class="calendar-grid" id="calendarGrid"></div>
@@ -2171,6 +2268,7 @@ function render() {
             const sched = SCHEDULE[dow];
             const slot  = document.createElement('div');
             const key   = slotKey(d, hour);
+            slot.setAttribute('data-slot', key);
 
             if (!sched || hour < sched.start || hour >= sched.end) {
                 slot.className = 'slot closed';
@@ -2351,6 +2449,105 @@ function wspRecordatorioLink(tel, nombre, hora) {
     const msg = `Buen día, ${nombre}! 🌿 Te recordamos que tenés agendado tu turno a las ${horaStr} hs. ¡Te esperamos en Club Pilates San Juan!`;
     return `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`;
 }
+
+// ── Buscador de alumnas ──────────────────────────────
+
+function searchAlumna(query) {
+    const results = document.getElementById('searchAlumnaResults');
+    query = query.trim().toLowerCase();
+
+    if (query.length < 2) {
+        results.classList.remove('open');
+        return;
+    }
+
+    // Buscar en todas las reservas cargadas en memoria
+    const DIAS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+    const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+    // Agrupar por alumna (nombre + apellido)
+    const alumnaMap = {};
+    Object.entries(reservas).forEach(([slotKey, lista]) => {
+        lista.forEach(r => {
+            const fullName = `${r.nombre} ${r.apellido}`.toLowerCase();
+            if (!fullName.includes(query)) return;
+            const key = `${r.nombre}|${r.apellido}|${r.alumna_id || ''}`;
+            if (!alumnaMap[key]) {
+                alumnaMap[key] = {
+                    nombre:    r.nombre,
+                    apellido:  r.apellido,
+                    alumna_id: r.alumna_id,
+                    slots:     []
+                };
+            }
+            alumnaMap[key].slots.push(slotKey);
+        });
+    });
+
+    const matches = Object.values(alumnaMap);
+
+    if (matches.length === 0) {
+        results.innerHTML = '<div class="search-no-results">Sin resultados</div>';
+        results.classList.add('open');
+        return;
+    }
+
+    // Ordenar slots por fecha
+    matches.forEach(m => m.slots.sort());
+
+    results.innerHTML = matches.map(m => {
+        const slotsHtml = m.slots.map(sk => {
+            const fecha = new Date(sk.substring(0, 10) + 'T12:00:00');
+            const hora  = parseInt(sk.substring(11, 13));
+            const dia   = DIAS[fecha.getDay()];
+            const label = `${dia} ${fecha.getDate()} ${MESES[fecha.getMonth()]} ${String(hora).padStart(2,'0')}h`;
+            return `<span class="search-slot-tag" onclick="irASlot('${sk}')" title="${sk}">${label}</span>`;
+        }).join('');
+
+        return `<div class="search-result-item">
+            <div class="search-result-name">${m.nombre} ${m.apellido}</div>
+            <div class="search-result-slots">${slotsHtml}</div>
+        </div>`;
+    }).join('');
+
+    results.innerHTML = `<div class="search-result-header">${matches.length} alumna${matches.length !== 1 ? 's' : ''} encontrada${matches.length !== 1 ? 's' : ''}</div>` + results.innerHTML;
+    results.classList.add('open');
+}
+
+function irASlot(slotKey) {
+    // Navegar a la semana que contiene ese slot y resaltar el turno
+    const fecha = new Date(slotKey.substring(0, 10) + 'T12:00:00');
+    currentMonday = getMonday(fecha);
+    render();
+
+    // Cerrar buscador
+    document.getElementById('searchAlumnaResults').classList.remove('open');
+    document.getElementById('searchAlumnaInput').value = '';
+
+    // Resaltar la celda después de que se renderice
+    setTimeout(() => {
+        const hora = parseInt(slotKey.substring(11, 13));
+        const dow  = fecha.getDay() === 0 ? 7 : fecha.getDay();
+        const cells = document.querySelectorAll('.slot-cell');
+        cells.forEach(cell => {
+            const cellSlot = cell.getAttribute('data-slot');
+            if (cellSlot === slotKey) {
+                cell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                cell.style.outline = '2px solid var(--sage)';
+                cell.style.outlineOffset = '2px';
+                setTimeout(() => { cell.style.outline = ''; cell.style.outlineOffset = ''; }, 2500);
+            }
+        });
+    }, 150);
+}
+
+// Cerrar buscador al clickear fuera
+document.addEventListener('click', e => {
+    const wrap = document.querySelector('.search-alumna-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+        document.getElementById('searchAlumnaResults').classList.remove('open');
+    }
+});
 
 async function setAsistencia(reservaId, asistio) {
     // Toggle: si ya tiene ese estado, lo limpia
