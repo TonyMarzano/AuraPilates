@@ -650,9 +650,14 @@ def update_alumna(alumna_id):
 @app.route('/api/alumnas/<int:alumna_id>', methods=['DELETE'])
 @login_required
 def delete_alumna(alumna_id):
+    """
+    Marca la alumna como inactiva en vez de borrarla físicamente.
+    Así las reservas existentes mantienen su alumna_id válido
+    y el historial de clases queda intacto.
+    """
     try:
         with get_db() as conn:
-            conn.execute('DELETE FROM alumnas WHERE id=?', (alumna_id,))
+            conn.execute('UPDATE alumnas SET activa=0 WHERE id=?', (alumna_id,))
             conn.commit()
         return jsonify({'ok': True})
     except Exception as e:
