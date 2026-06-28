@@ -603,8 +603,30 @@ def get_clases():
     mes = request.args.get('mes','')
     try:
         with get_db() as conn:
-            rows = conn.execute("SELECT alumna_id, COUNT(*) as usadas FROM reservas WHERE alumna_id IS NOT NULL AND asistio=1 AND substr(slot_key,1,7)=? GROUP BY alumna_id", (mes,)).fetchall()
-        return jsonify({str(r['alumna_id']): r['usadas'] for r in rows})
+            # Buscar fecha de pago de cada alumna en el mes seleccionado
+            pagos = conn.execute('''
+                SELECT alumna_id, MIN(fecha) as fecha_pago
+                FROM movimientos
+                WHERE tipo = 'ingreso'
+                  AND alumna_id IS NOT NULL
+                  AND substr(fecha, 1, 7) = ?
+                GROUP BY alumna_id
+            ''', (mes,)).fetchall()
+
+            result = {}
+            for pago in pagos:
+                # Contar clases asistidas dentro de los 30 días desde el pago
+                row = conn.execute('''
+                    SELECT COUNT(*) as usadas
+                    FROM reservas
+                    WHERE alumna_id = ?
+                      AND asistio = 1
+                      AND substr(slot_key, 1, 10) >= ?
+                      AND substr(slot_key, 1, 10) < date(?, '+30 days')
+                ''', (pago['alumna_id'], pago['fecha_pago'], pago['fecha_pago'])).fetchone()
+                result[str(pago['alumna_id'])] = row['usadas']
+
+        return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
