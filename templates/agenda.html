@@ -822,6 +822,65 @@
 
         .btn-cancel-reserva:hover { background: #fdf0f0; }
 
+        /* Selector mes_cobro inline */
+        .mes-cobro-wrap {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 5px;
+        }
+        .mes-cobro-tag {
+            font-size: 0.68rem;
+            background: var(--sage-pale);
+            color: var(--sage);
+            border: 1px solid var(--sage-light);
+            border-radius: 4px;
+            padding: 2px 7px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+        .mes-cobro-tag:hover { background: var(--sage); color: white; }
+        .mes-cobro-selector {
+            display: none;
+            align-items: center;
+            gap: 4px;
+            margin-top: 5px;
+        }
+        .mes-cobro-selector.open { display: flex; }
+        .mes-cobro-input {
+            padding: 3px 7px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-family: 'Jost', sans-serif;
+            font-size: 0.72rem;
+            color: var(--text);
+            background: var(--cream);
+            outline: none;
+        }
+        .mes-cobro-input:focus { border-color: var(--sage); }
+        .mes-cobro-confirm {
+            background: var(--sage);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 3px 9px;
+            font-size: 0.68rem;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: 'Jost', sans-serif;
+        }
+        .mes-cobro-cancel {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 3px 7px;
+            font-size: 0.68rem;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
         .btn-wsp-recordatorio {
             background: none;
             border: 1px solid #c8e6c9;
@@ -2406,21 +2465,24 @@ function renderSlotModal(key) {
             const siActive = r.asistio === 1 ? 'active' : '';
             const noActive = r.asistio === 0 ? 'active' : '';
             return `
-            <div class="slot-alumna-row" id="row-reserva-${r.id}">
-                <div class="slot-alumna-info">
-                    <div class="slot-alumna-name">${r.nombre} ${r.apellido}</div>
-                    <div class="slot-alumna-tel">${r.tel}</div>
+            <div class="slot-alumna-row" id="row-reserva-${r.id}" style="flex-direction:column;align-items:flex-start;gap:6px">
+                <div style="display:flex;align-items:center;gap:0.5rem;width:100%">
+                    <div class="slot-alumna-info">
+                        <div class="slot-alumna-name">${r.nombre} ${r.apellido}</div>
+                        <div class="slot-alumna-tel">${r.tel}</div>
+                    </div>
+                    <div class="asistencia-btns">
+                        <button class="btn-asistio si ${siActive}" onclick="setAsistencia(${r.id}, true)"  title="Asistió">✓ Asistió</button>
+                        <button class="btn-asistio no ${noActive}" onclick="setAsistencia(${r.id}, false)" title="Falta">✕ Falta</button>
+                    </div>
+                    ${r.tel ? `<a class="btn-wsp-recordatorio"
+                        href="${wspRecordatorioLink(r.tel, r.nombre, pendingSlot.hour)}"
+                        target="_blank" title="Enviar recordatorio por WhatsApp">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>` : ''}
+                    <button class="btn-cancel-reserva" onclick="cancelarReserva(${r.id})" style="margin-left:auto">✕</button>
                 </div>
-                <div class="asistencia-btns">
-                    <button class="btn-asistio si ${siActive}" onclick="setAsistencia(${r.id}, true)"  title="Asistió">✓ Asistió</button>
-                    <button class="btn-asistio no ${noActive}" onclick="setAsistencia(${r.id}, false)" title="Falta">✕ Falta</button>
-                </div>
-                ${r.tel ? `<a class="btn-wsp-recordatorio"
-                    href="${wspRecordatorioLink(r.tel, r.nombre, pendingSlot.hour)}"
-                    target="_blank" title="Enviar recordatorio por WhatsApp">
-                    <i class="fab fa-whatsapp"></i>
-                </a>` : ''}
-                <button class="btn-cancel-reserva" onclick="cancelarReserva(${r.id})" style="margin-left:0.4rem">✕</button>
+                ${r.asistio === 1 ? renderMesCobro(r.id, r.mes_cobro) : ''}
             </div>`;
           }).join('')
         : '<div style="font-size:0.82rem;color:var(--text-light);padding:0.3rem 0">Sin reservas aún.</div>';
@@ -2432,6 +2494,67 @@ function renderSlotModal(key) {
 function toggleAddForm() {
     addFormOpen = !addFormOpen;
     document.getElementById('slotAddForm').classList.toggle('open', addFormOpen);
+}
+
+// ── Mes de cobro ─────────────────────────────────────
+
+function renderMesCobro(reservaId, mesCobro) {
+    const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const label = mesCobro
+        ? (() => { const [y,m] = mesCobro.split('-'); return `📅 ${MESES[parseInt(m)-1]} ${y}`; })()
+        : '📅 Asignar mes';
+    const tagStyle = mesCobro ? '' : 'opacity:0.6;border-style:dashed';
+
+    return `<div class="mes-cobro-wrap" id="wrap-cobro-${reservaId}">
+        <span class="mes-cobro-tag" style="${tagStyle}"
+              onclick="abrirSelectorMes(${reservaId}, '${mesCobro||''}')">${label}</span>
+        <div class="mes-cobro-selector" id="selector-cobro-${reservaId}">
+            <input type="month" class="mes-cobro-input" id="input-cobro-${reservaId}"
+                   value="${mesCobro||''}">
+            <button class="mes-cobro-confirm" onclick="confirmarMesCobro(${reservaId})">OK</button>
+            <button class="mes-cobro-cancel"  onclick="cerrarSelectorMes(${reservaId})">✕</button>
+        </div>
+    </div>`;
+}
+
+function abrirSelectorMes(reservaId, mesCobro) {
+    document.getElementById(`selector-cobro-${reservaId}`).classList.add('open');
+    const input = document.getElementById(`input-cobro-${reservaId}`);
+    if (!mesCobro) {
+        const now = new Date();
+        input.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    }
+    input.focus();
+}
+
+function cerrarSelectorMes(reservaId) {
+    document.getElementById(`selector-cobro-${reservaId}`)?.classList.remove('open');
+}
+
+async function confirmarMesCobro(reservaId) {
+    const mes = document.getElementById(`input-cobro-${reservaId}`).value;
+    if (!mes) { showToast('Seleccioná un mes'); return; }
+
+    const res  = await fetch(`/api/reservas/${reservaId}/asistencia`, {
+        method:  'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body:    JSON.stringify({ asistio: true, mes_cobro: mes })
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || 'Error'); return; }
+
+    // Actualizar en memoria
+    const r = Object.values(reservas).flat().find(x => x.id === reservaId);
+    if (r) r.mes_cobro = mes;
+
+    // Re-renderizar el wrap
+    const wrap = document.getElementById(`wrap-cobro-${reservaId}`);
+    if (wrap) wrap.outerHTML = renderMesCobro(reservaId, mes);
+
+    // Actualizar tab alumnas
+    if (document.getElementById('tab-alumnas').classList.contains('active')) loadAlumnas();
+    showToast('✓ Mes de cobro asignado');
 }
 
 function wspRecordatorioLink(tel, nombre, hora) {
@@ -2550,31 +2673,43 @@ document.addEventListener('click', e => {
 });
 
 async function setAsistencia(reservaId, asistio) {
-    // Toggle: si ya tiene ese estado, lo limpia
-    const row    = document.getElementById(`row-reserva-${reservaId}`);
-    const btnSi  = row.querySelector('.btn-asistio.si');
-    const btnNo  = row.querySelector('.btn-asistio.no');
-    const yaActivo = (asistio === true && btnSi.classList.contains('active')) ||
+    const row   = document.getElementById(`row-reserva-${reservaId}`);
+    const btnSi = row.querySelector('.btn-asistio.si');
+    const btnNo = row.querySelector('.btn-asistio.no');
+    const yaActivo = (asistio === true  && btnSi.classList.contains('active')) ||
                      (asistio === false && btnNo.classList.contains('active'));
     const nuevoValor = yaActivo ? null : asistio;
 
     const res  = await fetch(`/api/reservas/${reservaId}/asistencia`, {
         method:  'PATCH',
         headers: {'Content-Type': 'application/json'},
-        body:    JSON.stringify({ asistio: nuevoValor })
+        body:    JSON.stringify({ asistio: nuevoValor, mes_cobro: nuevoValor === null ? null : undefined })
     });
     const data = await res.json();
     if (!res.ok) { showToast(data.error || 'Error al guardar'); return; }
 
-    // Actualizar estado en memoria
+    // Actualizar en memoria
     const slot = Object.values(reservas).flat().find(r => r.id === reservaId);
-    if (slot) slot.asistio = data.asistio;
+    if (slot) { slot.asistio = data.asistio; if (nuevoValor === null) slot.mes_cobro = null; }
 
-    // Actualizar UI
+    // Actualizar botones
     btnSi.classList.toggle('active', data.asistio === 1);
     btnNo.classList.toggle('active', data.asistio === 0);
 
-    // Actualizar tab Alumnas si está visible
+    // Mostrar/ocultar selector de mes_cobro
+    const existingWrap = document.getElementById(`wrap-cobro-${reservaId}`);
+    if (data.asistio === 1 && !existingWrap) {
+        // Agregar selector de mes debajo de la fila
+        const mesCobro = slot?.mes_cobro || null;
+        const div = document.createElement('div');
+        div.innerHTML = renderMesCobro(reservaId, mesCobro);
+        row.appendChild(div.firstElementChild);
+        // Abrir selector automáticamente si no tiene mes asignado
+        if (!mesCobro) setTimeout(() => abrirSelectorMes(reservaId, ''), 100);
+    } else if (data.asistio !== 1 && existingWrap) {
+        existingWrap.remove();
+    }
+
     if (document.getElementById('tab-alumnas').classList.contains('active')) loadAlumnas();
 }
 
