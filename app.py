@@ -622,6 +622,25 @@ def get_clases():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/pagos/todos', methods=['GET'])
+@login_required
+def get_todos_pagos():
+    """Todos los pagos de alumnas (ingresos vinculados a una alumna)."""
+    try:
+        with get_db() as conn:
+            rows = conn.execute('''
+                SELECT m.id, m.fecha, m.monto, m.descripcion, m.categoria,
+                       a.nombre || ' ' || a.apellido AS alumna_nombre,
+                       a.id AS alumna_id, a.plan
+                FROM movimientos m
+                JOIN alumnas a ON m.alumna_id = a.id
+                WHERE m.tipo = 'ingreso'
+                ORDER BY m.fecha DESC
+            ''').fetchall()
+        return jsonify([dict(r) for r in rows])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/alumnas/<int:alumna_id>/pagos', methods=['GET'])
 @login_required
 def get_pagos_alumna(alumna_id):
