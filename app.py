@@ -622,6 +622,22 @@ def get_clases():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/alumnas/<int:alumna_id>/pagos', methods=['GET'])
+@login_required
+def get_pagos_alumna(alumna_id):
+    """Historial completo de pagos de una alumna ordenado por fecha desc."""
+    try:
+        with get_db() as conn:
+            rows = conn.execute('''
+                SELECT fecha, categoria, descripcion, monto
+                FROM movimientos
+                WHERE alumna_id = ? AND tipo = 'ingreso'
+                ORDER BY fecha DESC
+            ''', (alumna_id,)).fetchall()
+        return jsonify([dict(r) for r in rows])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/alumnas/<int:alumna_id>', methods=['PUT'])
 @login_required
 def update_alumna(alumna_id):
