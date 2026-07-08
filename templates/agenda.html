@@ -89,6 +89,69 @@
             gap: 1rem;
         }
 
+        /* Modal historial de pagos */
+        .historial-pago-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .historial-pago-row:last-child { border-bottom: none; }
+        .historial-fecha {
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text);
+            min-width: 90px;
+        }
+        .historial-mes-badge {
+            font-size: 0.65rem;
+            background: var(--sage-pale);
+            color: var(--sage);
+            border: 1px solid var(--sage-light);
+            border-radius: 4px;
+            padding: 2px 7px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .historial-desc {
+            flex: 1;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            font-weight: 300;
+        }
+        .historial-monto {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text);
+            white-space: nowrap;
+        }
+        .historial-empty {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+        .historial-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0 0;
+            margin-top: 4px;
+            border-top: 2px solid var(--border);
+        }
+        .historial-total-label {
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text-light);
+        }
+        .historial-total-monto {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--sage);
+        }
+
         /* Buscador de alumnas */
         .search-alumna-wrap {
             position: relative;
@@ -2028,6 +2091,21 @@
     </div>
 </div>
 
+<!-- MODAL: Historial de pagos -->
+<div class="modal-overlay" id="modalHistorialPagos">
+    <div class="modal" style="max-width:500px;width:100%">
+        <div class="modal-header">
+            <div class="modal-title" id="historialModalTitle">Historial de pagos</div>
+        </div>
+        <div class="modal-body" id="historialModalBody">
+            <div class="historial-empty">Cargando...</div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-cancel" onclick="closeHistorialPagos()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL: Instructor -->
 <div class="modal-overlay" id="modalInstructor">
     <div class="modal" style="max-width:460px;width:100%">
@@ -3214,6 +3292,54 @@ function exportarExcel() {
     window.location.href = `/api/horas/export?mes=${mes}`;
 }
 
+// ── Historial de pagos ───────────────────────────────
+
+async function openHistorialPagos(alumnaId, nombre) {
+    document.getElementById('historialModalTitle').textContent = `💰 ${nombre}`;
+    document.getElementById('historialModalBody').innerHTML =
+        '<div class="historial-empty">Cargando...</div>';
+    document.getElementById('modalHistorialPagos').classList.add('open');
+
+    const pagos = await fetch(`/api/alumnas/${alumnaId}/pagos`)
+        .then(r => r.json()).catch(() => []);
+
+    if (!pagos.length) {
+        document.getElementById('historialModalBody').innerHTML =
+            '<div class="historial-empty">Sin pagos registrados para esta alumna.</div>';
+        return;
+    }
+
+    const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+    const rows = pagos.map(p => {
+        const [y, m, d] = p.fecha.split('-');
+        const fechaBonita = `${d}/${m}/${y}`;
+        const mesBadge = `${MESES[parseInt(m)-1]} ${y}`;
+        const monto = `$${parseFloat(p.monto).toLocaleString('es-AR', {minimumFractionDigits:0})}`;
+        return `
+        <div class="historial-pago-row">
+            <span class="historial-fecha">${fechaBonita}</span>
+            <span class="historial-mes-badge">${mesBadge}</span>
+            <span class="historial-desc">${p.descripcion || p.categoria}</span>
+            <span class="historial-monto">${monto}</span>
+        </div>`;
+    }).join('');
+
+    const total = pagos.reduce((s, p) => s + parseFloat(p.monto), 0);
+    const totalStr = `$${total.toLocaleString('es-AR', {minimumFractionDigits:0})}`;
+
+    document.getElementById('historialModalBody').innerHTML = rows + `
+        <div class="historial-total">
+            <span class="historial-total-label">Total histórico</span>
+            <span class="historial-total-monto">${totalStr}</span>
+        </div>`;
+}
+
+function closeHistorialPagos() {
+    document.getElementById('modalHistorialPagos').classList.remove('open');
+}
+
 // ── Cerrar modales ──
 document.getElementById('modalSlot').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 document.getElementById('modalMovimiento').addEventListener('click', e => { if (e.target === e.currentTarget) closeMovModal(); });
@@ -3221,8 +3347,9 @@ document.getElementById('modalAlumna').addEventListener('click',   e => { if (e.
 document.getElementById('modalBulk').addEventListener('click',     e => { if (e.target === e.currentTarget) closeBulkModal(); });
 document.getElementById('modalInstructor').addEventListener('click',e => { if (e.target === e.currentTarget) closeInstModal(); });
 document.getElementById('modalFinanzasPin').addEventListener('click',e => { if (e.target === e.currentTarget) cerrarPinFinanzas(); });
+document.getElementById('modalHistorialPagos').addEventListener('click',e => { if (e.target === e.currentTarget) closeHistorialPagos(); });
 document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeModal(); closeMovModal(); closeAlumnaModal(); closeBulkModal(); closeInstModal(); cerrarPinFinanzas(); }
+    if (e.key === 'Escape') { closeModal(); closeMovModal(); closeAlumnaModal(); closeBulkModal(); closeInstModal(); cerrarPinFinanzas(); closeHistorialPagos(); }
 });
 
 // Mes inicial para instructores
@@ -3544,7 +3671,13 @@ function renderAlumnas() {
                 ${a.notas ? `<div class="alum-info-row" style="font-style:italic">${a.notas.slice(0,60)}${a.notas.length>60?'…':''}</div>` : ''}
             </div>
             ${clasesHtml}
-            ${pagoBadge}
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+                ${pagoBadge}
+                <button class="btn-horario-edit" style="font-size:0.65rem"
+                    onclick="event.stopPropagation();openHistorialPagos(${a.id},'${a.nombre} ${a.apellido}')">
+                    💰 Historial
+                </button>
+            </div>
         </div>`;
     }).join('');
 }
