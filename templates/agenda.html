@@ -89,6 +89,93 @@
             gap: 1rem;
         }
 
+        /* Tabla general de pagos */
+        .pagos-wrap { margin-top: 1.5rem; }
+        .pagos-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .pagos-title {
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--text-light);
+        }
+        .pagos-filtros {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .pagos-search {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: 'Jost', sans-serif;
+            font-size: 0.8rem;
+            color: var(--text);
+            background: var(--cream);
+            outline: none;
+            width: 160px;
+        }
+        .pagos-search:focus { border-color: var(--sage); }
+        .pagos-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+        .pagos-table th {
+            text-align: left;
+            padding: 8px 10px;
+            font-size: 0.65rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text-light);
+            font-weight: 400;
+            border-bottom: 2px solid var(--border);
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+        .pagos-table th:hover { color: var(--sage); }
+        .pagos-table th.sort-asc::after  { content: ' ↑'; color: var(--sage); }
+        .pagos-table th.sort-desc::after { content: ' ↓'; color: var(--sage); }
+        .pagos-table th:last-child { text-align: right; cursor: default; }
+        .pagos-table td {
+            padding: 9px 10px;
+            border-bottom: 1px solid rgba(125,153,121,0.1);
+            color: var(--text);
+            vertical-align: middle;
+        }
+        .pagos-table tr:last-child td { border-bottom: none; }
+        .pagos-table tr:hover td { background: var(--sage-pale); }
+        .pagos-table td.monto { text-align: right; font-weight: 500; }
+        .pagos-table td.alumna { font-weight: 500; }
+        .pagos-table td.fecha { white-space: nowrap; color: var(--text-light); }
+        .pagos-table td.mes-badge span {
+            font-size: 0.68rem;
+            background: var(--sage-pale);
+            color: var(--sage);
+            border: 1px solid var(--sage-light);
+            border-radius: 4px;
+            padding: 2px 7px;
+            font-weight: 500;
+        }
+        .pagos-total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 10px 0;
+            border-top: 2px solid var(--border);
+            margin-top: 4px;
+        }
+        .pagos-total-label { font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-light); }
+        .pagos-total-val { font-size: 1rem; font-weight: 500; color: var(--sage); }
+
         /* Modal historial de pagos */
         .historial-pago-row {
             display: flex;
@@ -1786,6 +1873,33 @@
         </div>
     </div>
 
+    <!-- Listado general de pagos -->
+    <div class="pagos-wrap" id="pagosWrap">
+        <div class="pagos-header-row">
+            <div class="pagos-title">Todos los pagos de alumnas</div>
+            <div class="pagos-filtros">
+                <input type="text" class="pagos-search" id="pagosSearch"
+                       placeholder="Buscar alumna…" oninput="renderPagos()">
+            </div>
+        </div>
+        <table class="pagos-table" id="pagosTable">
+            <thead>
+                <tr>
+                    <th onclick="sortPagos('fecha')"    id="th-fecha">Fecha</th>
+                    <th onclick="sortPagos('alumna')"   id="th-alumna">Alumna</th>
+                    <th onclick="sortPagos('mes')"      id="th-mes">Mes</th>
+                    <th onclick="sortPagos('desc')"     id="th-desc">Descripción</th>
+                    <th style="text-align:right">Monto</th>
+                </tr>
+            </thead>
+            <tbody id="pagosTbody"></tbody>
+        </table>
+        <div class="pagos-total-row" id="pagosTotal" style="display:none">
+            <span class="pagos-total-label">Total filtrado</span>
+            <span class="pagos-total-val" id="pagosTotalVal"></span>
+        </div>
+    </div>
+
 </div>
 </div><!-- /tab-finanzas -->
 
@@ -3292,6 +3406,93 @@ function exportarExcel() {
     window.location.href = `/api/horas/export?mes=${mes}`;
 }
 
+// ── Listado general de pagos ─────────────────────────
+
+let todosLosPagos = [];
+let pagosSort = { col: 'fecha', dir: 'desc' };
+
+async function loadTodosPagos() {
+    todosLosPagos = await fetch('/api/pagos/todos').then(r=>r.json()).catch(()=>[]);
+    renderPagos();
+}
+
+function sortPagos(col) {
+    if (pagosSort.col === col) {
+        pagosSort.dir = pagosSort.dir === 'asc' ? 'desc' : 'asc';
+    } else {
+        pagosSort.col = col;
+        pagosSort.dir = col === 'fecha' ? 'desc' : 'asc';
+    }
+    // Actualizar flechas
+    ['fecha','alumna','mes','desc'].forEach(c => {
+        const th = document.getElementById(`th-${c}`);
+        if (!th) return;
+        th.classList.remove('sort-asc','sort-desc');
+        if (pagosSort.col === c) th.classList.add(`sort-${pagosSort.dir}`);
+    });
+    renderPagos();
+}
+
+function renderPagos() {
+    const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const q = (document.getElementById('pagosSearch')?.value || '').toLowerCase().trim();
+
+    let lista = todosLosPagos.filter(p => {
+        if (!q) return true;
+        return (p.alumna_nombre || '').toLowerCase().includes(q) ||
+               (p.descripcion  || '').toLowerCase().includes(q);
+    });
+
+    // Ordenar
+    lista = [...lista].sort((a, b) => {
+        let va, vb;
+        if (pagosSort.col === 'fecha')  { va = a.fecha;         vb = b.fecha; }
+        if (pagosSort.col === 'alumna') { va = a.alumna_nombre; vb = b.alumna_nombre; }
+        if (pagosSort.col === 'mes')    {
+            const [ya,ma] = a.fecha.split('-');
+            const [yb,mb] = b.fecha.split('-');
+            va = `${ya}-${ma}`; vb = `${yb}-${mb}`;
+        }
+        if (pagosSort.col === 'desc')   { va = a.descripcion;   vb = b.descripcion; }
+        va = va || ''; vb = vb || '';
+        const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+        return pagosSort.dir === 'asc' ? cmp : -cmp;
+    });
+
+    const tbody = document.getElementById('pagosTbody');
+    if (!tbody) return;
+
+    if (!lista.length) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-light)">Sin pagos registrados</td></tr>`;
+        document.getElementById('pagosTotal').style.display = 'none';
+        return;
+    }
+
+    tbody.innerHTML = lista.map(p => {
+        const [y, m, d] = p.fecha.split('-');
+        const fechaStr = `${d}/${m}/${y}`;
+        const mesStr   = `${MESES[parseInt(m)-1]} ${y}`;
+        const monto    = `$${parseFloat(p.monto).toLocaleString('es-AR', {minimumFractionDigits:0})}`;
+        return `<tr>
+            <td class="fecha">${fechaStr}</td>
+            <td class="alumna">${p.alumna_nombre}</td>
+            <td class="mes-badge"><span>${mesStr}</span></td>
+            <td>${p.descripcion || p.categoria || '—'}</td>
+            <td class="monto">${monto}</td>
+        </tr>`;
+    }).join('');
+
+    // Total filtrado
+    const total = lista.reduce((s,p) => s + parseFloat(p.monto), 0);
+    document.getElementById('pagosTotal').style.display = 'flex';
+    document.getElementById('pagosTotalVal').textContent =
+        `$${total.toLocaleString('es-AR', {minimumFractionDigits:0})}`;
+
+    // Inicializar flechas
+    document.getElementById(`th-${pagosSort.col}`)?.classList.add(`sort-${pagosSort.dir}`);
+}
+
 // ── Historial de pagos ───────────────────────────────
 
 async function openHistorialPagos(alumnaId, nombre) {
@@ -3423,7 +3624,7 @@ function _doSwitchTab(tab) {
     document.getElementById('tab-alumnas').classList.toggle('active',     tab==='alumnas');
     document.getElementById('tab-horarios').classList.toggle('active',    tab==='horarios');
     document.getElementById('tab-instructores').classList.toggle('active',tab==='instructores');
-    if (tab === 'finanzas')     loadFinanzas();
+    if (tab === 'finanzas')     { loadFinanzas(); loadTodosPagos(); }
     if (tab === 'alumnas')      loadAlumnas();
     if (tab === 'horarios')     loadHorarios();
     if (tab === 'instructores') { loadInstructores(); loadResumenHoras(); }
