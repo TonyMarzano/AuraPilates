@@ -527,7 +527,7 @@ def create_reservas_bulk():
         year, month = int(mes[:4]), int(mes[5:7])
     except Exception:
         return jsonify({'error': 'Mes inválido'}), 400
-    HORARIO = {0:(8,22),1:(8,22),2:(8,22),3:(8,22),4:(8,22),5:(9,12)}
+    HORARIO = {0:(8,22),1:(8,22),2:(8,22),3:(8,22),4:(8,22),5:(8,12)}
     try:
         import calendar as cal
         with get_db() as conn:
@@ -755,7 +755,7 @@ def resumen_movimientos():
 # ── Horarios Fijos ────────────────────────────────────
 def _generar_reservas_desde_patron(conn, horario_id, alumna_id, dias_semana, hora, mes_inicio, mes_fin, nombre, apellido, tel):
     import calendar as cal
-    HORARIO_EST = {0:(8,22),1:(8,22),2:(8,22),3:(8,22),4:(8,22),5:(9,12)}
+    HORARIO_EST = {0:(8,22),1:(8,22),2:(8,22),3:(8,22),4:(8,22),5:(8,12)}
     creadas = saltadas = existentes = 0
     hoy = date.today()
     y, m = int(mes_inicio[:4]), int(mes_inicio[5:7])
@@ -1075,7 +1075,7 @@ def get_horas_instructor(instructor_id):
         return jsonify({'error': str(e)}), 500
 
 # ── Bot WhatsApp ──────────────────────────────────────
-HORARIO_BOT = {0:(8,22),1:(8,22),2:(8,22),3:(8,22),4:(8,22),5:(9,12)}
+HORARIO_BOT = {0:(8,22),1:(8,22),2:(8,22),3:(8,22),4:(8,22),5:(8,12)}
 MAX_POR_TURNO = 4
 DIAS_ES_BOT = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo']
 PLANES_BOT = {'1':('plan8','Plan 8 – 2 veces/semana'),'2':('plan12','Plan 12 – 3 veces/semana'),'3':('plan4','Plan 4 – 1 vez/semana'),'4':('individual','Clase individual'),'5':(None,'Sin plan')}
