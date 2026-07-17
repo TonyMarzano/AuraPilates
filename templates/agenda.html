@@ -1452,6 +1452,101 @@
             flex-wrap: wrap;
         }
 
+        /* Banner alerta 1 clase restante */
+        .alert-1clase {
+            background: #fff8e1;
+            border: 1px solid #ffe082;
+            border-left: 4px solid #f9a825;
+            border-radius: 7px;
+            padding: 0;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+        .alert-1clase-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            cursor: pointer;
+            gap: 0.5rem;
+        }
+        .alert-1clase-title {
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: #7a5e00;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .alert-1clase-count {
+            background: #f9a825;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .alert-1clase-toggle {
+            font-size: 0.72rem;
+            color: #a07800;
+            background: none;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .alert-1clase-list {
+            border-top: 1px solid #ffe082;
+            padding: 8px 14px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .alert-alumna-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(249,168,37,0.15);
+        }
+        .alert-alumna-row:last-child { border-bottom: none; }
+        .alert-alumna-name {
+            flex: 1;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #7a5e00;
+        }
+        .alert-alumna-plan {
+            font-size: 0.68rem;
+            color: #a07800;
+            background: #fff3cd;
+            padding: 2px 7px;
+            border-radius: 4px;
+        }
+        .alert-wsp-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #25D366;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 6px 12px;
+            font-size: 0.72rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: 'Jost', sans-serif;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+        .alert-wsp-btn:hover { background: #1ebe5d; }
+        .alert-wsp-btn i { font-size: 0.9rem; }
+
         .alum-search {
             font-family: 'Jost', sans-serif;
             font-size: 0.88rem;
@@ -1949,6 +2044,9 @@
             <span class="stat-value" id="statAlumDeben" style="color:#c08080">0</span>
         </div>
     </div>
+
+    <!-- Alerta: alumnas con 1 clase restante -->
+    <div id="alert1Clase" style="display:none"></div>
 
     <!-- Grid -->
     <div class="alum-grid" id="alumGrid"></div>
@@ -3787,6 +3885,75 @@ async function loadAlumnas() {
     ]);
     renderAlumnas();
     updateAlumStats();
+    checkAlert1Clase();
+}
+
+let alertCollapsed = false;
+
+function checkAlert1Clase() {
+    const wrap = document.getElementById('alert1Clase');
+    if (!wrap) return;
+
+    // Alumnas activas con plan y con exactamente 1 clase restante
+    const con1 = alumnas.filter(a => {
+        if (!a.activa || !a.plan || a.plan === 'individual') return false;
+        const info  = PLAN_INFO[a.plan];
+        if (!info || !info.total) return false;
+        const usadas    = clasesUsadas[String(a.id)] || 0;
+        const restantes = info.total - usadas;
+        return restantes === 1;
+    });
+
+    if (!con1.length) { wrap.style.display = 'none'; return; }
+
+    const MESES_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                      'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const mes = document.getElementById('alumMes').value;
+    const [y,m] = mes.split('-');
+    const mesLabel = `${MESES_ES[parseInt(m)-1]} ${y}`;
+
+    const filas = con1.map(a => {
+        const info  = PLAN_INFO[a.plan];
+        const total = info.total;
+        const tel   = (a.tel || '').replace(/\D/g,'');
+        const telFmt = tel.startsWith('54') ? tel : `549${tel}`;
+        const msg   = encodeURIComponent(
+            `Hola ${a.nombre}! 🌿 Te avisamos que te queda 1 sola clase disponible en tu plan de ${mesLabel}. ¡Renovalo para seguir entrenando!`
+        );
+        const wspUrl = `https://wa.me/${telFmt}?text=${msg}`;
+        return `
+        <div class="alert-alumna-row">
+            <span class="alert-alumna-name">${a.nombre} ${a.apellido}</span>
+            <span class="alert-alumna-plan">${info.label}</span>
+            ${a.tel
+                ? `<a class="alert-wsp-btn" href="${wspUrl}" target="_blank"><i class="fab fa-whatsapp"></i> Avisar</a>`
+                : `<span style="font-size:0.72rem;color:#a07800">Sin teléfono</span>`
+            }
+        </div>`;
+    }).join('');
+
+    wrap.style.display = 'block';
+    wrap.innerHTML = `
+        <div class="alert-1clase">
+            <div class="alert-1clase-header" onclick="toggleAlert1Clase()">
+                <div class="alert-1clase-title">
+                    <span class="alert-1clase-count">${con1.length}</span>
+                    ⚠️ ${con1.length === 1 ? 'Alumna con' : 'Alumnas con'} 1 clase restante en ${mesLabel}
+                </div>
+                <button class="alert-1clase-toggle">${alertCollapsed ? 'Ver ▾' : 'Ocultar ▴'}</button>
+            </div>
+            <div class="alert-1clase-list" id="alert1ClaseList" style="${alertCollapsed ? 'display:none' : ''}">
+                ${filas}
+            </div>
+        </div>`;
+}
+
+function toggleAlert1Clase() {
+    alertCollapsed = !alertCollapsed;
+    const list = document.getElementById('alert1ClaseList');
+    const btn  = document.querySelector('.alert-1clase-toggle');
+    if (list) list.style.display = alertCollapsed ? 'none' : '';
+    if (btn)  btn.textContent = alertCollapsed ? 'Ver ▾' : 'Ocultar ▴';
 }
 
 function setFiltro(f) {
