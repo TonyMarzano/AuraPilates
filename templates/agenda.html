@@ -2859,7 +2859,7 @@ function wspRecordatorioLink(tel, nombre, hora) {
         digits = '549' + digits.slice(2);
     }
     const horaStr = String(hora).padStart(2, '0') + ':00';
-    const msg = `Buen día, ${nombre}! 🌿 Te recordamos que tenés agendado tu turno a las ${horaStr} hs. ¡Te esperamos en Club Pilates San Juan!`;
+    const msg = `Buen día, ${nombre}! Te recordamos que tenés agendado tu turno a las ${horaStr} hs. ¡Te esperamos en Club Pilates San Juan!`;
     return `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`;
 }
 
