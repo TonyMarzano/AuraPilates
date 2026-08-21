@@ -26,7 +26,7 @@ RECOVERY_CODE   = 'sanjuan2025'
 # ── Email ─────────────────────────────────────────────
 EMAIL_FROM     = 'clubpilatesanjuan@gmail.com'
 EMAIL_PASSWORD = 'uifs wyqf zrna zana'
-EMAIL_ENABLED  = True
+EMAIL_ENABLED  = False  # Recordatorios por email desactivados
 
 # ── PIN Finanzas ──────────────────────────────────────
 FINANZAS_PIN = '9119'
