@@ -71,11 +71,11 @@ def _build_welcome_html(nombre, apellido, plan):
 <body style="margin:0;padding:0;background:#f7f5f1;font-family:'Helvetica Neue',Arial,sans-serif;">
 <div style="max-width:560px;margin:40px auto;background:white;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(4,22,32,0.10);">
     <div style="background:#7d9979;padding:36px 40px 28px;text-align:center;">
-        <div style="font-size:11px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:8px;">Club Pilates San Juan</div>
+        <div style="font-size:11px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:8px;">Pilates San Juan</div>
         <div style="font-size:28px;color:white;font-weight:300;letter-spacing:0.05em;">Bienvenida/o,<br><strong style="font-weight:500">{nombre}</strong></div>
     </div>
     <div style="padding:32px 40px;">
-        <p style="font-size:15px;color:#041620;line-height:1.7;margin:0 0 16px;">Nos alegra mucho que te hayas sumado a nuestra comunidad 🌿<br>En Club Pilates San Juan trabajamos para que cada clase sea un espacio de bienestar, movimiento y conexión con tu cuerpo.</p>
+        <p style="font-size:15px;color:#041620;line-height:1.7;margin:0 0 16px;">Nos alegra mucho que te hayas sumado a nuestra comunidad 🌿<br>En Pilates San Juan trabajamos para que cada clase sea un espacio de bienestar, movimiento y conexión con tu cuerpo.</p>
         {plan_block}
         <div style="margin:28px 0 0;">
             <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#7a8f79;margin-bottom:12px;">¿Cómo agendar tu turno?</div>
@@ -100,7 +100,7 @@ def _build_welcome_html(nombre, apellido, plan):
         </div>
     </div>
     <div style="border-top:1px solid #eaf3e8;padding:20px 40px;text-align:center;">
-        <div style="font-size:12px;color:#b5c9b1;letter-spacing:0.1em;">Club Pilates San Juan &nbsp;·&nbsp; clubpilatesanjuan@gmail.com</div>
+        <div style="font-size:12px;color:#b5c9b1;letter-spacing:0.1em;">Pilates San Juan &nbsp;·&nbsp; clubpilatesanjuan@gmail.com</div>
     </div>
 </div></body></html>'''
 
@@ -111,8 +111,8 @@ def send_welcome_email(nombre, apellido, email_dest, plan):
     def _send():
         try:
             msg = MIMEMultipart('alternative')
-            msg['Subject'] = f'¡Bienvenida/o a Club Pilates San Juan, {nombre}! 🌿'
-            msg['From']    = f'Club Pilates San Juan <{EMAIL_FROM}>'
+            msg['Subject'] = f'¡Bienvenida/o a Pilates San Juan, {nombre}! 🌿'
+            msg['From']    = f'Pilates San Juan <{EMAIL_FROM}>'
             msg['To']      = email_dest
             msg.attach(MIMEText(_build_welcome_html(nombre, apellido, plan), 'html', 'utf-8'))
             with smtplib.SMTP('smtp.gmail.com', 587) as server:
@@ -142,7 +142,7 @@ def _build_reminder_html(nombre, fecha_str, hora):
 <body style="margin:0;padding:0;background:#f7f5f1;font-family:'Helvetica Neue',Arial,sans-serif;">
 <div style="max-width:560px;margin:40px auto;background:white;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(4,22,32,0.10);">
     <div style="background:#7d9979;padding:28px 40px;text-align:center;">
-        <div style="font-size:11px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:8px;">Club Pilates San Juan</div>
+        <div style="font-size:11px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:8px;">Pilates San Juan</div>
         <div style="font-size:26px;color:white;font-weight:300;">🌿 Recordatorio de clase</div>
     </div>
     <div style="padding:32px 40px;">
@@ -177,7 +177,7 @@ def _build_reminder_html(nombre, fecha_str, hora):
         </div>
     </div>
     <div style="border-top:1px solid #eaf3e8;padding:16px 40px;text-align:center;">
-        <div style="font-size:12px;color:#b5c9b1;letter-spacing:0.1em;">Club Pilates San Juan &nbsp;·&nbsp; clubpilatesanjuan@gmail.com</div>
+        <div style="font-size:12px;color:#b5c9b1;letter-spacing:0.1em;">Pilates San Juan &nbsp;·&nbsp; clubpilatesanjuan@gmail.com</div>
     </div>
 </div></body></html>'''
 
@@ -188,8 +188,8 @@ def send_reminder_email(nombre, email_dest, fecha_str, hora):
         return
     try:
         msg = MIMEMultipart('alternative')
-        msg['Subject'] = f'🌿 Recordatorio: tenés clase hoy a las {hora:02d}:00 hs — Club Pilates'
-        msg['From']    = f'Club Pilates San Juan <{EMAIL_FROM}>'
+        msg['Subject'] = f'🌿 Recordatorio: tenés clase hoy a las {hora:02d}:00 hs — Pilates San Juan'
+        msg['From']    = f'Pilates San Juan <{EMAIL_FROM}>'
         msg['To']      = email_dest
         msg.attach(MIMEText(_build_reminder_html(nombre, fecha_str, hora), 'html', 'utf-8'))
         with smtplib.SMTP('smtp.gmail.com', 587) as server:
@@ -996,7 +996,7 @@ def export_horas_excel():
             s = openpyxl.styles.Side(style='thin',color='CCCCCC')
             return Border(left=s,right=s,top=s,bottom=s)
         ws = wb.active; ws.title = 'Resumen'
-        ws.merge_cells('A1:E1'); ws['A1'] = f'Club Pilates San Juan — Horas · {mes}'
+        ws.merge_cells('A1:E1'); ws['A1'] = f'Pilates San Juan — Horas · {mes}'
         ws['A1'].font=Font(name='Calibri',bold=True,color=BLANCO,size=13); ws['A1'].fill=fl(VERDE)
         ws['A1'].alignment=Alignment(horizontal='center',vertical='center'); ws.row_dimensions[1].height=32
         for col,h in enumerate(['Instructor','Registros','Horas totales','Tarifa/hora','Total a pagar'],1):
@@ -1125,14 +1125,14 @@ def _responder_ia(pregunta):
         import anthropic as ant
         client=ant.Anthropic(api_key=ANTHROPIC_API_KEY)
         msg=client.messages.create(model='claude-haiku-4-5-20251001',max_tokens=250,
-            system='Sos el asistente de Club Pilates San Juan. Respondé amable, breve, español rioplatense. Máx 3 oraciones. Urquiza 991 Sur, Capital. Horarios: LV 8-21hs, Sáb 9-12hs.',
+            system='Sos el asistente de Pilates San Juan. Respondé amable, breve, español rioplatense. Máx 3 oraciones. Urquiza 991 Sur, Capital. Horarios: LV 8-21hs, Sáb 9-12hs.',
             messages=[{'role':'user','content':pregunta}])
         return msg.content[0].text
     except Exception as e:
         return 'No puedo responder ahora. Contactanos al +54 9 264 579-7486 🌿'
 def _msg_menu(alumna=None):
     s=f'¡Hola, *{alumna["nombre"]}*!' if alumna else '¡Hola!'
-    return f'{s} 👋 Bienvenida a *Club Pilates San Juan* 🌿\n\n*1* · 📅 Reservar turno\n*2* · ❌ Cancelar turno\n*3* · 🗓 Ver mis turnos\n*4* · 🕐 Consultar horarios\n*5* · 💬 Otra consulta\n\nRespondé con el número.'
+    return f'{s} 👋 Bienvenida a *Pilates San Juan* 🌿\n\n*1* · 📅 Reservar turno\n*2* · ❌ Cancelar turno\n*3* · 🗓 Ver mis turnos\n*4* · 🕐 Consultar horarios\n*5* · 💬 Otra consulta\n\nRespondé con el número.'
 def _msg_dias(dias):
     txt='📅 *¿Qué día querés reservar?*\n\n'
     for i,d in enumerate(dias,1):
