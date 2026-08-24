@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agenda — Club Pilates</title>
+    <title>Agenda — Pilates San Juan</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
     <style>
@@ -1834,7 +1834,7 @@
         <span class="header-cp">CP</span>
         <span class="header-divider"></span>
         <div>
-            <div class="header-title">Club Pilates</div>
+            <div class="header-title">Pilates San Juan</div>
             <div class="header-sub">Agenda de Turnos</div>
         </div>
     </a>
@@ -2085,7 +2085,7 @@
             <input type="month" id="instMes" class="form-input" style="max-width:160px" onchange="loadResumenHoras()">
         </div>
         <div style="display:flex;gap:0.5rem;margin-left:auto">
-            <a href="https://clubpilates.com.ar/instructor" target="_blank"
+            <a href="https://pilatesanjuan.com.ar/instructor" target="_blank"
                class="btn-nuevo-mov"
                style="background:var(--sage-pale);color:var(--sage);border:1px solid var(--sage-light);text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem">
                 ⏱ Cargar hora
@@ -2360,7 +2360,7 @@
                 <textarea class="form-input" id="instNotas" rows="2" placeholder="Especialidades, observaciones..."></textarea>
             </div>
             <div style="font-size:0.72rem;color:var(--text-light);background:var(--sage-pale);border-radius:5px;padding:0.45rem 0.6rem">
-                El instructor usará su PIN en <strong>clubpilates.com.ar/instructor</strong> para cargar sus horas.
+                El instructor usará su PIN en <strong>pilatesanjuan.com.ar/instructor</strong> para cargar sus horas.
             </div>
         </div>
         <div class="modal-footer" style="justify-content:space-between">
@@ -2859,7 +2859,7 @@ function wspRecordatorioLink(tel, nombre, hora) {
         digits = '549' + digits.slice(2);
     }
     const horaStr = String(hora).padStart(2, '0') + ':00';
-    const msg = `Buen día, ${nombre}! Te recordamos que tenés agendado tu turno a las ${horaStr} hs. ¡Te esperamos en Club Pilates San Juan!`;
+    const msg = `Buen día, ${nombre}! Te recordamos que tenés agendado tu turno a las ${horaStr} hs. ¡Te esperamos en Pilates San Juan!`;
     return `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`;
 }
 
