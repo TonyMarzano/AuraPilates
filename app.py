@@ -24,7 +24,7 @@ AGENDA_PASSWORD = 'clubpilates2025'
 RECOVERY_CODE   = 'sanjuan2025'
 
 # ── Email ─────────────────────────────────────────────
-EMAIL_FROM     = 'clubpilatesanjuan@gmail.com'
+EMAIL_FROM     = 'pilatesanjuan@gmail.com'
 EMAIL_PASSWORD = 'uifs wyqf zrna zana'
 EMAIL_ENABLED  = False  # Recordatorios por email desactivados
 
@@ -100,7 +100,7 @@ def _build_welcome_html(nombre, apellido, plan):
         </div>
     </div>
     <div style="border-top:1px solid #eaf3e8;padding:20px 40px;text-align:center;">
-        <div style="font-size:12px;color:#b5c9b1;letter-spacing:0.1em;">Pilates San Juan &nbsp;·&nbsp; clubpilatesanjuan@gmail.com</div>
+        <div style="font-size:12px;color:#b5c9b1;letter-spacing:0.1em;">Pilates San Juan &nbsp;·&nbsp; pilatesanjuan@gmail.com</div>
     </div>
 </div></body></html>'''
 
@@ -177,7 +177,7 @@ def _build_reminder_html(nombre, fecha_str, hora):
         </div>
     </div>
     <div style="border-top:1px solid #eaf3e8;padding:16px 40px;text-align:center;">
-        <div style="font-size:12px;color:#b5c9b1;letter-spacing:0.1em;">Pilates San Juan &nbsp;·&nbsp; clubpilatesanjuan@gmail.com</div>
+        <div style="font-size:12px;color:#b5c9b1;letter-spacing:0.1em;">Pilates San Juan &nbsp;·&nbsp; pilatesanjuan@gmail.com</div>
     </div>
 </div></body></html>'''
 
@@ -393,7 +393,7 @@ def verificar_finanzas():
 def index():
     return render_template('index.html', data={
         'whatsapp_link': 'https://wa.me/5492645797486',
-        'email': 'clubpilatesanjuan@gmail.com',
+        'email': 'pilatesanjuan@gmail.com',
         'address': 'Urquiza 991 Sur, Capital, San Juan',
     })
 
