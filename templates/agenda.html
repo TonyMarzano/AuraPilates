@@ -519,7 +519,7 @@
             cursor: pointer;
         }
 
-        /* Turno parcialmente ocupado (1-4 alumnas) */
+        /* Turno parcialmente ocupado (1-8 alumnas) */
         .slot.partial {
             background: #e8f5e4;
             cursor: pointer;
@@ -2624,7 +2624,7 @@ function render() {
             } else {
                 const list  = reservas[key] || [];
                 const count = list.length;
-                const MAX   = 4;
+                const MAX   = 8;
 
                 if (count === 0) {
                     slot.className = 'slot available';
@@ -2734,7 +2734,7 @@ async function openSlotModal(key, date, hour) {
 function renderSlotModal(key) {
     const list  = reservas[key] || [];
     const count = list.length;
-    const MAX   = 4;
+    const MAX   = 8;
 
     // Título
     document.getElementById('slotModalTitle').textContent =
