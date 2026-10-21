@@ -2631,8 +2631,8 @@ function render() {
                     slot.addEventListener('click', () => openSlotModal(key, d, hour));
                 } else if (count < MAX) {
                     slot.className = 'slot partial';
-                    const dots = Array.from({length: MAX}, (_,i) =>
-                        `<div class="slot-avatar-dot${i >= count ? ' empty' : ''}"></div>`
+                    const dots = Array.from({length: count}, () =>
+                        `<div class="slot-avatar-dot"></div>`
                     ).join('');
                     slot.innerHTML = `
                         <div class="slot-content">
