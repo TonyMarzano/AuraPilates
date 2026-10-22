@@ -296,6 +296,16 @@ def init_db():
             mes_inicio TEXT NOT NULL, mes_fin TEXT NOT NULL,
             activo INTEGER DEFAULT 1,
             created_at DATETIME DEFAULT (datetime('now','-3 hours')))''')
+        conn.execute('''CREATE TABLE IF NOT EXISTS plantilla (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            alumna_id INTEGER NOT NULL REFERENCES alumnas(id) ON DELETE CASCADE,
+            dia INTEGER NOT NULL, hora INTEGER NOT NULL,
+            estado TEXT NOT NULL DEFAULT 'fija' CHECK(estado IN ('fija','duda')),
+            created_at DATETIME DEFAULT (datetime('now','-3 hours')),
+            UNIQUE(alumna_id, dia, hora))''')
+        conn.execute('''CREATE TABLE IF NOT EXISTS plantilla_generada (
+            plantilla_id INTEGER NOT NULL, mes TEXT NOT NULL,
+            PRIMARY KEY (plantilla_id, mes))''')
         conn.execute('''CREATE TABLE IF NOT EXISTS instructores (
             id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT NOT NULL,
             apellido TEXT NOT NULL, tel TEXT, email TEXT,
@@ -319,6 +329,7 @@ def init_db():
             ('alumna_id',  'reservas',    'ALTER TABLE reservas ADD COLUMN alumna_id INTEGER REFERENCES alumnas(id) ON DELETE SET NULL'),
             ('horario_id', 'reservas',    'ALTER TABLE reservas ADD COLUMN horario_id INTEGER REFERENCES horarios_fijos(id) ON DELETE SET NULL'),
             ('asistio',    'reservas',    'ALTER TABLE reservas ADD COLUMN asistio INTEGER DEFAULT NULL'),
+            ('plantilla_id','reservas',   'ALTER TABLE reservas ADD COLUMN plantilla_id INTEGER DEFAULT NULL'),
             ('mes_cobro',  'reservas',    'ALTER TABLE reservas ADD COLUMN mes_cobro TEXT DEFAULT NULL'),
             ('pin',        'instructores','ALTER TABLE instructores ADD COLUMN pin TEXT DEFAULT \'0000\''),
         ]:
@@ -363,6 +374,8 @@ def start_scheduler():
         scheduler = BackgroundScheduler(timezone='America/Argentina/San_Juan')
         scheduler.add_job(check_and_send_reminders, 'interval', minutes=15,
                           id='recordatorios', replace_existing=True)
+        scheduler.add_job(lambda: sincronizar_plantilla(), 'interval', hours=6,
+                          id='plantilla', replace_existing=True)
         scheduler.start()
         print('[scheduler] Recordatorios activos — cada 15 min')
     except ImportError:
@@ -447,6 +460,7 @@ def agenda():
 def get_reservas():
     desde = request.args.get('desde','')
     hasta = request.args.get('hasta','')
+    _asegurar_plantilla_mes()
     try:
         with get_db() as conn:
             if desde and hasta:
@@ -846,6 +860,187 @@ def delete_horario_fijo(hid):
             conn.execute('UPDATE horarios_fijos SET activo=0 WHERE id=?', (hid,))
             conn.commit()
         return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ── Plantilla semanal ─────────────────────────────────
+# Cada fila = una alumna con lugar fijo en (día de semana, hora). La plantilla genera las
+# reservas del mes en curso UNA sola vez por mes (plantilla_generada): si después se cancela
+# o reprograma en el calendario, no se vuelve a crear. El calendario no modifica la plantilla.
+PLANTILLA_MAX = 8
+PLANTILLA_HORARIO = {0:(8,22),1:(8,22),2:(8,22),3:(8,22),4:(8,22),5:(8,12)}
+_PLANTILLA_SELECT = "SELECT p.*, a.nombre, a.apellido, a.tel, a.activa FROM plantilla p JOIN alumnas a ON a.id=p.alumna_id "
+_plantilla_sync_mes = None
+
+def _hoy_ar():
+    return (datetime.utcnow() - timedelta(hours=3)).date()
+
+def _plantilla_hora_valida(dia, hora):
+    sc = PLANTILLA_HORARIO.get(dia)
+    return bool(sc) and sc[0] <= hora < sc[1]
+
+def _plantilla_fijas(conn, dia, hora):
+    return conn.execute("SELECT COUNT(*) FROM plantilla p JOIN alumnas a ON a.id=p.alumna_id "
+                        "WHERE p.dia=? AND p.hora=? AND p.estado='fija' AND a.activa=1", (dia, hora)).fetchone()[0]
+
+def _plantilla_crear_reservas(conn, p, y, m):
+    import calendar as cal
+    hoy = _hoy_ar(); creadas = saltadas = 0
+    _, dim = cal.monthrange(y, m)
+    for day in range(1, dim+1):
+        f = date(y, m, day)
+        if f < hoy or f.weekday() != p['dia']: continue
+        sk = f"{f.strftime('%Y-%m-%d')}_{p['hora']:02d}"
+        if conn.execute('SELECT 1 FROM reservas WHERE slot_key=? AND alumna_id=?', (sk, p['alumna_id'])).fetchone(): continue
+        if conn.execute('SELECT COUNT(*) FROM reservas WHERE slot_key=?', (sk,)).fetchone()[0] >= PLANTILLA_MAX:
+            saltadas += 1; continue
+        conn.execute('INSERT INTO reservas (slot_key,nombre,apellido,tel,alumna_id,plantilla_id) VALUES (?,?,?,?,?,?)',
+                     (sk, p['nombre'], p['apellido'], p['tel'] or '', p['alumna_id'], p['id']))
+        creadas += 1
+    return creadas, saltadas
+
+def _plantilla_generar_mes(conn, p, mes, generar=True):
+    """Reclama el mes (atómico entre workers) y, si generar=True, crea las reservas. Una vez por mes."""
+    if not conn.execute('INSERT OR IGNORE INTO plantilla_generada (plantilla_id, mes) VALUES (?,?)', (p['id'], mes)).rowcount:
+        return 0, 0
+    if not generar: return 0, 0
+    return _plantilla_crear_reservas(conn, p, int(mes[:4]), int(mes[5:7]))
+
+def _plantilla_borrar_reservas_futuras(conn, pid):
+    hoy = _hoy_ar().strftime('%Y-%m-%d')
+    conn.execute("DELETE FROM reservas WHERE plantilla_id=? AND substr(slot_key,1,10)>=? AND asistio IS NULL", (pid, hoy))
+    conn.execute('DELETE FROM plantilla_generada WHERE plantilla_id=?', (pid,))
+
+def sincronizar_plantilla():
+    """Genera las reservas del mes en curso para toda la plantilla fija que todavía no las generó."""
+    mes = _hoy_ar().strftime('%Y-%m')
+    try:
+        with get_db() as conn:
+            rows = conn.execute(_PLANTILLA_SELECT + "WHERE p.estado='fija' AND a.activa=1").fetchall()
+            total = 0
+            for p in rows:
+                total += _plantilla_generar_mes(conn, p, mes)[0]
+            conn.commit()
+        if total: print(f'[plantilla] {total} reservas generadas para {mes}')
+        return total
+    except Exception as e:
+        print(f'[plantilla] Error sincronizando: {e}')
+        return 0
+
+def _asegurar_plantilla_mes():
+    """Barato: una sola corrida por mes y por worker (el reclamo en BD evita duplicados)."""
+    global _plantilla_sync_mes
+    mes = _hoy_ar().strftime('%Y-%m')
+    if _plantilla_sync_mes != mes:
+        sincronizar_plantilla()
+        _plantilla_sync_mes = mes
+
+@app.route('/api/plantilla', methods=['GET'])
+@login_required
+def get_plantilla():
+    _asegurar_plantilla_mes()
+    try:
+        with get_db() as conn:
+            rows = conn.execute(_PLANTILLA_SELECT + "WHERE a.activa=1 ORDER BY p.dia, p.hora, a.apellido, a.nombre").fetchall()
+        return jsonify([{'id':r['id'],'alumna_id':r['alumna_id'],'dia':r['dia'],'hora':r['hora'],
+                         'estado':r['estado'],'nombre':r['nombre'],'apellido':r['apellido']} for r in rows])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/plantilla', methods=['POST'])
+@login_required
+def create_plantilla():
+    d = request.get_json() or {}
+    try:
+        alumna_id = int(d.get('alumna_id')); dia = int(d.get('dia')); hora = int(d.get('hora'))
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Datos inválidos'}), 400
+    estado = 'duda' if d.get('estado') == 'duda' else 'fija'
+    if not _plantilla_hora_valida(dia, hora):
+        return jsonify({'error': 'Horario fuera del horario del estudio'}), 400
+    try:
+        with get_db() as conn:
+            if not conn.execute('SELECT 1 FROM alumnas WHERE id=? AND activa=1', (alumna_id,)).fetchone():
+                return jsonify({'error': 'Alumna no encontrada'}), 404
+            if conn.execute('SELECT 1 FROM plantilla WHERE alumna_id=? AND dia=? AND hora=?', (alumna_id, dia, hora)).fetchone():
+                return jsonify({'error': 'La alumna ya está asignada en ese horario'}), 409
+            if estado == 'fija' and _plantilla_fijas(conn, dia, hora) >= PLANTILLA_MAX:
+                return jsonify({'error': f'Turno completo ({PLANTILLA_MAX}/{PLANTILLA_MAX})'}), 409
+            cur = conn.execute('INSERT INTO plantilla (alumna_id,dia,hora,estado) VALUES (?,?,?,?)', (alumna_id, dia, hora, estado))
+            c = s = 0
+            if estado == 'fija':
+                p = conn.execute(_PLANTILLA_SELECT + 'WHERE p.id=?', (cur.lastrowid,)).fetchone()
+                c, s = _plantilla_generar_mes(conn, p, _hoy_ar().strftime('%Y-%m'))
+            conn.commit()
+        return jsonify({'ok': True, 'id': cur.lastrowid, 'creadas': c, 'saltadas': s}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/plantilla/<int:pid>', methods=['PATCH'])
+@login_required
+def update_plantilla(pid):
+    nuevo = 'duda' if (request.get_json() or {}).get('estado') == 'duda' else 'fija'
+    try:
+        with get_db() as conn:
+            p = conn.execute(_PLANTILLA_SELECT + 'WHERE p.id=?', (pid,)).fetchone()
+            if not p: return jsonify({'error': 'No encontrado'}), 404
+            if p['estado'] == nuevo: return jsonify({'ok': True, 'creadas': 0})
+            c = 0
+            if nuevo == 'fija':
+                if _plantilla_fijas(conn, p['dia'], p['hora']) >= PLANTILLA_MAX:
+                    return jsonify({'error': f'Turno completo ({PLANTILLA_MAX}/{PLANTILLA_MAX})'}), 409
+                conn.execute("UPDATE plantilla SET estado='fija' WHERE id=?", (pid,))
+                p = conn.execute(_PLANTILLA_SELECT + 'WHERE p.id=?', (pid,)).fetchone()
+                c = _plantilla_generar_mes(conn, p, _hoy_ar().strftime('%Y-%m'))[0]
+            else:
+                _plantilla_borrar_reservas_futuras(conn, pid)
+                conn.execute("UPDATE plantilla SET estado='duda' WHERE id=?", (pid,))
+            conn.commit()
+        return jsonify({'ok': True, 'creadas': c})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/plantilla/<int:pid>', methods=['DELETE'])
+@login_required
+def delete_plantilla(pid):
+    try:
+        with get_db() as conn:
+            _plantilla_borrar_reservas_futuras(conn, pid)
+            conn.execute('UPDATE reservas SET plantilla_id=NULL WHERE plantilla_id=?', (pid,))
+            conn.execute('DELETE FROM plantilla WHERE id=?', (pid,))
+            conn.commit()
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/plantilla/importar', methods=['POST'])
+@login_required
+def importar_plantilla():
+    d = request.get_json() or {}
+    generar = bool(d.get('generar'))
+    mes = _hoy_ar().strftime('%Y-%m')
+    res = {'agregadas':0,'duplicadas':0,'llenas':0,'invalidas':0,'reservas':0}
+    try:
+        with get_db() as conn:
+            for it in (d.get('items') or []):
+                try:
+                    aid = int(it['alumna_id']); dia = int(it['dia']); hora = int(it['hora'])
+                except (KeyError, TypeError, ValueError):
+                    res['invalidas'] += 1; continue
+                estado = 'duda' if it.get('estado') == 'duda' else 'fija'
+                if not _plantilla_hora_valida(dia, hora) or not conn.execute('SELECT 1 FROM alumnas WHERE id=? AND activa=1', (aid,)).fetchone():
+                    res['invalidas'] += 1; continue
+                if conn.execute('SELECT 1 FROM plantilla WHERE alumna_id=? AND dia=? AND hora=?', (aid, dia, hora)).fetchone():
+                    res['duplicadas'] += 1; continue
+                if estado == 'fija' and _plantilla_fijas(conn, dia, hora) >= PLANTILLA_MAX:
+                    res['llenas'] += 1; continue
+                cur = conn.execute('INSERT INTO plantilla (alumna_id,dia,hora,estado) VALUES (?,?,?,?)', (aid, dia, hora, estado))
+                res['agregadas'] += 1
+                if estado == 'fija':
+                    p = conn.execute(_PLANTILLA_SELECT + 'WHERE p.id=?', (cur.lastrowid,)).fetchone()
+                    res['reservas'] += _plantilla_generar_mes(conn, p, mes, generar)[0]
+            conn.commit()
+        return jsonify(res)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

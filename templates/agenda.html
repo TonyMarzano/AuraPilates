@@ -1148,6 +1148,44 @@
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
 
+
+        /* ── Plantilla semanal ── */
+        .pl-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:6px; background:white; }
+        .pl-table { border-collapse:collapse; width:100%; min-width:980px; table-layout:fixed; }
+        .pl-table th { background:var(--sage-pale); font-size:0.68rem; letter-spacing:0.2em; text-transform:uppercase;
+                       color:var(--text-light); font-weight:400; padding:10px 6px; border-bottom:1px solid var(--border); position:sticky; top:0; }
+        .pl-table th.pl-hcol, .pl-table td.pl-hora { width:64px; }
+        .pl-table td { vertical-align:top; border-bottom:1px solid var(--border); border-left:1px solid var(--border); padding:6px; }
+        .pl-hora { font-family:'Cormorant Garamond',serif; font-size:1.15rem; color:var(--text); text-align:center; background:var(--cream); border-left:none !important; }
+        .pl-bloque td { background:var(--sage-pale); font-size:0.62rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--sage); text-align:center; padding:6px; border-left:none; }
+        .pl-cell.closed { background:repeating-linear-gradient(45deg,#f4f4f1,#f4f4f1 6px,#efefeb 6px,#efefeb 12px); }
+        .pl-cell.libre  { background:#f6faf5; }
+        .pl-cell.llena  { background:#fbefee; }
+        .pl-count { font-size:0.62rem; letter-spacing:0.15em; color:var(--text-light); text-align:right; margin-bottom:4px; }
+        .pl-cell.llena .pl-count { color:#c97a7a; font-weight:500; }
+        .pl-chips { display:flex; flex-direction:column; gap:3px; }
+        .pl-chip { font-family:'Jost',sans-serif; font-size:0.74rem; text-align:left; color:var(--text); background:white; border:1px solid var(--border);
+                   border-radius:3px; padding:3px 6px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .pl-chip:hover { border-color:var(--sage); background:var(--sage-pale); }
+        .pl-chip.duda { border-style:dashed; color:var(--text-light); background:#fafaf7; font-style:italic; }
+        .pl-add { margin-top:5px; width:100%; font-family:'Jost',sans-serif; font-size:0.66rem; letter-spacing:0.15em; text-transform:uppercase;
+                  color:var(--sage); background:none; border:1px dashed var(--sage-light); border-radius:3px; padding:4px; cursor:pointer; }
+        .pl-add:hover { background:var(--sage-pale); }
+        .pl-resumen { display:flex; gap:1.5rem; flex-wrap:wrap; font-size:0.8rem; color:var(--text-light); margin:0.25rem 0 1rem; }
+        .pl-resumen b { color:var(--text); font-weight:500; }
+        .pl-legend { display:flex; gap:1rem; flex-wrap:wrap; font-size:0.7rem; color:var(--text-light); margin-top:0.75rem; }
+        .pl-legend i { display:inline-block; width:12px; height:12px; border:1px solid var(--border); border-radius:2px; vertical-align:-2px; margin-right:5px; }
+        .pl-picker-list { max-height:48vh; overflow-y:auto; border:1px solid var(--border); border-radius:4px; margin-top:10px; }
+        .pl-picker-item { display:flex; justify-content:space-between; width:100%; text-align:left; font-family:'Jost',sans-serif; font-size:0.88rem;
+                          color:var(--text); background:white; border:none; border-bottom:1px solid var(--border); padding:10px 12px; cursor:pointer; }
+        .pl-picker-item:hover { background:var(--sage-pale); }
+        .pl-picker-item small { color:var(--text-light); }
+        .pl-imp-table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+        .pl-imp-table td { padding:6px 8px; border-bottom:1px solid var(--border); vertical-align:middle; }
+        .pl-imp-table select { width:100%; font-family:'Jost',sans-serif; font-size:0.82rem; padding:5px; border:1px solid var(--border); border-radius:4px; background:white; color:var(--text); }
+        .pl-badge { font-size:0.6rem; letter-spacing:0.12em; text-transform:uppercase; padding:2px 7px; border-radius:10px; white-space:nowrap; }
+        .pl-badge.ok { background:#e3f0e1; color:#4d7a48; } .pl-badge.rev { background:#fbf1d9; color:#9a7424; } .pl-badge.new { background:#e2ecf5; color:#3d6b94; }
+
         /* ── Finanzas ── */
         .fin-body {
             padding: 1.5rem 2rem;
@@ -1855,6 +1893,7 @@
     <button class="tab-btn" onclick="switchTab('finanzas')">💰 Finanzas</button>
     <button class="tab-btn" onclick="switchTab('alumnas')">👩 Alumnas</button>
     <button class="tab-btn" onclick="switchTab('horarios')">🔁 Horarios</button>
+    <button class="tab-btn" onclick="switchTab('plantilla')">📋 Plantilla</button>
     <button class="tab-btn" onclick="switchTab('instructores')">👤 Instructores</button>
 </div>
 
@@ -2074,6 +2113,28 @@
     </div>
 </div>
 </div><!-- /tab-horarios -->
+
+<div class="tab-panel" id="tab-plantilla">
+<div class="fin-body">
+    <div class="fin-header-row">
+        <div style="font-size:0.8rem;color:var(--text-light);font-weight:300;letter-spacing:0.05em;max-width:640px;line-height:1.5;">
+            Lugares fijos de cada día y horario. Al asignar una alumna se crean sus reservas del mes en curso y se renuevan solas cada mes.
+            Si después cambiás algo en el calendario, la plantilla no se modifica.
+        </div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <button class="btn-nuevo-mov" style="background:white;color:var(--sage);border:1px solid var(--sage);" onclick="event.stopPropagation();document.getElementById('plFile').click()">⬆ Importar Excel</button>
+            <input type="file" id="plFile" accept=".xlsx,.xls" style="display:none" onchange="plElegirArchivo(this)">
+        </div>
+    </div>
+    <div class="pl-resumen" id="plResumen"></div>
+    <div class="pl-wrap"><table class="pl-table" id="plTabla"></table></div>
+    <div class="pl-legend">
+        <span><i style="background:#f6faf5"></i>Con lugar</span>
+        <span><i style="background:#fbefee"></i>Completo (8/8)</span>
+        <span><i style="border-style:dashed"></i>En duda (no ocupa lugar ni genera reservas)</span>
+    </div>
+</div>
+</div><!-- /tab-plantilla -->
 
 <!-- TAB: INSTRUCTORES -->
 <div class="tab-panel" id="tab-instructores">
@@ -2314,6 +2375,70 @@
         </div>
         <div class="modal-footer">
             <button class="btn btn-cancel" onclick="closeHistorialPagos()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+
+<!-- MODAL: Plantilla - asignar alumna -->
+<div class="modal-overlay" id="modalPlPicker">
+    <div class="modal" style="max-width:440px;width:100%">
+        <div class="modal-header">
+            <div class="modal-title">Asignar alumna</div>
+            <div class="modal-slot-info" id="plPickerInfo"></div>
+        </div>
+        <div class="modal-body">
+            <input class="form-input" id="plBuscar" placeholder="Buscar alumna…" oninput="plFiltrarPicker()" autocomplete="off">
+            <div style="display:flex;gap:1.25rem;margin-top:10px;font-size:0.8rem;color:var(--text-light);">
+                <label><input type="radio" name="plEstadoNuevo" value="fija" checked> Fija</label>
+                <label><input type="radio" name="plEstadoNuevo" value="duda"> En duda</label>
+            </div>
+            <div class="pl-picker-list" id="plPickerList"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-cancel" onclick="plCerrar('modalPlPicker')">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Plantilla - acciones sobre una alumna asignada -->
+<div class="modal-overlay" id="modalPlChip">
+    <div class="modal" style="max-width:400px;width:100%">
+        <div class="modal-header">
+            <div class="modal-title" id="plChipNombre"></div>
+            <div class="modal-slot-info" id="plChipInfo"></div>
+        </div>
+        <div class="modal-body" style="display:flex;flex-direction:column;gap:0.6rem;">
+            <button class="btn btn-cancel" id="plChipToggle" onclick="plToggleEstado()"></button>
+            <button class="btn btn-cancel" style="color:#c0756d;" onclick="plQuitar()">Quitar de este horario</button>
+            <div style="font-size:0.72rem;color:var(--text-light);line-height:1.5;">Al quitarla o pasarla a "en duda" se borran sus reservas futuras generadas por la plantilla. Las clases ya dadas no se tocan.</div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-cancel" onclick="plCerrar('modalPlChip')">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Plantilla - revisión de importación -->
+<div class="modal-overlay" id="modalPlImport">
+    <div class="modal" style="max-width:760px;width:100%">
+        <div class="modal-header">
+            <div class="modal-title">Importar desde Excel</div>
+            <div class="modal-slot-info" id="plImpResumen"></div>
+        </div>
+        <div class="modal-body" style="overflow-y:auto;">
+            <div style="font-size:0.8rem;color:var(--text-light);line-height:1.5;margin-bottom:0.75rem;">
+                Revisá a quién corresponde cada nombre del Excel. Lo dudoso aparece primero. Podés elegir otra alumna, crear una nueva u omitir el nombre.
+            </div>
+            <label style="display:flex;gap:8px;align-items:flex-start;font-size:0.8rem;color:var(--text);margin-bottom:0.9rem;line-height:1.4;">
+                <input type="checkbox" id="plImpGenerar" style="margin-top:3px">
+                <span>Crear también las reservas que falten de lo que resta del mes. <span style="color:var(--text-light)">Dejalo sin marcar si el calendario ya tiene estas clases: así no se vuelve a crear una que hayas cancelado. Desde el mes que viene se generan solas.</span></span>
+            </label>
+            <table class="pl-imp-table"><tbody id="plImpBody"></tbody></table>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-cancel" onclick="plCerrar('modalPlImport')">Cancelar</button>
+            <button class="btn btn-confirm" id="plImpBtn" onclick="plConfirmarImport()">Importar</button>
         </div>
     </div>
 </div>
@@ -3714,14 +3839,16 @@ function _doSwitchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach((b,i) => {
         b.classList.toggle('active',
             (i===0&&tab==='agenda')||(i===1&&tab==='finanzas')||
-            (i===2&&tab==='alumnas')||(i===3&&tab==='horarios')||(i===4&&tab==='instructores')
+            (i===2&&tab==='alumnas')||(i===3&&tab==='horarios')||(i===4&&tab==='plantilla')||(i===5&&tab==='instructores')
         );
     });
     document.getElementById('tab-agenda').classList.toggle('active',      tab==='agenda');
     document.getElementById('tab-finanzas').classList.toggle('active',    tab==='finanzas');
     document.getElementById('tab-alumnas').classList.toggle('active',     tab==='alumnas');
     document.getElementById('tab-horarios').classList.toggle('active',    tab==='horarios');
+    document.getElementById('tab-plantilla').classList.toggle('active',   tab==='plantilla');
     document.getElementById('tab-instructores').classList.toggle('active',tab==='instructores');
+    if (tab === 'plantilla')    loadPlantilla();
     if (tab === 'finanzas')     { loadFinanzas(); loadTodosPagos(); }
     if (tab === 'alumnas')      loadAlumnas();
     if (tab === 'horarios')     loadHorarios();
@@ -4145,6 +4272,272 @@ async function deleteAlumna() {
     showToast('Alumna eliminada');
 }
 
+
+// ══════════════════════════════════════════════════════
+//  PLANTILLA SEMANAL
+// ══════════════════════════════════════════════════════
+const PL_DIAS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const PL_HORARIO = {0:[8,22],1:[8,22],2:[8,22],3:[8,22],4:[8,22],5:[8,12]};
+const PL_MAX = 8;
+let plData = [], plAlumnas = [], plCelda = null, plChip = null;
+
+const plEsc  = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const plNorm = t => String(t ?? '').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\(.*?\)/g,' ')
+                      .replace(/[^a-zA-Z\s]/g,' ').replace(/\s+/g,' ').trim().toLowerCase();
+const plHH   = h => String(h).padStart(2,'0') + ':00';
+async function plRefrescarAgenda() { try { await fetchReservas(); render(); } catch(e) {} }
+const plCerrar = id => document.getElementById(id).classList.remove('open');
+
+async function loadPlantilla() {
+    try {
+        const [pl, al] = await Promise.all([
+            fetch('/api/plantilla').then(r => r.json()),
+            fetch('/api/alumnas?activa=1').then(r => r.json())
+        ]);
+        plData = Array.isArray(pl) ? pl : [];
+        plAlumnas = Array.isArray(al) ? al : [];
+        renderPlantilla();
+    } catch (e) { showToast('Error cargando la plantilla'); }
+}
+
+function plCelda_(dia, hora) { return plData.filter(p => p.dia === dia && p.hora === hora); }
+
+function renderPlantilla() {
+    const tabla = document.getElementById('plTabla');
+    let html = '<thead><tr><th class="pl-hcol"></th>' + PL_DIAS.map(d => `<th>${d}</th>`).join('') + '</tr></thead><tbody>';
+    let libres = 0, turnos = 0;
+    const fila = h => {
+        let tr = `<tr><td class="pl-hora">${plHH(h).slice(0,2)}</td>`;
+        for (let d = 0; d < 6; d++) {
+            const [a, b] = PL_HORARIO[d];
+            if (h < a || h >= b) { tr += '<td class="pl-cell closed"></td>'; continue; }
+            const lista = plCelda_(d, h);
+            const fijas = lista.filter(p => p.estado === 'fija').length;
+            turnos++; if (fijas < PL_MAX) libres += PL_MAX - fijas;
+            const cls = fijas >= PL_MAX ? 'llena' : 'libre';
+            tr += `<td class="pl-cell ${cls}"><div class="pl-count">${fijas}/${PL_MAX}</div><div class="pl-chips">` +
+                lista.map(p => `<button class="pl-chip${p.estado==='duda'?' duda':''}" title="${plEsc(p.nombre+' '+p.apellido)}" onclick="plAbrirChip(${p.id})">${plEsc(p.nombre+' '+p.apellido)}</button>`).join('') +
+                `</div>${fijas >= PL_MAX ? '' : `<button class="pl-add" onclick="plAbrirPicker(${d},${h})">+ Asignar</button>`}</td>`;
+        }
+        return tr + '</tr>';
+    };
+    html += '<tr class="pl-bloque"><td colspan="7">Turno mañana</td></tr>';
+    for (let h = 8; h <= 13; h++) html += fila(h);
+    html += '<tr class="pl-bloque"><td colspan="7">Turno tarde</td></tr>';
+    for (let h = 14; h <= 21; h++) html += fila(h);
+    tabla.innerHTML = html + '</tbody>';
+
+    const fijas = plData.filter(p => p.estado === 'fija'), duda = plData.length - fijas.length;
+    const unicas = new Set(fijas.map(p => p.alumna_id)).size;
+    document.getElementById('plResumen').innerHTML =
+        `<span><b>${unicas}</b> alumnas con horario fijo</span><span><b>${fijas.length}</b> lugares fijos ocupados</span>` +
+        `<span><b>${libres}</b> lugares libres en ${turnos} turnos</span>` + (duda ? `<span><b>${duda}</b> en duda</span>` : '');
+}
+
+// ── Asignar ──
+function plAbrirPicker(dia, hora) {
+    plCelda = {dia, hora};
+    const n = plCelda_(dia, hora).filter(p => p.estado === 'fija').length;
+    document.getElementById('plPickerInfo').textContent = `${PL_DIAS[dia]} · ${plHH(hora)} · ${n}/${PL_MAX}`;
+    document.getElementById('plBuscar').value = '';
+    document.querySelector('input[name="plEstadoNuevo"][value="fija"]').checked = true;
+    plFiltrarPicker();
+    document.getElementById('modalPlPicker').classList.add('open');
+    setTimeout(() => document.getElementById('plBuscar').focus(), 50);
+}
+
+function plFiltrarPicker() {
+    const q = plNorm(document.getElementById('plBuscar').value).split(' ').filter(Boolean);
+    const ya = new Set(plCelda_(plCelda.dia, plCelda.hora).map(p => p.alumna_id));
+    const lista = plAlumnas.filter(a => !ya.has(a.id) && q.every(t => plNorm(a.apellido + ' ' + a.nombre).includes(t)));
+    document.getElementById('plPickerList').innerHTML = lista.length
+        ? lista.map(a => `<button class="pl-picker-item" onclick="plAsignar(${a.id})"><span>${plEsc(a.apellido)}, ${plEsc(a.nombre)}</span><small>${plEsc(a.plan || '')}</small></button>`).join('')
+        : '<div style="padding:14px;font-size:0.82rem;color:var(--text-light);">No hay alumnas con ese nombre. Podés crearla en la pestaña Alumnas.</div>';
+}
+
+async function plAsignar(alumnaId) {
+    const estado = document.querySelector('input[name="plEstadoNuevo"]:checked').value;
+    try {
+        const r = await fetch('/api/plantilla', {method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({alumna_id: alumnaId, dia: plCelda.dia, hora: plCelda.hora, estado})});
+        const d = await r.json();
+        if (!r.ok) { showToast(d.error || 'No se pudo asignar'); return; }
+        plCerrar('modalPlPicker');
+        showToast(estado === 'duda' ? 'Agregada como "en duda"' : `Asignada · ${d.creadas} reserva${d.creadas===1?'':'s'} creada${d.creadas===1?'':'s'}` + (d.saltadas ? ` (${d.saltadas} sin lugar)` : ''));
+        await loadPlantilla();
+        await plRefrescarAgenda();
+    } catch (e) { showToast('Error de conexión'); }
+}
+
+// ── Acciones sobre una asignada ──
+function plAbrirChip(id) {
+    plChip = plData.find(p => p.id === id); if (!plChip) return;
+    document.getElementById('plChipNombre').textContent = `${plChip.nombre} ${plChip.apellido}`;
+    document.getElementById('plChipInfo').textContent = `${PL_DIAS[plChip.dia]} · ${plHH(plChip.hora)} · ${plChip.estado === 'duda' ? 'En duda' : 'Fija'}`;
+    document.getElementById('plChipToggle').textContent = plChip.estado === 'duda' ? 'Pasar a fija' : 'Pasar a "en duda"';
+    document.getElementById('modalPlChip').classList.add('open');
+}
+
+async function plToggleEstado() {
+    const nuevo = plChip.estado === 'duda' ? 'fija' : 'duda';
+    const r = await fetch(`/api/plantilla/${plChip.id}`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({estado: nuevo})});
+    const d = await r.json();
+    if (!r.ok) { showToast(d.error || 'No se pudo cambiar'); return; }
+    plCerrar('modalPlChip'); await loadPlantilla();
+    await plRefrescarAgenda();
+}
+
+async function plQuitar() {
+    if (!confirm(`¿Quitar a ${plChip.nombre} ${plChip.apellido} del ${PL_DIAS[plChip.dia]} ${plHH(plChip.hora)}? Se borran sus reservas futuras de ese horario.`)) return;
+    const r = await fetch(`/api/plantilla/${plChip.id}`, {method:'DELETE'});
+    if (!r.ok) { showToast('No se pudo quitar'); return; }
+    plCerrar('modalPlChip'); await loadPlantilla();
+    await plRefrescarAgenda();
+}
+
+// ══════════ Importación desde Excel ══════════
+let plImpFilas = [], plImpOpciones = '';
+
+function plCargarXLSX() {
+    return new Promise((res, rej) => {
+        if (window.XLSX) return res();
+        const sc = document.createElement('script');
+        sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        sc.onload = () => res(); sc.onerror = () => rej(new Error('No se pudo cargar el lector de Excel'));
+        document.head.appendChild(sc);
+    });
+}
+
+// Lee la hoja: encabezados de días (Lunes…Sábado), horas en la columna A y un nombre por celda.
+function plParsearExcel(wb) {
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const filas = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null, blankrows:true});
+    const rx = [/^lunes/, /^martes/, /^miercoles/, /^jueves/, /^viernes/, /^sabado/];
+    let colDia = {}, hora = null; const out = [];
+    for (const fila of filas) {
+        const hdr = {};
+        fila.forEach((v, c) => { if (typeof v === 'string') { const t = plNorm(v); rx.forEach((r, d) => { if (r.test(t) && t.length < 14) hdr[c] = d; }); } });
+        if (Object.keys(hdr).length >= 3) { colDia = hdr; hora = null; continue; }
+        const a = fila[0];
+        if (typeof a === 'string' && /duda|nunca/i.test(plNorm(a))) break;      // secciones finales: no son turnos
+        if (typeof a === 'number') hora = a > 0 && a < 1 ? Math.round(a * 24) : Math.round(a);
+        else if (a instanceof Date) hora = a.getHours();
+        if (hora === null) continue;
+        fila.forEach((v, c) => {
+            if (c === 0 || !(c in colDia) || typeof v !== 'string') return;
+            const n = v.replace(/!/g,'').replace(/\s+/g,' ').trim();
+            if (!n || /^turno\b/i.test(n)) return;
+            out.push({nombre: n, dia: colDia[c], hora});
+        });
+    }
+    return out;
+}
+
+function plLev(a, b) {
+    const m = a.length, n = b.length; if (!m) return n; if (!n) return m;
+    let prev = Array.from({length: n + 1}, (_, j) => j);
+    for (let i = 1; i <= m; i++) {
+        const cur = [i];
+        for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j-1] + 1, prev[j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+        prev = cur;
+    }
+    return prev[n];
+}
+function plSimTok(a, b) {
+    if (a === b) return 1;
+    if (a.length >= 3 && b.length >= 3 && (a.startsWith(b) || b.startsWith(a))) return 0.9;   // Guada ↔ Guadalupe
+    const r = 1 - plLev(a, b) / Math.max(a.length, b.length);
+    return r >= 0.75 ? r * 0.9 : 0;                                                          // Mathias ↔ Matias
+}
+function plPuntaje(xt, at) {                       // no depende del orden (Apellido Nombre / Nombre Apellido)
+    const usados = new Set(); let suma = 0;
+    for (const t of xt) {
+        let mejor = 0, bi = -1;
+        at.forEach((u, i) => { if (usados.has(i)) return; const s = plSimTok(t, u); if (s > mejor) { mejor = s; bi = i; } });
+        if (bi >= 0) { usados.add(bi); suma += mejor; }
+    }
+    return suma / Math.max(xt.length, at.length);
+}
+
+async function plElegirArchivo(input) {
+    const f = input.files[0]; input.value = ''; if (!f) return;
+    try {
+        await plCargarXLSX();
+        const wb = XLSX.read(await f.arrayBuffer(), {type:'array'});
+        const items = plParsearExcel(wb);
+        if (!items.length) { showToast('No encontré turnos en el Excel'); return; }
+        if (!plAlumnas.length) await loadPlantilla();
+        const grupos = new Map();
+        items.forEach(it => { const k = plNorm(it.nombre); if (!k) return;
+            if (!grupos.has(k)) grupos.set(k, {key:k, nombre:it.nombre, items:[]}); grupos.get(k).items.push(it); });
+        plImpFilas = [...grupos.values()].map(g => {
+            const xt = g.key.split(' ');
+            let mejor = null, ms = 0;
+            plAlumnas.forEach(a => { const s = plPuntaje(xt, plNorm(a.nombre + ' ' + a.apellido).split(' ')); if (s > ms) { ms = s; mejor = a; } });
+            g.alumnaId = ms >= 0.6 ? mejor.id : null; g.score = ms;
+            g.estado = ms >= 0.85 ? 'ok' : (ms >= 0.6 ? 'rev' : 'new');
+            return g;
+        }).sort((a, b) => ({new:0, rev:1, ok:2}[a.estado] - {new:0, rev:1, ok:2}[b.estado]) || a.nombre.localeCompare(b.nombre));
+        plImpOpciones = plAlumnas.map(a => `<option value="${a.id}">${plEsc(a.apellido)}, ${plEsc(a.nombre)}</option>`).join('');
+        plRenderImport(items.length);
+        document.getElementById('modalPlImport').classList.add('open');
+    } catch (e) { showToast(e.message || 'No se pudo leer el archivo'); }
+}
+
+function plRenderImport(total) {
+    const c = {ok:0, rev:0, new:0};
+    plImpFilas.forEach(g => c[g.estado]++);
+    document.getElementById('plImpResumen').textContent =
+        `${total} turnos · ${plImpFilas.length} nombres · ${c.ok} coinciden · ${c.rev} a revisar · ${c.new} nuevas`;
+    const lbl = {ok:'Coincide', rev:'Revisar', new:'Nueva'};
+    document.getElementById('plImpBody').innerHTML = plImpFilas.map((g, i) => `
+        <tr><td style="width:30%"><b style="font-weight:500">${plEsc(g.nombre)}</b><br><small style="color:var(--text-light)">${g.items.length} turno${g.items.length>1?'s':''}</small></td>
+            <td style="width:70px"><span class="pl-badge ${g.estado}">${lbl[g.estado]}</span></td>
+            <td><select id="plSel${i}">
+                <option value="new"${g.alumnaId===null?' selected':''}>➕ Crear alumna nueva</option>
+                <option value="skip">⛔ Omitir este nombre</option>${plImpOpciones}</select></td></tr>`).join('');
+    plImpFilas.forEach((g, i) => { if (g.alumnaId !== null) document.getElementById('plSel' + i).value = String(g.alumnaId); });
+}
+
+function plPartirNombre(n) {                       // "Ana Laura Vera" → nombre "Ana Laura", apellido "Vera"
+    const t = n.replace(/\(.*?\)/g, ' ').split(' ').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+    if (t.length === 1) return {nombre: t[0], apellido: '(sin apellido)'};
+    return {nombre: t.slice(0, -1).join(' '), apellido: t[t.length - 1]};
+}
+
+async function plConfirmarImport() {
+    const btn = document.getElementById('plImpBtn'); btn.disabled = true;
+    try {
+        const items = []; let creadas = 0;
+        for (let i = 0; i < plImpFilas.length; i++) {
+            const g = plImpFilas[i], v = document.getElementById('plSel' + i).value;
+            if (v === 'skip') continue;
+            let aid = v;
+            if (v === 'new') {
+                btn.textContent = `Creando alumnas… ${creadas + 1}`;
+                const r = await fetch('/api/alumnas', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(plPartirNombre(g.nombre))});
+                const a = await r.json();
+                if (!r.ok) { showToast(`No se pudo crear a ${g.nombre}: ${a.error || ''}`); btn.disabled = false; btn.textContent = 'Importar'; return; }
+                aid = a.id; creadas++;
+            }
+            g.items.forEach(it => items.push({alumna_id: Number(aid), dia: it.dia, hora: it.hora, estado: 'fija'}));
+        }
+        btn.textContent = 'Guardando…';
+        const r = await fetch('/api/plantilla/importar', {method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({items, generar: document.getElementById('plImpGenerar').checked})});
+        const d = await r.json();
+        if (!r.ok) { showToast(d.error || 'Error al importar'); return; }
+        plCerrar('modalPlImport');
+        let msg = `Importado: ${d.agregadas} lugares` + (creadas ? ` · ${creadas} alumnas nuevas` : '');
+        if (d.duplicadas) msg += ` · ${d.duplicadas} ya estaban`;
+        if (d.llenas)     msg += ` · ${d.llenas} no entraron (turno completo)`;
+        if (d.invalidas)  msg += ` · ${d.invalidas} fuera de horario`;
+        showToast(msg);
+        await loadPlantilla();
+        await plRefrescarAgenda();
+    } catch (e) { showToast('Error de conexión'); }
+    finally { btn.disabled = false; btn.textContent = 'Importar'; }
+}
 </script>
 </body>
 </html>
