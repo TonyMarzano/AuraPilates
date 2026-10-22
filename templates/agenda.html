@@ -1184,6 +1184,13 @@
         .pl-imp-table td { padding:6px 8px; border-bottom:1px solid var(--border); vertical-align:middle; }
         .pl-imp-table select { width:100%; font-family:'Jost',sans-serif; font-size:0.82rem; padding:5px; border:1px solid var(--border); border-radius:4px; background:white; color:var(--text); }
         .pl-badge { font-size:0.6rem; letter-spacing:0.12em; text-transform:uppercase; padding:2px 7px; border-radius:10px; white-space:nowrap; }
+        .pl-avisos { background:#fdf6e3; border:1px solid #ecd9a0; border-radius:6px; padding:12px 16px; margin-bottom:1rem; font-size:0.82rem; color:#7a5f1a; }
+        .pl-avisos b { font-weight:500; }
+        .pl-aviso-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:7px 0; border-top:1px solid #f1e4b8; margin-top:7px; color:var(--text); }
+        .pl-aviso-row span.q { flex:1; min-width:220px; }
+        .pl-aviso-row button { font-family:'Jost',sans-serif; font-size:0.66rem; letter-spacing:0.15em; text-transform:uppercase; background:white; color:var(--text-light); border:1px solid var(--border); border-radius:3px; padding:5px 10px; cursor:pointer; }
+        .pl-aviso-row button:hover { border-color:var(--sage); color:var(--sage); }
+        #plTabBadge:not(:empty) { background:#e0a43a; color:white; border-radius:10px; font-size:0.62rem; padding:1px 7px; margin-left:6px; letter-spacing:0; vertical-align:1px; }
         .pl-badge.ok { background:#e3f0e1; color:#4d7a48; } .pl-badge.rev { background:#fbf1d9; color:#9a7424; } .pl-badge.new { background:#e2ecf5; color:#3d6b94; }
 
         /* ── Finanzas ── */
@@ -1893,7 +1900,7 @@
     <button class="tab-btn" onclick="switchTab('finanzas')">💰 Finanzas</button>
     <button class="tab-btn" onclick="switchTab('alumnas')">👩 Alumnas</button>
     <button class="tab-btn" onclick="switchTab('horarios')">🔁 Horarios</button>
-    <button class="tab-btn" onclick="switchTab('plantilla')">📋 Plantilla</button>
+    <button class="tab-btn" onclick="switchTab('plantilla')">📋 Plantilla<span id="plTabBadge"></span></button>
     <button class="tab-btn" onclick="switchTab('instructores')">👤 Instructores</button>
 </div>
 
@@ -2126,6 +2133,7 @@
             <input type="file" id="plFile" accept=".xlsx,.xls" style="display:none" onchange="plElegirArchivo(this)">
         </div>
     </div>
+    <div id="plAvisos"></div>
     <div class="pl-resumen" id="plResumen"></div>
     <div class="pl-wrap"><table class="pl-table" id="plTabla"></table></div>
     <div class="pl-legend">
@@ -4297,6 +4305,7 @@ async function loadPlantilla() {
         plData = Array.isArray(pl) ? pl : [];
         plAlumnas = Array.isArray(al) ? al : [];
         renderPlantilla();
+        plCargarAvisos();
     } catch (e) { showToast('Error cargando la plantilla'); }
 }
 
@@ -4538,6 +4547,40 @@ async function plConfirmarImport() {
     } catch (e) { showToast('Error de conexión'); }
     finally { btn.disabled = false; btn.textContent = 'Importar'; }
 }
+
+// ── Avisos: alumnas fijas que no entraron porque el turno estaba completo ──
+let plAvisos = [];
+async function plCargarAvisos() {
+    try {
+        const r = await fetch('/api/plantilla/avisos');
+        const d = await r.json();
+        plAvisos = Array.isArray(d) ? d : [];
+    } catch (e) { plAvisos = []; }
+    plRenderAvisos();
+}
+function plRenderAvisos() {
+    document.getElementById('plTabBadge').textContent = plAvisos.length ? plAvisos.length : '';
+    const box = document.getElementById('plAvisos');
+    if (!plAvisos.length) { box.innerHTML = ''; return; }
+    const n = plAvisos.length;
+    box.innerHTML = `<div class="pl-avisos"><b>⚠ ${n} clase${n>1?'s':''} de la plantilla ${n>1?'quedaron':'quedó'} sin agendar porque el turno estaba completo (${PL_MAX}/${PL_MAX})</b>` +
+        plAvisos.map(a => {
+            const f = new Date(a.slot_key.slice(0,10) + 'T12:00:00'), h = Number(a.slot_key.split('_')[1]);
+            const dia = PL_DIAS[(f.getDay() + 6) % 7].slice(0,3), fecha = `${String(f.getDate()).padStart(2,'0')}/${String(f.getMonth()+1).padStart(2,'0')}`;
+            return `<div class="pl-aviso-row"><span class="q"><b>${plEsc(a.nombre + ' ' + a.apellido)}</b> · ${dia} ${fecha} · ${plHH(h)} · turno con ${a.ocupadas}/${PL_MAX}</span>` +
+                `<button onclick="plVerEnAgenda('${a.slot_key}')">Ver en agenda</button><button onclick="plDescartarAviso(${a.id})">Descartar</button></div>`;
+        }).join('') + '</div>';
+}
+function plVerEnAgenda(slotKey) {
+    currentMonday = getMonday(new Date(slotKey.slice(0,10) + 'T12:00:00'));
+    switchTab('agenda');
+    loadAndRender();
+}
+async function plDescartarAviso(id) {
+    await fetch(`/api/plantilla/avisos/${id}/descartar`, {method:'POST'});
+    plCargarAvisos();
+}
+plCargarAvisos();   // al abrir la página: muestra el contador en la solapa
 </script>
 </body>
 </html>

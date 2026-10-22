@@ -303,6 +303,12 @@ def init_db():
             estado TEXT NOT NULL DEFAULT 'fija' CHECK(estado IN ('fija','duda')),
             created_at DATETIME DEFAULT (datetime('now','-3 hours')),
             UNIQUE(alumna_id, dia, hora))''')
+        conn.execute('''CREATE TABLE IF NOT EXISTS plantilla_avisos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            plantilla_id INTEGER NOT NULL, slot_key TEXT NOT NULL,
+            descartado INTEGER DEFAULT 0,
+            created_at DATETIME DEFAULT (datetime('now','-3 hours')),
+            UNIQUE(plantilla_id, slot_key))''')
         conn.execute('''CREATE TABLE IF NOT EXISTS plantilla_generada (
             plantilla_id INTEGER NOT NULL, mes TEXT NOT NULL,
             PRIMARY KEY (plantilla_id, mes))''')
@@ -893,7 +899,9 @@ def _plantilla_crear_reservas(conn, p, y, m):
         sk = f"{f.strftime('%Y-%m-%d')}_{p['hora']:02d}"
         if conn.execute('SELECT 1 FROM reservas WHERE slot_key=? AND alumna_id=?', (sk, p['alumna_id'])).fetchone(): continue
         if conn.execute('SELECT COUNT(*) FROM reservas WHERE slot_key=?', (sk,)).fetchone()[0] >= PLANTILLA_MAX:
-            saltadas += 1; continue
+            saltadas += 1
+            conn.execute('INSERT OR IGNORE INTO plantilla_avisos (plantilla_id, slot_key) VALUES (?,?)', (p['id'], sk))
+            continue
         conn.execute('INSERT INTO reservas (slot_key,nombre,apellido,tel,alumna_id,plantilla_id) VALUES (?,?,?,?,?,?)',
                      (sk, p['nombre'], p['apellido'], p['tel'] or '', p['alumna_id'], p['id']))
         creadas += 1
@@ -910,6 +918,7 @@ def _plantilla_borrar_reservas_futuras(conn, pid):
     hoy = _hoy_ar().strftime('%Y-%m-%d')
     conn.execute("DELETE FROM reservas WHERE plantilla_id=? AND substr(slot_key,1,10)>=? AND asistio IS NULL", (pid, hoy))
     conn.execute('DELETE FROM plantilla_generada WHERE plantilla_id=?', (pid,))
+    conn.execute('DELETE FROM plantilla_avisos WHERE plantilla_id=?', (pid,))
 
 def sincronizar_plantilla():
     """Genera las reservas del mes en curso para toda la plantilla fija que todavía no las generó."""
@@ -944,6 +953,36 @@ def get_plantilla():
             rows = conn.execute(_PLANTILLA_SELECT + "WHERE a.activa=1 ORDER BY p.dia, p.hora, a.apellido, a.nombre").fetchall()
         return jsonify([{'id':r['id'],'alumna_id':r['alumna_id'],'dia':r['dia'],'hora':r['hora'],
                          'estado':r['estado'],'nombre':r['nombre'],'apellido':r['apellido']} for r in rows])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/plantilla/avisos', methods=['GET'])
+@login_required
+def get_plantilla_avisos():
+    """Clases fijas que no se pudieron agendar porque el turno estaba completo (y siguen sin lugar)."""
+    try:
+        hoy = _hoy_ar().strftime('%Y-%m-%d')
+        with get_db() as conn:
+            rows = conn.execute("""SELECT av.id, av.slot_key, a.nombre, a.apellido,
+                       (SELECT COUNT(*) FROM reservas r WHERE r.slot_key=av.slot_key) AS ocupadas
+                FROM plantilla_avisos av
+                JOIN plantilla p ON p.id=av.plantilla_id
+                JOIN alumnas a ON a.id=p.alumna_id
+                WHERE av.descartado=0 AND p.estado='fija' AND a.activa=1 AND substr(av.slot_key,1,10)>=?
+                  AND NOT EXISTS (SELECT 1 FROM reservas r WHERE r.slot_key=av.slot_key AND r.alumna_id=p.alumna_id)
+                ORDER BY av.slot_key, a.apellido""", (hoy,)).fetchall()
+        return jsonify([dict(r) for r in rows])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/plantilla/avisos/<int:aid>/descartar', methods=['POST'])
+@login_required
+def descartar_plantilla_aviso(aid):
+    try:
+        with get_db() as conn:
+            conn.execute('UPDATE plantilla_avisos SET descartado=1 WHERE id=?', (aid,))
+            conn.commit()
+        return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
